@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /** Dhaka-area addresses only for v1: a loose box around Bangladesh catches swapped lat/lng. */
-const latLng = z.object({
+export const latLng = z.object({
   lat: z.number().min(20.5).max(26.7),
   lng: z.number().min(88).max(92.7),
 });

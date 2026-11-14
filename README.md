@@ -21,7 +21,7 @@ You need Node 22 or newer, Docker, and pnpm 12 (`corepack enable`, or `npm i -g 
 ```bash
 pnpm install
 cp .env.example apps/api/.env
-pnpm db:up          # PostgreSQL with PostGIS, and Redis, in Docker
+pnpm db:up          # PostgreSQL with PostGIS, Redis, and S3-compatible photo storage, in Docker
 pnpm db:migrate     # creates the full schema
 pnpm db:seed -- --sample-rates   # categories, the admin account, today's sample rates
 pnpm dev            # API on :3000 and admin panel on :5173
@@ -41,6 +41,16 @@ docker compose exec postgres createdb -U bw bhangariwala_test
 cp .env.example apps/api/.env      # adds JWT_SECRET, OTP_DEV_CODE, ADMIN_PHONE and the test URLs
 pnpm db:migrate && pnpm db:seed -- --sample-rates
 ```
+
+### Already ran M1?
+
+M2 adds photo storage (an S3-compatible SeaweedFS service on port 8333) and new settings. Start it, copy the new `S3_*` and `JOBS_ENABLED` lines from `.env.example` into `apps/api/.env` (the defaults already match), then migrate:
+
+```bash
+pnpm db:up && pnpm db:migrate
+```
+
+The API creates the photo bucket on start in development. Photo uploads go straight from the app to storage with a presigned link, so a phone must be able to reach `S3_ENDPOINT`.
 
 ### Signing in during development
 

@@ -14,7 +14,19 @@ describe('validateEnv', () => {
       ACCESS_TOKEN_TTL_SEC: 900,
       REFRESH_TOKEN_TTL_DAYS: 30,
       OTP_TTL_SEC: 300,
+      JOBS_ENABLED: true,
+      S3_ENDPOINT: 'http://localhost:8333',
+      S3_BUCKET: 'bhangariwala-photos',
     });
+  });
+
+  it('reads JOBS_ENABLED and rejects other words', () => {
+    expect(validateEnv({ ...base, JOBS_ENABLED: 'false' }).JOBS_ENABLED).toBe(false);
+    expect(() => validateEnv({ ...base, JOBS_ENABLED: 'no' })).toThrow('true or false');
+  });
+
+  it('needs real photo storage settings in production', () => {
+    expect(() => validateEnv({ ...base, NODE_ENV: 'production' })).toThrow('S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY');
   });
 
   it('names every missing variable', () => {

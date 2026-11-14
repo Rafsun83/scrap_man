@@ -18,7 +18,7 @@ Households in Dhaka sell scrap (iron, old newspaper, plastic, carton, aluminium,
 - `pnpm dev` (API :3000 + admin :5173), `pnpm dev:mobile`
 - `pnpm turbo run lint typecheck test build`: run before calling any task done
 - `pnpm test:e2e`: API end-to-end tests against `bhangariwala_test` and Redis db 15 (the config refuses any database not ending in `_test`)
-- `pnpm db:up`, `pnpm db:migrate`, `pnpm db:seed -- --sample-rates`
+- `pnpm db:up` (Postgres, Redis, S3 storage), `pnpm db:migrate`, `pnpm db:seed -- --sample-rates`
 - `pnpm gen:api`: regenerate `packages/shared/src/generated/api.ts` after editing the contract
 
 Development sign-in: every OTP is `123456` (`OTP_DEV_CODE`); admin phone `+8801700000000`.
@@ -70,13 +70,15 @@ Development sign-in: every OTP is `123456` (`OTP_DEV_CODE`); admin phone `+88017
 | DISPUTED -> CANCELLED | Admin | `POST /admin/disputes/{id}/resolve` outcome CANCEL |
 | CONFIRMED -> COMPLETED | Collector | `POST /pickups/{id}/payment` (TrxID required for BKASH and NAGAD) |
 
-Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`.
+Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`, `pickup.released`, `pickup.code_locked` (admins), `dispute.opened`, `dispute.resolved`. Payloads and recipients: `SocketEvents` and `Event*` in `docs/openapi.yaml`.
 
 ## Milestones
 
+When a milestone is complete, add `milestones/<id>-<name>.md` with a checklist of what was built and verified.
+
 - [x] M0 Project setup
 - [x] M1 Backend core: full schema, OTP sign-in, profile, addresses, categories, daily rates
-- [ ] M2 Pickup engine: create requests, PostGIS matching with radius widening, first accept wins, pickup code, weighing, disputes, confirm, payment, expiry jobs, Socket.IO events, photo uploads (S3-compatible storage; MinIO locally)
+- [x] M2 Pickup engine: create requests, PostGIS matching with radius widening, first accept wins, pickup code, weighing, disputes, confirm, payment, expiry jobs, Socket.IO events, photo uploads (S3-compatible storage; SeaweedFS locally, as MinIO no longer publishes images). Notes: `milestones/M2-pickup-engine.md`
 - [ ] M3 Household app screens
 - [ ] M4 Collector app screens (and collector sign-up endpoints)
 - [ ] M5 Admin panel

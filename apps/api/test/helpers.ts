@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module.js';
 import { SMS_SENDER, type SmsSender } from '../src/auth/sms/sms-sender.js';
 import { configureApp } from '../src/configure-app.js';
 import { REDIS } from '../src/redis/redis.module.js';
+import { PHOTO_STORAGE, type PhotoStorage } from '../src/storage/storage.js';
 
 /** Catches outgoing SMS so tests can read the OTP. */
 export class FakeSms implements SmsSender {
@@ -18,19 +19,40 @@ export class FakeSms implements SmsSender {
   }
 }
 
+/** Photo storage in memory: tests "upload" by calling complete() with the upload URL. */
+export class FakeStorage implements PhotoStorage {
+  readonly uploaded = new Set<string>();
+  async uploadUrl(key: string): Promise<string> {
+    return `https://storage.test/upload/${key}`;
+  }
+  async downloadUrl(key: string): Promise<string> {
+    return `https://storage.test/download/${key}`;
+  }
+  async exists(key: string): Promise<boolean> {
+    return this.uploaded.has(key);
+  }
+  complete(uploadUrl: string): void {
+    this.uploaded.add(uploadUrl.replace('https://storage.test/upload/', ''));
+  }
+}
+
 export interface TestContext {
   app: INestApplication<App>;
   http: () => ReturnType<typeof request>;
   sms: FakeSms;
+  storage: FakeStorage;
   db: DataSource;
   redis: Redis;
 }
 
 export async function createTestApp(): Promise<TestContext> {
   const sms = new FakeSms();
+  const storage = new FakeStorage();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(SMS_SENDER)
     .useValue(sms)
+    .overrideProvider(PHOTO_STORAGE)
+    .useValue(storage)
     .compile();
   const app = configureApp(moduleRef.createNestApplication()) as INestApplication<App>;
   await app.init();
@@ -38,6 +60,7 @@ export async function createTestApp(): Promise<TestContext> {
     app,
     http: () => request(app.getHttpServer()),
     sms,
+    storage,
     db: app.get(DataSource),
     redis: app.get<Redis>(REDIS),
   };
@@ -51,6 +74,7 @@ export async function resetData(ctx: TestContext): Promise<void> {
   );
   await ctx.redis.flushdb();
   ctx.sms.codes.clear();
+  ctx.storage.uploaded.clear();
 }
 
 export async function signIn(

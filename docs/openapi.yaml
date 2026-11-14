@@ -6,7 +6,15 @@ info:
     v1 contract for the BhangariWala household app, collector app and admin panel.
     Conventions: UUID ids, UTC timestamps (ISO 8601), money in BDT with 2 decimals,
     weight in kg with 1 decimal, ASCII digits and English enum values only.
-    Write calls that change status or money require an Idempotency-Key header.
+    Write calls that change status or money require an Idempotency-Key header: repeating a call with the
+    same key (per user, for 24 hours) returns the first response without doing the work again; reusing a key
+    with a different body is VALIDATION_ERROR, and a repeat while the first call is still running is
+    INVALID_STATE (retry shortly).
+
+    Live updates: connect with Socket.IO to the API origin, path /socket.io, passing the access token as
+    `auth.token`. The server answers `ready` once the user's rooms are joined, or `unauthorized` and then
+    disconnects. Each user receives only events meant for them; admins receive every pickup event.
+    Event names and payloads are the Event* schemas under components.schemas (see SocketEvents).
 servers:
   - url: https://api.bhangariwala.example/api/v1
 security:
@@ -223,6 +231,9 @@ paths:
     get:
       tags: [Me]
       summary: Own pickups, newest first (household or collector)
+      description: |
+        Households see pickups they requested; collectors see pickups assigned to them.
+        ACTIVE is REQUESTED to CONFIRMED; CANCELLED includes EXPIRED.
       parameters:
         - name: status
           in: query
@@ -240,6 +251,14 @@ paths:
     post:
       tags: [Pickups]
       summary: Household creates a pickup request
+      description: |
+        Household only. The address must belong to the household. Categories must be active, and every
+        PER_KG category needs a published rate. slotDate is today, tomorrow or the day after (Dhaka time),
+        and the slot must not have ended yet. The request expires at the end of the slot.
+        The minimum is 2 kg estimated unless the request includes an ON_INSPECTION category (electronics):
+        weightBand UNDER_5 means "2 to 5 kg" and the apps say so on screen.
+        Item photos are added after this call with POST /pickups/{pickupId}/photos (kind ITEMS).
+        On success, online approved collectors within 1 km receive `request.created`.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -254,6 +273,9 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
         '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
         '422': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}:
@@ -262,6 +284,7 @@ paths:
     get:
       tags: [Pickups]
       summary: Pickup detail (owner, assigned collector or admin)
+      description: Anyone else gets NOT_FOUND. Collectors browsing open requests use /collector/requests/nearby.
       responses:
         '200':
           description: Pickup
@@ -276,6 +299,7 @@ paths:
     post:
       tags: [Pickups]
       summary: Household cancels before the collector arrives
+      description: Household owner only, while REQUESTED or ACCEPTED. Admins use /admin/pickups/{pickupId}/cancel.
       requestBody:
         content:
           application/json:
@@ -289,6 +313,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}/accept:
@@ -298,6 +323,11 @@ paths:
     post:
       tags: [Pickups]
       summary: Collector claims a request; first to accept wins
+      description: |
+        Collector only. The collector must be APPROVED (else 403 NOT_APPROVED), online, and their last
+        location must be within the request's current search radius (else 422 OUT_OF_RANGE).
+        One atomic update where status is still REQUESTED: the loser gets 409 ALREADY_TAKEN.
+        Today's rates are copied onto the pickup and a 4-digit pickup code is created for the household.
       responses:
         '200':
           description: Accepted; address and household phone are now included
@@ -305,6 +335,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
         '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
         '422': { $ref: '#/components/responses/Error' }
 
@@ -314,8 +345,19 @@ paths:
     post:
       tags: [Pickups]
       summary: Collector gives the request back before arriving
+      description: |
+        Assigned collector only, while ACCEPTED. Clears the collector, pickup code and copied rates,
+        resets the search radius to 1 km and restarts the 5-minute widening clock.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 200 }
       responses:
         '204': { description: Released; request is open again at 1 km }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}/arrive:
@@ -324,6 +366,10 @@ paths:
     post:
       tags: [Pickups]
       summary: Collector enters the household's pickup code
+      description: |
+        Assigned collector only, while ACCEPTED. A wrong code returns 422 CODE_MISMATCH with
+        details.attemptsLeft. The 5th wrong code locks the pickup (423 CODE_LOCKED from then on) and
+        sends `pickup.code_locked` to admins, who can cancel it.
       requestBody:
         required: true
         content:
@@ -339,7 +385,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
         '422': { $ref: '#/components/responses/Error' }
+        '423': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}/photos:
     parameters:
@@ -347,6 +396,11 @@ paths:
     post:
       tags: [Pickups]
       summary: Get a presigned upload URL for an item or scale photo
+      description: |
+        ITEMS: the household owner, while the pickup is active or COMPLETED (item photos, dispute evidence).
+        SCALE: the assigned collector while ARRIVED or DISPUTED, or an admin while DISPUTED.
+        Upload the file with an HTTP PUT to uploadUrl, sending the same Content-Type, before expiresAt.
+        The photo counts only once the file is uploaded.
       requestBody:
         required: true
         content:
@@ -356,7 +410,7 @@ paths:
               required: [kind]
               properties:
                 kind: { type: string, enum: [ITEMS, SCALE] }
-                contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+                contentType: { type: string, enum: [image/jpeg, image/png, image/webp], default: image/jpeg }
       responses:
         '201':
           description: Upload slot
@@ -364,10 +418,14 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [photoId, uploadUrl, expiresAt]
                 properties:
                   photoId: { type: string, format: uuid }
                   uploadUrl: { type: string, format: uri }
                   expiresAt: { type: string, format: date-time }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}/weights:
     parameters:
@@ -376,6 +434,14 @@ paths:
     post:
       tags: [Pickups]
       summary: Collector submits weights (first weigh or re-weigh)
+      description: |
+        First weigh: assigned collector while ARRIVED (version 1).
+        Re-weigh: assigned collector while DISPUTED with an open REWEIGH dispute, or an admin while
+        DISPUTED after resolving with TEAM_REWEIGH (version + 1). Either closes the open weight dispute.
+        Each line is one of the request's categories, at most once. PER_KG lines use the rate copied at
+        accept; ON_INSPECTION lines need quotedAmount. The server computes every amount and the totals.
+        scalePhotoId must be an uploaded SCALE photo of this pickup not used by an earlier round
+        (else 422 SCALE_PHOTO_REQUIRED).
       requestBody:
         required: true
         content:
@@ -387,6 +453,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
         '422': { $ref: '#/components/responses/Error' }
 
@@ -397,6 +465,7 @@ paths:
     post:
       tags: [Pickups]
       summary: Household approves the weights and picks a payment method
+      description: Household owner only, while WEIGHED. walletNumber is required for BKASH and NAGAD.
       requestBody:
         required: true
         content:
@@ -413,6 +482,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}/dispute:
@@ -421,6 +492,14 @@ paths:
     post:
       tags: [Pickups]
       summary: Household rejects the weights or reports a problem
+      description: |
+        Household owner only. One open dispute per pickup.
+        WEIGHT: while WEIGHED. Moves the pickup to DISPUTED. The first weight dispute is REWEIGH (the
+        collector re-weighs); any later one is ADMIN_REVIEW.
+        PAYMENT ("payment not received"): while COMPLETED. ADMIN_REVIEW; the pickup status does not change
+        and the payment is marked REPORTED.
+        BEHAVIOUR and OTHER: any time after accept. ADMIN_REVIEW; the pickup status does not change.
+        photoIds are ITEMS photos of this pickup uploaded by the household.
       requestBody:
         required: true
         content:
@@ -433,6 +512,7 @@ paths:
                 reason: { type: string, maxLength: 500 }
                 photoIds:
                   type: array
+                  maxItems: 5
                   items: { type: string, format: uuid }
       responses:
         '201':
@@ -440,6 +520,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Dispute' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}/payment:
@@ -449,6 +531,12 @@ paths:
     post:
       tags: [Pickups]
       summary: Collector records the payment; status COMPLETED
+      description: |
+        Assigned collector only, while CONFIRMED. method must be the one the household confirmed.
+        trxId is required for BKASH and NAGAD (422 TRX_ID_REQUIRED) and can be used once per method
+        (409 TRX_ID_REUSED). The amount is the pickup's total, computed by the server.
+        After an admin resolves a payment dispute with PAY_AGAIN, the collector calls this again on the
+        COMPLETED pickup with a new trxId; the status stays COMPLETED and the payment returns to PAID.
       requestBody:
         required: true
         content:
@@ -458,13 +546,15 @@ paths:
               required: [method]
               properties:
                 method: { $ref: '#/components/schemas/PaymentMethod' }
-                trxId: { type: string, maxLength: 30, description: Required for BKASH and NAGAD }
+                trxId: { type: string, pattern: '^[A-Za-z0-9]{6,30}$', description: Required for BKASH and NAGAD }
       responses:
         '200':
           description: Completed
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
         '422': { $ref: '#/components/responses/Error' }
 
@@ -474,6 +564,7 @@ paths:
     post:
       tags: [Pickups]
       summary: Household rates the collector after completion
+      description: Household owner only, while COMPLETED, once per pickup. Updates the collector's average.
       requestBody:
         required: true
         content:
@@ -486,6 +577,7 @@ paths:
                 comment: { type: string, maxLength: 300 }
       responses:
         '204': { description: Saved }
+        '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
 
   /collector/signup:
@@ -538,6 +630,9 @@ paths:
     put:
       tags: [Collector]
       summary: Go online or offline
+      description: |
+        Approved collectors only (else 403 NOT_APPROVED). location is required when going online.
+        A collector with no location ping for 10 minutes is treated as offline for matching.
       requestBody:
         required: true
         content:
@@ -550,12 +645,16 @@ paths:
                 location: { $ref: '#/components/schemas/LatLng' }
       responses:
         '204': { description: Saved }
+        '400': { $ref: '#/components/responses/Error' }
         '403': { $ref: '#/components/responses/Error' }
 
   /collector/location:
     put:
       tags: [Collector]
       summary: Location ping while online or on the way
+      description: |
+        Send about every 30 seconds while online. While the collector has an ACCEPTED pickup, the
+        household receives `collector.location`.
       requestBody:
         required: true
         content:
@@ -563,11 +662,13 @@ paths:
             schema: { $ref: '#/components/schemas/LatLng' }
       responses:
         '204': { description: Saved }
+        '403': { $ref: '#/components/responses/Error' }
 
   /collector/requests/nearby:
     get:
       tags: [Collector]
       summary: Open requests inside each request's current radius
+      description: Approved collectors only. Shows each REQUESTED pickup whose current radius reaches lat/lng.
       parameters:
         - name: lat
           in: query
@@ -704,6 +805,7 @@ paths:
     post:
       tags: [Admin]
       summary: Cancel any active pickup
+      description: Any status from REQUESTED to CONFIRMED. Closes an open dispute on the pickup with outcome CANCEL.
       requestBody:
         required: true
         content:
@@ -719,6 +821,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Pickup' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
 
   /admin/disputes:
     get:
@@ -746,6 +850,15 @@ paths:
     post:
       tags: [Admin]
       summary: Close a dispute with an outcome
+      description: |
+        The dispute must be in ADMIN_REVIEW (409 INVALID_STATE otherwise). Outcomes by type:
+        WEIGHT: ACCEPT_WEIGHTS (pickup DISPUTED -> WEIGHED with the latest round; the household confirms
+        as usual), TEAM_REWEIGH (pickup stays DISPUTED until an admin posts weights), CANCEL
+        (pickup -> CANCELLED; items stay with the household).
+        PAYMENT: PAYMENT_VERIFIED (payment VERIFIED), PAY_AGAIN (the collector records a new TrxID),
+        SUSPEND_COLLECTOR (collector suspended and set offline; payment stays REPORTED).
+        BEHAVIOUR and OTHER: NO_ACTION, SUSPEND_COLLECTOR, or CANCEL while the pickup is still active.
+        Any other outcome for the type is VALIDATION_ERROR. Both sides receive `dispute.resolved` with the note.
       requestBody:
         required: true
         content:
@@ -756,14 +869,17 @@ paths:
               properties:
                 outcome:
                   type: string
-                  enum: [ACCEPT_WEIGHTS, TEAM_REWEIGH, CANCEL, PAYMENT_VERIFIED, PAY_AGAIN, SUSPEND_COLLECTOR]
-                note: { type: string, maxLength: 500, description: Shown to both sides }
+                  $ref: '#/components/schemas/DisputeOutcome'
+                note: { type: string, minLength: 1, maxLength: 500, description: Shown to both sides }
       responses:
         '200':
           description: Resolved
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Dispute' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
 
   /admin/users:
     get:
@@ -892,6 +1008,12 @@ components:
     PaymentMethod: { type: string, enum: [CASH, BKASH, NAGAD] }
     DisputeType: { type: string, enum: [WEIGHT, PAYMENT, BEHAVIOUR, OTHER] }
     DisputeStatus: { type: string, enum: [REWEIGH, ADMIN_REVIEW, RESOLVED] }
+    DisputeOutcome:
+      type: string
+      description: REWEIGHED is set by the system when a re-weigh closes a REWEIGH dispute; admins cannot send it.
+      enum: [REWEIGHED, ACCEPT_WEIGHTS, TEAM_REWEIGH, CANCEL, PAYMENT_VERIFIED, PAY_AGAIN, SUSPEND_COLLECTOR, NO_ACTION]
+    PaymentStatus: { type: string, enum: [PAID, REPORTED, VERIFIED] }
+    PhotoKind: { type: string, enum: [ITEMS, SCALE] }
 
     Session:
       type: object
@@ -954,25 +1076,68 @@ components:
         categoryCodes:
           type: array
           minItems: 1
+          uniqueItems: true
           items: { type: string }
         weightBand: { $ref: '#/components/schemas/WeightBand' }
         slotDate: { type: string, format: date }
         slot: { $ref: '#/components/schemas/TimeSlot' }
         note: { type: string, maxLength: 200 }
-        itemPhotoIds:
-          type: array
-          items: { type: string, format: uuid }
 
     PickupLine:
       type: object
+      required: [categoryCode, kg, rate, amount]
       properties:
         categoryCode: { type: string }
         kg: { $ref: '#/components/schemas/Kg' }
-        rate: { $ref: '#/components/schemas/Money' }
+        rate:
+          anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }]
+          description: null for ON_INSPECTION categories, whose amount is the collector's quote
         amount: { $ref: '#/components/schemas/Money' }
+
+    WeighRound:
+      type: object
+      required: [version, lines, totalKg, totalAmount, scalePhotoId, weighedBy, createdAt]
+      properties:
+        version: { type: integer, minimum: 1 }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/PickupLine' }
+        totalKg: { $ref: '#/components/schemas/Kg' }
+        totalAmount: { $ref: '#/components/schemas/Money' }
+        scalePhotoId: { type: string, format: uuid }
+        weighedBy: { type: string, enum: [COLLECTOR, ADMIN] }
+        createdAt: { type: string, format: date-time }
+
+    Photo:
+      type: object
+      required: [id, kind, weighVersion, url, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { $ref: '#/components/schemas/PhotoKind' }
+        weighVersion: { type: [integer, 'null'] }
+        url: { type: string, format: uri, description: Presigned download link, valid for 15 minutes }
+        createdAt: { type: string, format: date-time }
+
+    Payment:
+      type: object
+      required: [method, amount, walletNumber, trxId, status, paidAt]
+      properties:
+        method: { $ref: '#/components/schemas/PaymentMethod' }
+        amount: { $ref: '#/components/schemas/Money' }
+        walletNumber: { type: [string, 'null'] }
+        trxId: { type: [string, 'null'] }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        paidAt: { type: string, format: date-time }
 
     Pickup:
       type: object
+      description: |
+        One shape for every viewer; fields a viewer may not see are null.
+        Before accept nobody but the household and admins sees the address.
+      required: [id, displayNo, status, slotDate, slot, weightBand, categoryCodes, area, estimate, address,
+                 household, collector, pickupCode, codeLocked, lines, weighVersion, weighRounds, photos, totalKg,
+                 totalAmount, paymentMethod, walletNumber, payment, openDispute, searchRadiusM, requestedAt,
+                 acceptedAt, arrivedAt, weighedAt, confirmedAt, completedAt, cancelledAt, expiresAt]
       properties:
         id: { type: string, format: uuid }
         displayNo: { type: string, examples: [BW-1052] }
@@ -981,8 +1146,10 @@ components:
         slot: { $ref: '#/components/schemas/TimeSlot' }
         weightBand: { $ref: '#/components/schemas/WeightBand' }
         categoryCodes: { type: array, items: { type: string } }
+        area: { type: string, examples: ['Mirpur 10'], description: Approximate area; visible to everyone who can see the pickup }
         estimate:
-          type: object
+          type: [object, 'null']
+          description: Rough payout range from the weight band and today's rates; null when it cannot be estimated
           properties:
             min: { $ref: '#/components/schemas/Money' }
             max: { $ref: '#/components/schemas/Money' }
@@ -999,28 +1166,45 @@ components:
           properties:
             id: { type: string, format: uuid }
             name: { type: [string, 'null'] }
-            phone: { type: [string, 'null'], description: Only to the assigned collector after accept }
+            phone: { type: [string, 'null'], description: Only to the assigned collector after accept, and admins }
         collector:
           type: [object, 'null']
           properties:
             id: { type: string, format: uuid }
-            name: { type: string }
+            name: { type: [string, 'null'] }
             rating: { type: [number, 'null'] }
             phone: { type: [string, 'null'] }
         pickupCode:
           type: [string, 'null']
           description: 4 digits; returned to the household only, while ACCEPTED
+        codeLocked: { type: boolean, description: True after 5 wrong pickup codes }
         lines:
           type: array
+          description: The latest weigh round's lines; empty before weighing
           items: { $ref: '#/components/schemas/PickupLine' }
         weighVersion: { type: [integer, 'null'] }
+        weighRounds:
+          type: array
+          description: Every weigh round, oldest first (C10 shows the previous round; A4 shows all)
+          items: { $ref: '#/components/schemas/WeighRound' }
+        photos:
+          type: array
+          items: { $ref: '#/components/schemas/Photo' }
         totalKg: { anyOf: [{ $ref: '#/components/schemas/Kg' }, { type: 'null' }] }
         totalAmount: { anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }] }
         paymentMethod: { anyOf: [{ $ref: '#/components/schemas/PaymentMethod' }, { type: 'null' }] }
+        walletNumber: { type: [string, 'null'], description: The household's bKash or Nagad number, set at confirm }
+        payment: { anyOf: [{ $ref: '#/components/schemas/Payment' }, { type: 'null' }] }
+        openDispute: { anyOf: [{ $ref: '#/components/schemas/Dispute' }, { type: 'null' }] }
         searchRadiusM: { type: integer, examples: [1000] }
         requestedAt: { type: string, format: date-time }
         acceptedAt: { type: [string, 'null'], format: date-time }
+        arrivedAt: { type: [string, 'null'], format: date-time }
+        weighedAt: { type: [string, 'null'], format: date-time }
+        confirmedAt: { type: [string, 'null'], format: date-time }
         completedAt: { type: [string, 'null'], format: date-time }
+        cancelledAt: { type: [string, 'null'], format: date-time }
+        expiresAt: { type: string, format: date-time, description: End of the booked slot }
 
     PickupPage:
       type: object
@@ -1045,18 +1229,23 @@ components:
               kg: { $ref: '#/components/schemas/Kg' }
               quotedAmount:
                 anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }]
-                description: Only for ON_INSPECTION categories such as electronics
+                description: Required for ON_INSPECTION categories such as electronics; not allowed otherwise
         scalePhotoId: { type: string, format: uuid }
 
     Dispute:
       type: object
+      required: [id, pickupId, displayNo, type, status, raisedBy, reason, photoIds, outcome, resolutionNote,
+                 createdAt, resolvedAt]
       properties:
         id: { type: string, format: uuid }
         pickupId: { type: string, format: uuid }
+        displayNo: { type: string, examples: [BW-1038] }
         type: { $ref: '#/components/schemas/DisputeType' }
         status: { $ref: '#/components/schemas/DisputeStatus' }
+        raisedBy: { type: string, format: uuid }
         reason: { type: [string, 'null'] }
-        outcome: { type: [string, 'null'] }
+        photoIds: { type: array, items: { type: string, format: uuid } }
+        outcome: { anyOf: [{ $ref: '#/components/schemas/DisputeOutcome' }, { type: 'null' }] }
         resolutionNote: { type: [string, 'null'] }
         createdAt: { type: string, format: date-time }
         resolvedAt: { type: [string, 'null'], format: date-time }
@@ -1143,3 +1332,65 @@ components:
               trxId: { type: [string, 'null'] }
               amount: { $ref: '#/components/schemas/Money' }
               paidAt: { type: string, format: date-time }
+
+    SocketEvents:
+      type: string
+      description: |
+        Socket.IO event names. Who receives each (admins receive all of them):
+        request.created: online approved collectors inside the request's radius (again for new ones when it widens
+        or after a release). request.taken: collectors who were sent the request, when it is accepted, cancelled
+        or expired. pickup.*: the household and the assigned collector. collector.location: the household while
+        ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
+      enum: [request.created, request.taken, request.expired, pickup.accepted, pickup.released, collector.location,
+             pickup.arrived, pickup.code_locked, pickup.weighed, pickup.confirmed, pickup.disputed, pickup.paid,
+             pickup.cancelled, dispute.opened, dispute.resolved]
+
+    EventRequestCreated:
+      description: request.created
+      allOf:
+        - $ref: '#/components/schemas/NearbyRequest'
+
+    EventRequestTaken:
+      description: request.taken; the request is gone from the nearby list
+      type: object
+      required: [pickupId, reason]
+      properties:
+        pickupId: { type: string, format: uuid }
+        reason: { type: string, enum: [ACCEPTED, CANCELLED, EXPIRED] }
+
+    EventPickupChanged:
+      description: |
+        request.expired, pickup.accepted, pickup.released, pickup.arrived, pickup.weighed, pickup.confirmed,
+        pickup.disputed, pickup.paid, pickup.cancelled. Clients refetch GET /pickups/{pickupId} for detail.
+      type: object
+      required: [pickupId, displayNo, status, at]
+      properties:
+        pickupId: { type: string, format: uuid }
+        displayNo: { type: string }
+        status: { $ref: '#/components/schemas/PickupStatus' }
+        at: { type: string, format: date-time }
+
+    EventCollectorLocation:
+      description: collector.location
+      type: object
+      required: [pickupId, lat, lng, at]
+      properties:
+        pickupId: { type: string, format: uuid }
+        lat: { type: number }
+        lng: { type: number }
+        at: { type: string, format: date-time }
+
+    EventCodeLocked:
+      description: pickup.code_locked (admins)
+      type: object
+      required: [pickupId, displayNo, collectorId, at]
+      properties:
+        pickupId: { type: string, format: uuid }
+        displayNo: { type: string }
+        collectorId: { type: string, format: uuid }
+        at: { type: string, format: date-time }
+
+    EventDispute:
+      description: dispute.opened, dispute.resolved
+      allOf:
+        - $ref: '#/components/schemas/Dispute'
