@@ -1,0 +1,1127 @@
+openapi: 3.1.0
+info:
+  title: BhangariWala API
+  version: 1.0.0-draft
+  description: |
+    v1 contract for the BhangariWala household app, collector app and admin panel.
+    Conventions: UUID ids, UTC timestamps (ISO 8601), money in BDT with 2 decimals,
+    weight in kg with 1 decimal, ASCII digits and English enum values only.
+    Write calls that change status or money require an Idempotency-Key header.
+servers:
+  - url: https://api.bhangariwala.example/api/v1
+security:
+  - bearer: []
+
+tags:
+  - name: Auth
+  - name: Catalog
+  - name: Me
+  - name: Pickups
+  - name: Collector
+  - name: Admin
+
+paths:
+  /auth/otp/request:
+    post:
+      tags: [Auth]
+      summary: Send an OTP to a phone number
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { $ref: '#/components/schemas/Phone' }
+      responses:
+        '204': { description: OTP sent }
+        '400': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+
+  /auth/otp/verify:
+    post:
+      tags: [Auth]
+      summary: Verify the OTP and sign in or sign up
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code, role]
+              properties:
+                phone: { $ref: '#/components/schemas/Phone' }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+                role: { type: string, enum: [HOUSEHOLD, COLLECTOR] }
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '401': { $ref: '#/components/responses/Error' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Exchange a refresh token for a new token pair
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: New tokens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '401': { $ref: '#/components/responses/Error' }
+
+  /categories:
+    get:
+      tags: [Catalog]
+      summary: Active scrap categories
+      security: []
+      responses:
+        '200':
+          description: Categories in display order
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Category' }
+
+  /rates/today:
+    get:
+      tags: [Catalog]
+      summary: Today's published rate per category
+      security: []
+      responses:
+        '200':
+          description: Rates for today, with the change from yesterday
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  effectiveDate: { type: string, format: date }
+                  publishedAt: { type: string, format: date-time }
+                  rates:
+                    type: array
+                    items: { $ref: '#/components/schemas/Rate' }
+
+  /me:
+    get:
+      tags: [Me]
+      summary: The signed-in user
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+    patch:
+      tags: [Me]
+      summary: Update name or language
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 80 }
+                language: { $ref: '#/components/schemas/Language' }
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /me/addresses:
+    get:
+      tags: [Me]
+      summary: Saved addresses
+      responses:
+        '200':
+          description: Addresses, default first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Address' }
+    post:
+      tags: [Me]
+      summary: Add an address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddressInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Address' }
+
+  /me/addresses/{addressId}:
+    parameters:
+      - name: addressId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [Me]
+      summary: Edit an address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddressInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Address' }
+    delete:
+      tags: [Me]
+      summary: Remove an address
+      responses:
+        '204': { description: Removed }
+
+  /me/pickups:
+    get:
+      tags: [Me]
+      summary: Own pickups, newest first (household or collector)
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [ACTIVE, COMPLETED, CANCELLED] }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of pickups
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PickupPage' }
+
+  /pickups:
+    post:
+      tags: [Pickups]
+      summary: Household creates a pickup request
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePickup' }
+      responses:
+        '201':
+          description: Request created and sent to collectors within 1 km
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '400': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    get:
+      tags: [Pickups]
+      summary: Pickup detail (owner, assigned collector or admin)
+      responses:
+        '200':
+          description: Pickup
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Pickups]
+      summary: Household cancels before the collector arrives
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 200 }
+      responses:
+        '200':
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/accept:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+    post:
+      tags: [Pickups]
+      summary: Collector claims a request; first to accept wins
+      responses:
+        '200':
+          description: Accepted; address and household phone are now included
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/release:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Pickups]
+      summary: Collector gives the request back before arriving
+      responses:
+        '204': { description: Released; request is open again at 1 km }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/arrive:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Pickups]
+      summary: Collector enters the household's pickup code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, pattern: '^[0-9]{4}$' }
+      responses:
+        '200':
+          description: Code matched; status ARRIVED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/photos:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Pickups]
+      summary: Get a presigned upload URL for an item or scale photo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { type: string, enum: [ITEMS, SCALE] }
+                contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+      responses:
+        '201':
+          description: Upload slot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photoId: { type: string, format: uuid }
+                  uploadUrl: { type: string, format: uri }
+                  expiresAt: { type: string, format: date-time }
+
+  /pickups/{pickupId}/weights:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+    post:
+      tags: [Pickups]
+      summary: Collector submits weights (first weigh or re-weigh)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WeightsInput' }
+      responses:
+        '200':
+          description: Status WEIGHED; totals computed by the server
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/confirm:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+    post:
+      tags: [Pickups]
+      summary: Household approves the weights and picks a payment method
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentMethod]
+              properties:
+                paymentMethod: { $ref: '#/components/schemas/PaymentMethod' }
+                walletNumber: { $ref: '#/components/schemas/Phone' }
+      responses:
+        '200':
+          description: Status CONFIRMED
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/dispute:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Pickups]
+      summary: Household rejects the weights or reports a problem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { $ref: '#/components/schemas/DisputeType' }
+                reason: { type: string, maxLength: 500 }
+                photoIds:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Dispute opened
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/payment:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+    post:
+      tags: [Pickups]
+      summary: Collector records the payment; status COMPLETED
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method]
+              properties:
+                method: { $ref: '#/components/schemas/PaymentMethod' }
+                trxId: { type: string, maxLength: 30, description: Required for BKASH and NAGAD }
+      responses:
+        '200':
+          description: Completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/rating:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Pickups]
+      summary: Household rates the collector after completion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stars]
+              properties:
+                stars: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: string, maxLength: 300 }
+      responses:
+        '204': { description: Saved }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /collector/signup:
+    post:
+      tags: [Collector]
+      summary: Submit a collector application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CollectorSignup' }
+      responses:
+        '201':
+          description: Application saved; verification PENDING
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectorProfile' }
+
+  /collector/profile:
+    get:
+      tags: [Collector]
+      summary: Own collector profile, rating and verification status
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectorProfile' }
+    patch:
+      tags: [Collector]
+      summary: Change work areas, vehicle or scale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workAreas: { type: array, items: { type: string } }
+                vehicleType: { $ref: '#/components/schemas/VehicleType' }
+                hasScale: { type: boolean }
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CollectorProfile' }
+
+  /collector/status:
+    put:
+      tags: [Collector]
+      summary: Go online or offline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [online]
+              properties:
+                online: { type: boolean }
+                location: { $ref: '#/components/schemas/LatLng' }
+      responses:
+        '204': { description: Saved }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /collector/location:
+    put:
+      tags: [Collector]
+      summary: Location ping while online or on the way
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LatLng' }
+      responses:
+        '204': { description: Saved }
+
+  /collector/requests/nearby:
+    get:
+      tags: [Collector]
+      summary: Open requests inside each request's current radius
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema: { type: number }
+        - name: lng
+          in: query
+          required: true
+          schema: { type: number }
+      responses:
+        '200':
+          description: Requests, nearest first; no exact address or phone
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/NearbyRequest' }
+
+  /collector/ledger:
+    get:
+      tags: [Collector]
+      summary: Payouts and kg collected for a date range
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Ledger summary and lines
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ledger' }
+
+  /admin/rates:
+    put:
+      tags: [Admin]
+      summary: Publish rates for a date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [effectiveDate, rates]
+              properties:
+                effectiveDate: { type: string, format: date }
+                rates:
+                  type: array
+                  items:
+                    type: object
+                    required: [categoryCode, ratePerKg]
+                    properties:
+                      categoryCode: { type: string }
+                      ratePerKg: { $ref: '#/components/schemas/Money' }
+      responses:
+        '204': { description: Published }
+
+  /admin/collectors:
+    get:
+      tags: [Admin]
+      summary: Collectors by verification status
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/VerificationStatus' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of collector profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CollectorProfile' }
+                  nextCursor: { type: [string, 'null'] }
+
+  /admin/collectors/{userId}/decision:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Admin]
+      summary: Approve or reject a collector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [APPROVED, REJECTED] }
+                note: { type: string, maxLength: 500 }
+      responses:
+        '204': { description: Saved; collector notified }
+
+  /admin/pickups:
+    get:
+      tags: [Admin]
+      summary: Filter pickups by status, area and date
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/PickupStatus' }
+        - name: area
+          in: query
+          schema: { type: string }
+        - name: date
+          in: query
+          schema: { type: string, format: date }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of pickups
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PickupPage' }
+
+  /admin/pickups/{pickupId}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Admin]
+      summary: Cancel any active pickup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+
+  /admin/disputes:
+    get:
+      tags: [Admin]
+      summary: Disputes, open first
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/DisputeStatus' }
+      responses:
+        '200':
+          description: Disputes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Dispute' }
+
+  /admin/disputes/{disputeId}/resolve:
+    parameters:
+      - name: disputeId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [Admin]
+      summary: Close a dispute with an outcome
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome, note]
+              properties:
+                outcome:
+                  type: string
+                  enum: [ACCEPT_WEIGHTS, TEAM_REWEIGH, CANCEL, PAYMENT_VERIFIED, PAY_AGAIN, SUSPEND_COLLECTOR]
+                note: { type: string, maxLength: 500, description: Shown to both sides }
+      responses:
+        '200':
+          description: Resolved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: Households or collectors, searchable
+      parameters:
+        - name: role
+          in: query
+          required: true
+          schema: { type: string, enum: [HOUSEHOLD, COLLECTOR] }
+        - name: q
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/User' }
+                  nextCursor: { type: [string, 'null'] }
+
+  /admin/users/{userId}/status:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      tags: [Admin]
+      summary: Activate, flag or suspend a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [ACTIVE, FLAGGED, SUSPENDED] }
+                note: { type: string, maxLength: 500 }
+      responses:
+        '204': { description: Saved }
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PickupId:
+      name: pickupId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, maxLength: 64 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [VALIDATION_ERROR, OTP_INVALID, OTP_RATE_LIMIT, NOT_APPROVED, ALREADY_TAKEN,
+                 INVALID_STATE, TRX_ID_REUSED, BELOW_MINIMUM, OUT_OF_RANGE, CODE_MISMATCH,
+                 CODE_LOCKED, SCALE_PHOTO_REQUIRED, TRX_ID_REQUIRED, NOT_FOUND, FORBIDDEN]
+        message: { type: string }
+        details: { type: object, additionalProperties: true }
+
+    Phone:
+      type: string
+      pattern: '^\+8801[3-9][0-9]{8}$'
+      examples: ['+8801712345456']
+    Money:
+      type: number
+      multipleOf: 0.01
+      minimum: 0
+    Kg:
+      type: number
+      multipleOf: 0.1
+      exclusiveMinimum: 0
+    LatLng:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+
+    Language: { type: string, enum: [BN, EN] }
+    Role: { type: string, enum: [HOUSEHOLD, COLLECTOR, ADMIN] }
+    VerificationStatus: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+    VehicleType: { type: string, enum: [VAN, PUSHCART, ON_FOOT] }
+    TimeSlot: { type: string, enum: [MORNING, MIDDAY, AFTERNOON] }
+    WeightBand: { type: string, enum: [UNDER_5, FROM_5_TO_15, OVER_15, UNSURE] }
+    PickupStatus:
+      type: string
+      enum: [REQUESTED, ACCEPTED, ARRIVED, WEIGHED, DISPUTED, CONFIRMED, COMPLETED, CANCELLED, EXPIRED]
+    PaymentMethod: { type: string, enum: [CASH, BKASH, NAGAD] }
+    DisputeType: { type: string, enum: [WEIGHT, PAYMENT, BEHAVIOUR, OTHER] }
+    DisputeStatus: { type: string, enum: [REWEIGH, ADMIN_REVIEW, RESOLVED] }
+
+    Session:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, description: Seconds until the access token expires }
+        user: { $ref: '#/components/schemas/User' }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        phone: { $ref: '#/components/schemas/Phone' }
+        role: { $ref: '#/components/schemas/Role' }
+        name: { type: [string, 'null'] }
+        language: { $ref: '#/components/schemas/Language' }
+        status: { type: string, enum: [ACTIVE, FLAGGED, SUSPENDED] }
+        createdAt: { type: string, format: date-time }
+
+    Address:
+      allOf:
+        - $ref: '#/components/schemas/AddressInput'
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+    AddressInput:
+      type: object
+      required: [label, line, area, location]
+      properties:
+        label: { type: string, maxLength: 40 }
+        line: { type: string, maxLength: 200 }
+        area: { type: string, maxLength: 80 }
+        city: { type: string, default: Dhaka }
+        location: { $ref: '#/components/schemas/LatLng' }
+        note: { type: string, maxLength: 200 }
+        isDefault: { type: boolean }
+
+    Category:
+      type: object
+      properties:
+        code: { type: string, examples: [IRON] }
+        nameBn: { type: string }
+        nameEn: { type: string }
+        pricingType: { type: string, enum: [PER_KG, ON_INSPECTION] }
+        icon: { type: string }
+
+    Rate:
+      type: object
+      properties:
+        categoryCode: { type: string }
+        ratePerKg: { anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }] }
+        changeFromYesterday: { type: [number, 'null'] }
+
+    CreatePickup:
+      type: object
+      required: [addressId, categoryCodes, weightBand, slotDate, slot]
+      properties:
+        addressId: { type: string, format: uuid }
+        categoryCodes:
+          type: array
+          minItems: 1
+          items: { type: string }
+        weightBand: { $ref: '#/components/schemas/WeightBand' }
+        slotDate: { type: string, format: date }
+        slot: { $ref: '#/components/schemas/TimeSlot' }
+        note: { type: string, maxLength: 200 }
+        itemPhotoIds:
+          type: array
+          items: { type: string, format: uuid }
+
+    PickupLine:
+      type: object
+      properties:
+        categoryCode: { type: string }
+        kg: { $ref: '#/components/schemas/Kg' }
+        rate: { $ref: '#/components/schemas/Money' }
+        amount: { $ref: '#/components/schemas/Money' }
+
+    Pickup:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        displayNo: { type: string, examples: [BW-1052] }
+        status: { $ref: '#/components/schemas/PickupStatus' }
+        slotDate: { type: string, format: date }
+        slot: { $ref: '#/components/schemas/TimeSlot' }
+        weightBand: { $ref: '#/components/schemas/WeightBand' }
+        categoryCodes: { type: array, items: { type: string } }
+        estimate:
+          type: object
+          properties:
+            min: { $ref: '#/components/schemas/Money' }
+            max: { $ref: '#/components/schemas/Money' }
+        address:
+          description: Exact address; only for the household, the assigned collector after accept, and admins
+          type: [object, 'null']
+          properties:
+            text: { type: string }
+            lat: { type: number }
+            lng: { type: number }
+            note: { type: [string, 'null'] }
+        household:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: [string, 'null'] }
+            phone: { type: [string, 'null'], description: Only to the assigned collector after accept }
+        collector:
+          type: [object, 'null']
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            rating: { type: [number, 'null'] }
+            phone: { type: [string, 'null'] }
+        pickupCode:
+          type: [string, 'null']
+          description: 4 digits; returned to the household only, while ACCEPTED
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/PickupLine' }
+        weighVersion: { type: [integer, 'null'] }
+        totalKg: { anyOf: [{ $ref: '#/components/schemas/Kg' }, { type: 'null' }] }
+        totalAmount: { anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }] }
+        paymentMethod: { anyOf: [{ $ref: '#/components/schemas/PaymentMethod' }, { type: 'null' }] }
+        searchRadiusM: { type: integer, examples: [1000] }
+        requestedAt: { type: string, format: date-time }
+        acceptedAt: { type: [string, 'null'], format: date-time }
+        completedAt: { type: [string, 'null'], format: date-time }
+
+    PickupPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Pickup' }
+        nextCursor: { type: [string, 'null'] }
+
+    WeightsInput:
+      type: object
+      required: [lines, scalePhotoId]
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [categoryCode, kg]
+            properties:
+              categoryCode: { type: string }
+              kg: { $ref: '#/components/schemas/Kg' }
+              quotedAmount:
+                anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }]
+                description: Only for ON_INSPECTION categories such as electronics
+        scalePhotoId: { type: string, format: uuid }
+
+    Dispute:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        pickupId: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/DisputeType' }
+        status: { $ref: '#/components/schemas/DisputeStatus' }
+        reason: { type: [string, 'null'] }
+        outcome: { type: [string, 'null'] }
+        resolutionNote: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        resolvedAt: { type: [string, 'null'], format: date-time }
+
+    CollectorSignup:
+      type: object
+      required: [name, nidNumber, selfiePhotoId, workAreas, vehicleType, hasScale, acceptedAgreement]
+      properties:
+        name: { type: string, maxLength: 80 }
+        nidNumber: { type: string, pattern: '^([0-9]{10}|[0-9]{13}|[0-9]{17})$' }
+        selfiePhotoId: { type: string, format: uuid }
+        workAreas:
+          type: array
+          minItems: 1
+          items: { type: string }
+        vehicleType: { $ref: '#/components/schemas/VehicleType' }
+        hasScale: { type: boolean }
+        acceptedAgreement: { type: boolean, const: true }
+
+    CollectorProfile:
+      type: object
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: string }
+        phone: { $ref: '#/components/schemas/Phone' }
+        nidNumberMasked: { type: string, examples: ['19XX XXX 4821'] }
+        nidVerified: { type: boolean }
+        selfieUrl: { type: [string, 'null'], format: uri }
+        workAreas: { type: array, items: { type: string } }
+        vehicleType: { $ref: '#/components/schemas/VehicleType' }
+        hasScale: { type: boolean }
+        verificationStatus: { $ref: '#/components/schemas/VerificationStatus' }
+        isOnline: { type: boolean }
+        ratingAvg: { type: [number, 'null'] }
+        pickups30d: { type: integer }
+        releases30d: { type: integer }
+
+    NearbyRequest:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        area: { type: string, examples: ['Mirpur 10, Block C'] }
+        distanceM: { type: integer }
+        categoryCodes: { type: array, items: { type: string } }
+        weightBand: { $ref: '#/components/schemas/WeightBand' }
+        slotDate: { type: string, format: date }
+        slot: { $ref: '#/components/schemas/TimeSlot' }
+        hasPhoto: { type: boolean }
+        estimate:
+          type: object
+          properties:
+            min: { $ref: '#/components/schemas/Money' }
+            max: { $ref: '#/components/schemas/Money' }
+
+    Ledger:
+      type: object
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        totalPaid: { $ref: '#/components/schemas/Money' }
+        totalKg: { type: number }
+        pickupCount: { type: integer }
+        byMethod:
+          type: object
+          properties:
+            CASH: { $ref: '#/components/schemas/Money' }
+            BKASH: { $ref: '#/components/schemas/Money' }
+            NAGAD: { $ref: '#/components/schemas/Money' }
+        byCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryCode: { type: string }
+              kg: { type: number }
+        payments:
+          type: array
+          items:
+            type: object
+            properties:
+              pickupId: { type: string, format: uuid }
+              householdName: { type: [string, 'null'] }
+              method: { $ref: '#/components/schemas/PaymentMethod' }
+              trxId: { type: [string, 'null'] }
+              amount: { $ref: '#/components/schemas/Money' }
+              paidAt: { type: string, format: date-time }

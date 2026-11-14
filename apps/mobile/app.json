@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "ভাঙ্গারিওয়ালা",
+    "slug": "bhangariwala",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bhangariwala.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFC72C",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.bhangariwala.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "bhangariwala"
+  }
+}

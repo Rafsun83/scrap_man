@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+
+peerDependencyRules:
+  allowedVersions:
+    # openapi-typescript is a build-time generator; it works with TypeScript 6
+    openapi-typescript>typescript: '6'
