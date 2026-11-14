@@ -44,6 +44,7 @@ paths:
     post:
       tags: [Auth]
       summary: Verify the OTP and sign in or sign up
+      description: New numbers sign up with the role sent. Existing numbers keep their role; check user.role in the response.
       security: []
       requestBody:
         required: true
@@ -85,6 +86,23 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Session' }
         '401': { $ref: '#/components/responses/Error' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: End a session by revoking its refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '204': { description: Signed out }
 
   /categories:
     get:
@@ -837,7 +855,7 @@ components:
       properties:
         code:
           type: string
-          enum: [VALIDATION_ERROR, OTP_INVALID, OTP_RATE_LIMIT, NOT_APPROVED, ALREADY_TAKEN,
+          enum: [VALIDATION_ERROR, UNAUTHORIZED, OTP_INVALID, OTP_RATE_LIMIT, NOT_APPROVED, ALREADY_TAKEN,
                  INVALID_STATE, TRX_ID_REUSED, BELOW_MINIMUM, OUT_OF_RANGE, CODE_MISMATCH,
                  CODE_LOCKED, SCALE_PHOTO_REQUIRED, TRX_ID_REQUIRED, NOT_FOUND, FORBIDDEN]
         message: { type: string }

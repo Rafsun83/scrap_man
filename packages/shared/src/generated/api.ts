@@ -55,7 +55,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Verify the OTP and sign in or sign up */
+        /**
+         * Verify the OTP and sign in or sign up
+         * @description New numbers sign up with the role sent. Existing numbers keep their role; check user.role in the response.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -127,6 +130,46 @@ export interface paths {
                     };
                 };
                 401: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End a session by revoking its refresh token */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        refreshToken: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Signed out */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         delete?: never;
@@ -1679,7 +1722,7 @@ export interface components {
     schemas: {
         Error: {
             /** @enum {string} */
-            code: "VALIDATION_ERROR" | "OTP_INVALID" | "OTP_RATE_LIMIT" | "NOT_APPROVED" | "ALREADY_TAKEN" | "INVALID_STATE" | "TRX_ID_REUSED" | "BELOW_MINIMUM" | "OUT_OF_RANGE" | "CODE_MISMATCH" | "CODE_LOCKED" | "SCALE_PHOTO_REQUIRED" | "TRX_ID_REQUIRED" | "NOT_FOUND" | "FORBIDDEN";
+            code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "OTP_INVALID" | "OTP_RATE_LIMIT" | "NOT_APPROVED" | "ALREADY_TAKEN" | "INVALID_STATE" | "TRX_ID_REUSED" | "BELOW_MINIMUM" | "OUT_OF_RANGE" | "CODE_MISMATCH" | "CODE_LOCKED" | "SCALE_PHOTO_REQUIRED" | "TRX_ID_REQUIRED" | "NOT_FOUND" | "FORBIDDEN";
             message: string;
             details?: {
                 [key: string]: unknown;

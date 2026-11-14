@@ -14,9 +14,11 @@
     "gen:api": "pnpm --filter @bw/shared gen:api",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:migrate": "pnpm --filter @bw/api migration:run",
     "dev:mobile": "pnpm --filter @bw/mobile dev",
-    "test:e2e": "pnpm --filter @bw/api test:e2e"
+    "db:migrate": "pnpm --filter @bw/shared build && pnpm --filter @bw/api migration:run",
+    "db:seed": "pnpm --filter @bw/shared build && pnpm --filter @bw/api db:seed",
+    "test:e2e": "pnpm --filter @bw/shared build && pnpm --filter @bw/api test:e2e",
+    "postinstall": "pnpm --filter @bw/shared build"
   },
   "devDependencies": {
     "turbo": "2.11.10"

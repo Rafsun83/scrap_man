@@ -28,10 +28,10 @@ jobs:
         env:
           POSTGRES_USER: bw
           POSTGRES_PASSWORD: bw_dev_password
-          POSTGRES_DB: bhangariwala
+          POSTGRES_DB: bhangariwala_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U bw -d bhangariwala"
+          --health-cmd "pg_isready -U bw -d bhangariwala_test"
           --health-interval 5s --health-timeout 3s --health-retries 10
       redis:
         image: redis:7.4-alpine
@@ -40,8 +40,11 @@ jobs:
           --health-cmd "redis-cli ping"
           --health-interval 5s --health-timeout 3s --health-retries 10
     env:
-      DATABASE_URL: postgres://bw:bw_dev_password@localhost:5432/bhangariwala
+      DATABASE_URL: postgres://bw:bw_dev_password@localhost:5432/bhangariwala_test
+      TEST_DATABASE_URL: postgres://bw:bw_dev_password@localhost:5432/bhangariwala_test
       REDIS_URL: redis://localhost:6379
+      TEST_REDIS_URL: redis://localhost:6379/15
+      JWT_SECRET: ci-only-secret-that-is-at-least-32-characters-long
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -51,5 +54,4 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @bw/shared build
-      - run: pnpm db:migrate
       - run: pnpm test:e2e

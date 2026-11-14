@@ -19,7 +19,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "nest start --watch",
     "migration:run": "nest build && typeorm migration:run -d dist/database/data-source.js",
-    "migration:revert": "nest build && typeorm migration:revert -d dist/database/data-source.js"
+    "migration:revert": "nest build && typeorm migration:revert -d dist/database/data-source.js",
+    "db:seed": "nest build && node dist/database/seed.js"
   },
   "dependencies": {
     "@nestjs/common": "12.3.2",
@@ -32,7 +33,9 @@
     "@nestjs/typeorm": "12.0.2",
     "typeorm": "1.1.2",
     "pg": "8.23.1",
-    "ioredis": "5.11.1"
+    "ioredis": "5.11.1",
+    "@nestjs/jwt": "12.0.3",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@nestjs/cli": "12.0.11",

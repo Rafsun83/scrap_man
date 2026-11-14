@@ -1,0 +1,92 @@
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
+import type { Redis } from 'ioredis';
+import { AppError } from '../common/errors.js';
+import type { Env } from '../config/env.js';
+import { REDIS } from '../redis/redis.module.js';
+import { SMS_SENDER, type SmsSender } from './sms/sms-sender.js';
+
+export const OTP_LIMITS = {
+  perPhone: 3, // OTP requests per phone in the window
+  perIp: 10, // OTP requests per IP address in the window
+  windowSec: 600,
+  maxAttempts: 5, // wrong codes before the OTP is thrown away
+} as const;
+
+interface StoredOtp {
+  hash: string;
+  attempts: number;
+}
+
+@Injectable()
+export class OtpService {
+  constructor(
+    @Inject(REDIS) private readonly redis: Redis,
+    @Inject(SMS_SENDER) private readonly sms: SmsSender,
+    private readonly config: ConfigService<Env, true>,
+  ) {}
+
+  private hash(phone: string, code: string): string {
+    return createHmac('sha256', this.config.get('JWT_SECRET', { infer: true }))
+      .update(`${phone}:${code}`)
+      .digest('hex');
+  }
+
+  /** Counts a request in a fixed window; throws OTP_RATE_LIMIT past the limit. */
+  private async countRequest(key: string, limit: number): Promise<void> {
+    const count = await this.redis.incr(key);
+    if (count === 1) await this.redis.expire(key, OTP_LIMITS.windowSec);
+    if (count > limit) {
+      const retryAfterSec = Math.max(await this.redis.ttl(key), 1);
+      throw new AppError(
+        'OTP_RATE_LIMIT',
+        HttpStatus.TOO_MANY_REQUESTS,
+        `Too many codes requested. Try again in ${Math.ceil(retryAfterSec / 60)} minutes.`,
+        { retryAfterSec },
+      );
+    }
+  }
+
+  async request(phone: string, ip: string): Promise<void> {
+    await this.countRequest(`bw:otp:rl:phone:${phone}`, OTP_LIMITS.perPhone);
+    await this.countRequest(`bw:otp:rl:ip:${ip}`, OTP_LIMITS.perIp);
+
+    const devCode = this.config.get('OTP_DEV_CODE', { infer: true });
+    const code = devCode || String(randomInt(0, 1_000_000)).padStart(6, '0');
+    const stored: StoredOtp = { hash: this.hash(phone, code), attempts: 0 };
+    await this.redis.set(`bw:otp:${phone}`, JSON.stringify(stored), 'EX', this.config.get('OTP_TTL_SEC', { infer: true }));
+    await this.sms.send(phone, `ভাঙ্গারিওয়ালা কোড: ${code}। কাউকে বলবেন না। BhangariWala code: ${code}`);
+  }
+
+  /** Checks a code; a correct code can be used once, and 5 wrong tries discard it. */
+  async verify(phone: string, code: string): Promise<void> {
+    const key = `bw:otp:${phone}`;
+    const raw = await this.redis.get(key);
+    if (!raw) {
+      throw new AppError('OTP_INVALID', HttpStatus.UNAUTHORIZED, 'The code has expired. Request a new one.', {
+        attemptsLeft: 0,
+      });
+    }
+    const stored = JSON.parse(raw) as StoredOtp;
+    const expected = Buffer.from(stored.hash, 'hex');
+    const actual = Buffer.from(this.hash(phone, code), 'hex');
+    if (expected.length === actual.length && timingSafeEqual(expected, actual)) {
+      await this.redis.del(key);
+      return;
+    }
+    const attempts = stored.attempts + 1;
+    const attemptsLeft = OTP_LIMITS.maxAttempts - attempts;
+    if (attemptsLeft <= 0) {
+      await this.redis.del(key);
+    } else {
+      await this.redis.set(key, JSON.stringify({ ...stored, attempts }), 'KEEPTTL');
+    }
+    throw new AppError(
+      'OTP_INVALID',
+      HttpStatus.UNAUTHORIZED,
+      attemptsLeft > 0 ? 'That code is not right. Check the SMS and try again.' : 'Too many wrong codes. Request a new one.',
+      { attemptsLeft: Math.max(attemptsLeft, 0) },
+    );
+  }
+}
