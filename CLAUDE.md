@@ -37,6 +37,12 @@ Development sign-in: every OTP is `123456` (`OTP_DEV_CODE`); admin phone `+88017
 - Dependencies: exact versions, released at least 14 days before they are added.
 - Mobile UI: Bangla first, 48 px touch targets, icon plus text on every action. Brand colours in `@bw/shared` (`colors`).
 
+## Backend standards (apps/api)
+For any code change in `apps/api/` (new feature, endpoint, module, refactor), follow
+`.claude/skills/nestjs-backend-standards/SKILL.md` and run its final checklist before finishing.
+In that skill, `src/modules/` means `apps/api/src/modules/`.
+These rules do not apply to the React app in `apps/web/`.
+
 ## Product rules (from the spec)
 
 - Roles: HOUSEHOLD, COLLECTOR, ADMIN. A phone number keeps the role it signed up with. Collectors give a selfie and NID number; an admin approves them. NID card verification comes later.
