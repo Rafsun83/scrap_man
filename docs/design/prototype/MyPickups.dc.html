@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>My pickups</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="background: #13304A; color: #FFFFFF; padding: 20px 20px 16px; display: flex; flex-direction: column; gap: 14px">
+    <h1 style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2">আমার পিকআপ</h1>
+    <div role="tablist" aria-label="সময়" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 12px; background: #1E4466">
+      <button type="button" role="tab" aria-selected="{{t0Sel}}" onClick="{{pickT0}}" style="min-height: 44px; border-radius: 9px; border: 0; background: {{t0Bg}}; color: {{t0Fg}}; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">আজ</button>
+      <button type="button" role="tab" aria-selected="{{t1Sel}}" onClick="{{pickT1}}" style="min-height: 44px; border-radius: 9px; border: 0; background: {{t1Bg}}; color: {{t1Fg}}; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">আসন্ন</button>
+      <button type="button" role="tab" aria-selected="{{t2Sel}}" onClick="{{pickT2}}" style="min-height: 44px; border-radius: 9px; border: 0; background: {{t2Bg}}; color: {{t2Fg}}; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">আগের</button>
+    </div>
+  </header>
+
+  <main role="tabpanel" style="flex: 1; overflow-y: auto; padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+      <a href="{{r.href}}" style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 14px; background: #FFFFFF; border: 2px solid {{r.border}}; color: #13304A; text-decoration: none">
+        <span style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px">
+          <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-size: 16px; font-weight: 700">{{r.title}}</span>
+            <span style="font-size: 14px; color: #4F5B66">{{r.sub}}</span>
+          </span>
+          <span style="flex: none; padding: 2px 10px; border-radius: 999px; background: {{r.badgeBg}}; color: {{r.badgeFg}}; font-size: 13px; font-weight: 700">{{r.badge}}</span>
+        </span>
+        <span style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px">
+          <span style="color: #4F5B66">{{r.meta}}</span>
+          <span style="font-family: 'Anek Bangla', sans-serif; font-size: 17px; font-weight: 700">{{r.amount}}</span>
+        </span>
+      </a>
+    </sc-for>
+  </main>
+
+  <nav aria-label="সংগ্রাহক মেনু" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #D5D9D3; padding: 6px 8px 10px">
+    <a href="CollectorHome.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+      অনুরোধ
+    </a>
+    <a href="MyPickups.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; font-weight: 700; color: #13304A; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFC72C" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"></path><circle cx="7" cy="17.5" r="1.8" fill="#FFFFFF"></circle><circle cx="17" cy="17.5" r="1.8" fill="#FFFFFF"></circle></svg>
+      আমার পিকআপ
+    </a>
+    <a href="Ledger.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18M16 15h2"></path></svg>
+      হিসাব
+    </a>
+    <a href="CollectorProfile.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+      প্রোফাইল
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tab = (this.state && this.state.tab) || 0;
+    const active = { badgeBg: '#FFC72C', badgeFg: '#13304A', border: '#13304A' };
+    const done = { badgeBg: '#DCEFE7', badgeFg: '#0B5C45', border: '#FFFFFF' };
+    const accepted = { badgeBg: '#E2E6E0', badgeFg: '#13304A', border: '#FFFFFF' };
+    const lists = [
+      [
+        Object.assign({ title: 'রাশেদা বেগম', sub: 'মিরপুর ১০, ব্লক সি', badge: 'পথে আছেন', meta: 'সকাল ৯টা–১২টা, ৫–১৫ কেজি', amount: 'আনুমানিক ৳২০০–৬০০', href: 'ActivePickup.dc.html' }, active),
+        Object.assign({ title: 'আব্দুল করিম', sub: 'পল্লবী, সেকশন ৬', badge: 'সম্পন্ন', meta: 'সকাল ৮:৪০, ১৫ কেজি, বিকাশ', amount: '৳৭৭০', href: 'Ledger.dc.html' }, done),
+        Object.assign({ title: 'শাহানা আক্তার', sub: 'মিরপুর ১১, এভিনিউ ৫', badge: 'সম্পন্ন', meta: 'সকাল ৭:৫৫, ৯.৫ কেজি, ক্যাশ', amount: '৳৩৮০', href: 'Ledger.dc.html' }, done)
+      ],
+      [
+        Object.assign({ title: 'পল্লবী, সেকশন ১২', sub: 'লোহা, অ্যালুমিনিয়াম, ইলেকট্রনিক্স', badge: 'গৃহীত', meta: 'আগামীকাল, সকাল ৯টা–১২টা', amount: '১৫ কেজির বেশি', href: 'RequestDetail.dc.html' }, accepted)
+      ],
+      [
+        Object.assign({ title: '১০ নভেম্বর', sub: '৫টি পিকআপ', badge: 'সম্পন্ন', meta: '৬১ কেজি সংগ্রহ', amount: '৳২,৪৩০', href: 'Ledger.dc.html' }, done),
+        Object.assign({ title: '৯ নভেম্বর', sub: '৪টি পিকআপ', badge: 'সম্পন্ন', meta: '৪৮ কেজি সংগ্রহ', amount: '৳১,৯৫০', href: 'Ledger.dc.html' }, done),
+        Object.assign({ title: '৮ নভেম্বর', sub: '৩টি পিকআপ, ১টি বাতিল', badge: 'সম্পন্ন', meta: '৩৩ কেজি সংগ্রহ', amount: '৳১,২৮০', href: 'Ledger.dc.html' }, done)
+      ]
+    ];
+    const v = { rows: lists[tab] };
+    [0, 1, 2].forEach((i) => {
+      const on = tab === i;
+      v['t' + i + 'Sel'] = on ? 'true' : 'false';
+      v['t' + i + 'Bg'] = on ? '#FFC72C' : 'transparent';
+      v['t' + i + 'Fg'] = on ? '#13304A' : '#FFFFFF';
+      v['pickT' + i] = () => this.setState({ tab: i });
+    });
+    return v;
+  }
+}
+</script>
+</body>
+</html>

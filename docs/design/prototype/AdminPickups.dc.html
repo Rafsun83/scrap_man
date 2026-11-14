@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin live pickups</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+input::placeholder{color:#6B7580}
+</style>
+</helmet>
+<div style="min-height: 100vh; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-wrap: wrap">
+  <aside style="flex: 1 1 232px; max-width: 100%; box-sizing: border-box; background: #13304A; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px">
+      <span aria-hidden="true" style="flex: none; width: 40px; height: 40px; border-radius: 10px; background: #FFC72C; color: #13304A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M4 7h16"></path><path d="M7 7l-3 7a3 3 0 0 0 6 0L7 7z"></path><path d="M17 7l-3 7a3 3 0 0 0 6 0l-3-7z"></path></svg></span>
+      <span style="display: flex; flex-direction: column"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 19px; font-weight: 700; line-height: 1.2">BhangariWala</span><span style="font-size: 13px; color: #D3DCE5">Admin</span></span>
+    </div>
+    <nav aria-label="Admin" style="display: flex; flex-direction: column; gap: 4px">
+      <a href="AdminPickups.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; background: #FFC72C; color: #13304A; font-size: 15px; font-weight: 700; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"></path></svg>Live pickups</a>
+      <a href="AdminRates.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg>Daily rates</a>
+      <a href="AdminCollectors.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"></path><path d="M8.5 12l2.5 2.5 4.5-5"></path></svg>Collector approvals<span style="margin-left: auto; min-width: 24px; padding: 0 6px; border-radius: 999px; background: #FFC72C; color: #13304A; font-size: 13px; font-weight: 700; text-align: center">4</span></a>
+      <a href="AdminDisputes.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5M12 16v.5"></path></svg>Disputes<span style="margin-left: auto; min-width: 24px; padding: 0 6px; border-radius: 999px; background: #FFC72C; color: #13304A; font-size: 13px; font-weight: 700; text-align: center">2</span></a>
+      <a href="AdminUsers.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"></path></svg>Users</a>
+    </nav>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px 8px 0; border-top: 1px solid #2D5277">
+      <span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">Farhana Rahman</span><span style="font-size: 13px; color: #D3DCE5">Operations</span></span>
+      <button type="button" lang="bn" style="align-self: flex-start; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid #D3DCE5; background: transparent; color: #FFFFFF; font-family: 'Hind Siliguri', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer">বাংলা</button>
+    </div>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px 40px">
+    <div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-size: 32px; font-weight: 700; line-height: 1.15">Live pickups</h1>
+          <span style="font-size: 15px; color: #4F5B66">Wednesday, 11 November 2026</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <label for="search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search pickups</label>
+          <input id="search" type="search" placeholder="Search by ID, phone or name" style="min-height: 44px; width: 280px; max-width: 100%; box-sizing: border-box; border: 2px solid #D5D9D3; border-radius: 10px; padding: 0 12px; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; color: #13304A; background: #FFFFFF">
+          <label for="area" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Area</label>
+          <select id="area" style="min-height: 44px; border: 2px solid #D5D9D3; border-radius: 10px; padding: 0 12px; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; color: #13304A; background: #FFFFFF"><option>All areas</option><option>Mirpur</option><option>Pallabi</option><option>Kafrul</option><option>Shyamoli</option></select>
+        </div>
+      </div>
+
+      <div role="group" aria-label="Filter by status" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px">
+        <button type="button" aria-pressed="{{requestedPressed}}" onClick="{{pickRequested}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 16px; border-radius: 14px; border: 2px solid {{requestedBd}}; background: #FFFFFF; color: #13304A; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 30px; font-weight: 700; line-height: 1.1">6</span><span style="font-size: 14px; font-weight: 600">Requested</span></button>
+        <button type="button" aria-pressed="{{acceptedPressed}}" onClick="{{pickAccepted}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 16px; border-radius: 14px; border: 2px solid {{acceptedBd}}; background: #FFFFFF; color: #13304A; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 30px; font-weight: 700; line-height: 1.1">4</span><span style="font-size: 14px; font-weight: 600">Accepted</span></button>
+        <button type="button" aria-pressed="{{weighingPressed}}" onClick="{{pickWeighing}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 16px; border-radius: 14px; border: 2px solid {{weighingBd}}; background: #FFFFFF; color: #13304A; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 30px; font-weight: 700; line-height: 1.1">2</span><span style="font-size: 14px; font-weight: 600">Weighing</span></button>
+        <button type="button" aria-pressed="{{disputedPressed}}" onClick="{{pickDisputed}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 16px; border-radius: 14px; border: 2px solid {{disputedBd}}; background: #FFFFFF; color: #A63D16; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 30px; font-weight: 700; line-height: 1.1">1</span><span style="font-size: 14px; font-weight: 600">Disputed</span></button>
+        <button type="button" aria-pressed="{{completedPressed}}" onClick="{{pickCompleted}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 16px; border-radius: 14px; border: 2px solid {{completedBd}}; background: #FFFFFF; color: #0B5C45; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 30px; font-weight: 700; line-height: 1.1">23</span><span style="font-size: 14px; font-weight: 600">Completed today</span></button>
+      </div>
+
+      <section aria-labelledby="attn-title" style="background: #FFF4CC; border: 2px solid #13304A; border-radius: 14px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
+        <h2 id="attn-title" style="margin: 0; font-size: 16px; font-weight: 700">Needs attention</h2>
+        <ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 1.45">
+          <li>BW-1047 in Pallabi has waited 2 hours with no collector.</li>
+          <li><a href="AdminDisputes.dc.html" style="font-weight: 600">BW-1038</a> was disputed twice and is paused for review.</li>
+          <li>Collector Mizan Rahman released 3 requests today.</li>
+        </ul>
+      </section>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+        <section aria-labelledby="table-title" style="flex: 999 1 640px; min-width: 0; background: #FFFFFF; border-radius: 14px; padding: 16px 0 8px">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 0 18px 12px">
+            <h2 id="table-title" style="margin: 0; font-size: 18px; font-weight: 700">{{tableTitle}}</h2>
+            <sc-if value="{{isFiltered}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{clearFilter}}" style="min-height: 40px; padding: 0 12px; border-radius: 10px; border: 2px solid #D5D9D3; background: #FFFFFF; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer">Show all</button></sc-if>
+          </div>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px">
+              <thead>
+                <tr style="text-align: left; color: #4F5B66">
+                  <th scope="col" style="padding: 10px 18px; border-bottom: 1px solid #D5D9D3; font-weight: 600">ID</th>
+                  <th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #D5D9D3; font-weight: 600">Household</th>
+                  <th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #D5D9D3; font-weight: 600">Area</th>
+                  <th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #D5D9D3; font-weight: 600">Collector</th>
+                  <th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #D5D9D3; font-weight: 600">Items</th>
+                  <th scope="col" style="padding: 10px 8px; border-bottom: 1px solid #D5D9D3; font-weight: 600">Status</th>
+                  <th scope="col" style="padding: 10px 18px 10px 8px; border-bottom: 1px solid #D5D9D3; font-weight: 600">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+                  <tr>
+                    <td style="padding: 12px 18px; border-bottom: 1px solid #EEF0EC; font-weight: 700">{{r.id}}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #EEF0EC">{{r.household}}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #EEF0EC">{{r.area}}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #EEF0EC; color: {{r.collectorColor}}">{{r.collector}}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #EEF0EC">{{r.items}}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #EEF0EC"><span style="display: inline-block; padding: 2px 10px; border-radius: 999px; background: {{r.badgeBg}}; color: {{r.badgeFg}}; font-size: 13px; font-weight: 700; white-space: nowrap">{{r.statusLabel}}</span></td>
+                    <td style="padding: 12px 18px 12px 8px; border-bottom: 1px solid #EEF0EC; color: {{r.updatedColor}}; font-weight: {{r.updatedWeight}}; white-space: nowrap">{{r.updated}}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section aria-labelledby="map-title" style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+          <h2 id="map-title" style="margin: 0; font-size: 18px; font-weight: 700">Map</h2>
+          <div aria-hidden="true" style="position: relative; height: 320px; border-radius: 12px; background: #E2E6E0; overflow: hidden">
+            <span style="position: absolute; left: 0; right: 0; top: 90px; height: 14px; background: #FFFFFF"></span>
+            <span style="position: absolute; left: 0; right: 0; top: 220px; height: 10px; background: #FFFFFF"></span>
+            <span style="position: absolute; top: 0; bottom: 0; left: 30%; width: 14px; background: #FFFFFF"></span>
+            <span style="position: absolute; top: 0; bottom: 0; left: 72%; width: 10px; background: #FFFFFF"></span>
+            <span style="position: absolute; left: 18%; top: 50px; width: 22px; height: 22px; border-radius: 50%; background: #FFC72C; border: 2px solid #13304A"></span>
+            <span style="position: absolute; left: 60%; top: 130px; width: 22px; height: 22px; border-radius: 50%; background: #FFC72C; border: 2px solid #13304A"></span>
+            <span style="position: absolute; left: 80%; top: 250px; width: 22px; height: 22px; border-radius: 50%; background: #FFC72C; border: 2px solid #A63D16; box-shadow: 0 0 0 4px #F9ECE7"></span>
+            <span style="position: absolute; left: 40%; top: 70px; width: 22px; height: 22px; border-radius: 6px; background: #13304A"></span>
+            <span style="position: absolute; left: 25%; top: 180px; width: 22px; height: 22px; border-radius: 6px; background: #13304A"></span>
+            <span style="position: absolute; left: 66%; top: 40px; width: 22px; height: 22px; border-radius: 6px; background: #13304A"></span>
+            <span style="position: absolute; left: 50%; top: 260px; width: 22px; height: 22px; border-radius: 6px; background: #13304A"></span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: #4F5B66">
+            <span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; background: #FFC72C; border: 2px solid #13304A"></span>Open request</span>
+            <span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 4px; background: #13304A"></span>Online collector</span>
+            <span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; background: #FFC72C; border: 2px solid #A63D16"></span>Waiting too long</span>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const filter = (this.state && this.state.filter) || 'all';
+    const all = [
+      { id: 'BW-1052', household: 'Rasheda Begum', area: 'Mirpur 10', collector: 'Jasim Uddin', items: 'Iron, paper, plastic', status: 'weighing', updated: '2 min ago' },
+      { id: 'BW-1051', household: 'Nasrin Akter', area: 'Mirpur 11', collector: 'Not assigned', items: 'Paper, carton', status: 'requested', updated: '6 min ago' },
+      { id: 'BW-1050', household: 'Kamal Hossain', area: 'Pallabi 12', collector: 'Jasim Uddin', items: 'Iron, aluminium, electronics', status: 'accepted', updated: '14 min ago' },
+      { id: 'BW-1049', household: 'Shirin Sultana', area: 'Kafrul', collector: 'Rubel Mia', items: 'Plastic', status: 'accepted', updated: '18 min ago' },
+      { id: 'BW-1047', household: 'Hasina Begum', area: 'Pallabi 12', collector: 'Not assigned', items: 'Iron', status: 'requested', updated: 'Waiting 2 h', flag: true },
+      { id: 'BW-1046', household: 'Abdul Karim', area: 'Pallabi 6', collector: 'Jasim Uddin', items: 'Iron, aluminium', status: 'completed', updated: '8:40 AM' },
+      { id: 'BW-1045', household: 'Shahana Akter', area: 'Mirpur 11', collector: 'Jasim Uddin', items: 'Paper, carton', status: 'completed', updated: '7:55 AM' },
+      { id: 'BW-1038', household: 'Morium Khatun', area: 'Shyamoli', collector: 'Sohel Rana', items: 'Iron, paper', status: 'disputed', updated: '11:06 AM' }
+    ];
+    const label = { requested: 'Requested', accepted: 'Accepted', weighing: 'Weighing', disputed: 'Disputed', completed: 'Completed' };
+    const bg = { requested: '#FFF4CC', accepted: '#E7F1FB', weighing: '#EFEDFF', disputed: '#F9ECE7', completed: '#DCEFE7' };
+    const fg = { requested: '#13304A', accepted: '#13304A', weighing: '#13304A', disputed: '#A63D16', completed: '#0B5C45' };
+    const rows = all
+      .filter((r) => filter === 'all' || r.status === filter)
+      .map((r) => Object.assign({}, r, {
+        statusLabel: label[r.status],
+        badgeBg: bg[r.status],
+        badgeFg: fg[r.status],
+        collectorColor: r.collector === 'Not assigned' ? '#4F5B66' : '#13304A',
+        updatedColor: r.flag ? '#A63D16' : '#4F5B66',
+        updatedWeight: r.flag ? '700' : '400'
+      }));
+    const v = {
+      rows,
+      isFiltered: filter !== 'all',
+      tableTitle: filter === 'all' ? 'Latest pickups' : label[filter] + ' pickups',
+      clearFilter: () => this.setState({ filter: 'all' })
+    };
+    ['requested', 'accepted', 'weighing', 'disputed', 'completed'].forEach((k) => {
+      const on = filter === k;
+      v[k + 'Pressed'] = on ? 'true' : 'false';
+      v[k + 'Bd'] = on ? '#13304A' : '#FFFFFF';
+      v['pick' + k.charAt(0).toUpperCase() + k.slice(1)] = () => this.setState({ filter: on ? 'all' : k });
+    });
+    return v;
+  }
+}
+</script>
+</body>
+</html>

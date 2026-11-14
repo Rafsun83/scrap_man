@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Today's rates</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 12px 20px 4px">
+    <a href="Home.dc.html" aria-label="পেছনে যান" style="width: 44px; height: 44px; margin-left: -10px; display: flex; align-items: center; justify-content: center; color: #13304A">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </a>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 18px">
+    <section aria-labelledby="rates-title" style="background: #FFC72C; border: 2px solid #13304A; border-radius: 16px; padding: 20px 18px 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 id="rates-title" style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 34px; font-weight: 800; line-height: 1.1">আজকের দর</h1>
+        <span style="font-size: 15px; font-weight: 600">বুধবার, ১১ নভেম্বর। সকাল ৮টায় হালনাগাদ।</span>
+        <span style="font-size: 14px">প্রতি কেজি, টাকায়</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <sc-for list="{{rates}}" as="r" hint-placeholder-count="6">
+          <div style="display: flex; align-items: center; gap: 10px; min-height: 52px; border-top: 1px solid #13304A">
+            <span style="display: flex; flex-direction: column">
+              <span style="font-size: 18px; font-weight: 600">{{r.name}}</span>
+              <span style="font-size: 13px">{{r.change}}</span>
+            </span>
+            <span aria-hidden="true" style="flex: 1"></span>
+            <span style="font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 24px; font-weight: 800">{{r.price}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: flex; align-items: flex-start; gap: 10px; padding: 14px; border-radius: 14px; background: #FFFFFF; font-size: 15px; line-height: 1.5">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8v.5"></path></svg>
+      <span>দর প্রতিদিন সকালে বাজার অনুযায়ী ঠিক হয়। সংগ্রাহক যখন আপনার অনুরোধ গ্রহণ করেন, সেই সময়ের দরেই হিসাব হবে।</span>
+    </div>
+  </main>
+
+  <footer style="padding: 12px 20px 18px">
+    <a href="SelectItems.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: #13304A; color: #FFFFFF; font-family: 'Anek Bangla', sans-serif; font-size: 20px; font-weight: 700; text-decoration: none">ভাঙ্গারি বিক্রি করুন</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      rates: [
+        { name: 'লোহা', price: '৳৫০', change: 'গতকালের চেয়ে ৳২ বেশি' },
+        { name: 'পুরোনো পত্রিকা', price: '৳৩০', change: 'গতকালের মতোই' },
+        { name: 'প্লাস্টিক বোতল', price: '৳৩৫', change: 'গতকালের চেয়ে ৳১ কম' },
+        { name: 'কার্টন', price: '৳১৮', change: 'গতকালের মতোই' },
+        { name: 'অ্যালুমিনিয়াম', price: '৳১৬০', change: 'গতকালের চেয়ে ৳৫ বেশি' },
+        { name: 'ইলেকট্রনিক্স', price: 'দেখে দর', change: 'সংগ্রাহক দেখে দাম বলবেন' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

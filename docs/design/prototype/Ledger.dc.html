@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Collector ledger</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="background: #13304A; color: #FFFFFF; padding: 20px 20px 16px; display: flex; flex-direction: column; gap: 14px">
+    <h1 style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2">হিসাব</h1>
+    <div role="tablist" aria-label="সময়কাল" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 12px; background: #1E4466">
+      <button type="button" role="tab" aria-selected="{{r0Sel}}" onClick="{{pickR0}}" style="min-height: 44px; border-radius: 9px; border: 0; background: {{r0Bg}}; color: {{r0Fg}}; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">আজ</button>
+      <button type="button" role="tab" aria-selected="{{r1Sel}}" onClick="{{pickR1}}" style="min-height: 44px; border-radius: 9px; border: 0; background: {{r1Bg}}; color: {{r1Fg}}; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">এই সপ্তাহ</button>
+      <button type="button" role="tab" aria-selected="{{r2Sel}}" onClick="{{pickR2}}" style="min-height: 44px; border-radius: 9px; border: 0; background: {{r2Bg}}; color: {{r2Fg}}; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">এই মাস</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 22px; font-weight: 700; color: #FFC72C">{{paid}}</span><span style="font-size: 13px; color: #D3DCE5">মোট পরিশোধ</span></div>
+      <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 22px; font-weight: 700; color: #FFC72C">{{kg}}</span><span style="font-size: 13px; color: #D3DCE5">সংগ্রহ</span></div>
+      <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Anek Bangla', sans-serif; font-size: 22px; font-weight: 700; color: #FFC72C">{{count}}</span><span style="font-size: 13px; color: #D3DCE5">পিকআপ</span></div>
+    </div>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 18px">
+    <section aria-labelledby="mix-label" style="background: #FFFFFF; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+      <h2 id="mix-label" style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 18px; font-weight: 700">আজকের সংগ্রহ</h2>
+      <div style="display: grid; grid-template-columns: 110px 1fr 64px; align-items: center; gap: 8px; font-size: 15px"><span>লোহা</span><span aria-hidden="true" style="height: 10px; border-radius: 5px; background: #13304A; width: 100%"></span><span style="text-align: right; font-weight: 600">২০ কেজি</span></div>
+      <div style="display: grid; grid-template-columns: 110px 1fr 64px; align-items: center; gap: 8px; font-size: 15px"><span>পুরোনো পত্রিকা</span><span aria-hidden="true" style="height: 10px; border-radius: 5px; background: #13304A; width: 70%"></span><span style="text-align: right; font-weight: 600">১৪ কেজি</span></div>
+      <div style="display: grid; grid-template-columns: 110px 1fr 64px; align-items: center; gap: 8px; font-size: 15px"><span>প্লাস্টিক</span><span aria-hidden="true" style="height: 10px; border-radius: 5px; background: #13304A; width: 23%"></span><span style="text-align: right; font-weight: 600">৪.৫ কেজি</span></div>
+      <div style="display: grid; grid-template-columns: 110px 1fr 64px; align-items: center; gap: 8px; font-size: 15px"><span>কার্টন</span><span aria-hidden="true" style="height: 10px; border-radius: 5px; background: #13304A; width: 18%"></span><span style="text-align: right; font-weight: 600">৩.৫ কেজি</span></div>
+      <div style="display: flex; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid #D5D9D3; font-size: 14px; color: #4F5B66"><span>ক্যাশে ৳৩৮০</span><span>বিকাশে ৳১,৪৮০</span></div>
+    </section>
+
+    <section aria-labelledby="tx-label" style="display: flex; flex-direction: column; gap: 8px">
+      <h2 id="tx-label" style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 18px; font-weight: 700">আজকের পরিশোধ</h2>
+      <div style="background: #FFFFFF; border-radius: 14px; padding: 0 16px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #D5D9D3">
+          <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">রাশেদা বেগম</span><span style="font-size: 13px; color: #4F5B66">সকাল ১০:২০, বিকাশ, TrxID 9KX7ABC123</span></span>
+          <span style="font-family: 'Anek Bangla', sans-serif; font-size: 18px; font-weight: 700">৳৭১০</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #D5D9D3">
+          <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">আব্দুল করিম</span><span style="font-size: 13px; color: #4F5B66">সকাল ৮:৪০, বিকাশ, TrxID 9KW2DEF456</span></span>
+          <span style="font-family: 'Anek Bangla', sans-serif; font-size: 18px; font-weight: 700">৳৭৭০</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0">
+          <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">শাহানা আক্তার</span><span style="font-size: 13px; color: #4F5B66">সকাল ৭:৫৫, হাতে ক্যাশ</span></span>
+          <span style="font-family: 'Anek Bangla', sans-serif; font-size: 18px; font-weight: 700">৳৩৮০</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav aria-label="সংগ্রাহক মেনু" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #D5D9D3; padding: 6px 8px 10px">
+    <a href="CollectorHome.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+      অনুরোধ
+    </a>
+    <a href="MyPickups.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"></path><circle cx="7" cy="17.5" r="1.8"></circle><circle cx="17" cy="17.5" r="1.8"></circle></svg>
+      আমার পিকআপ
+    </a>
+    <a href="Ledger.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; font-weight: 700; color: #13304A; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFC72C" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18M16 15h2"></path></svg>
+      হিসাব
+    </a>
+    <a href="CollectorProfile.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+      প্রোফাইল
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const range = (this.state && this.state.range) || 0;
+    const sums = [
+      { paid: '৳১,৮৬০', kg: '৪২ কেজি', count: '৩টি' },
+      { paid: '৳৬,২৪০', kg: '১৫১ কেজি', count: '১২টি' },
+      { paid: '৳১৯,৭৫০', kg: '৪৮৬ কেজি', count: '৩৮টি' }
+    ];
+    const v = Object.assign({}, sums[range]);
+    [0, 1, 2].forEach((i) => {
+      const on = range === i;
+      v['r' + i + 'Sel'] = on ? 'true' : 'false';
+      v['r' + i + 'Bg'] = on ? '#FFC72C' : 'transparent';
+      v['r' + i + 'Fg'] = on ? '#13304A' : '#FFFFFF';
+      v['pickR' + i] = () => this.setState({ range: i });
+    });
+    return v;
+  }
+}
+</script>
+</body>
+</html>

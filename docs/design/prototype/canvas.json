@@ -1,0 +1,443 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-11T10:00:00Z"
+  },
+  "title": "BhangariWala App Prototype",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [
+    {
+      "id": "mobile",
+      "name": "Mobile app"
+    },
+    {
+      "id": "admin",
+      "name": "Admin panel"
+    },
+    {
+      "id": "logo",
+      "name": "Logo"
+    }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H1 Sign in",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Home.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H2 Home",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "SelectItems.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H3 Select items",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Schedule.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H4 Schedule pickup",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Searching.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H5 Finding a collector",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Tracking.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H6 Collector on the way",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "ConfirmWeight.dc.html": {
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H7 Confirm weight",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Receipt.dc.html": {
+      "x": 3290,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H8 Paid",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "OTP.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H9 Verify phone (OTP)",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Profile.dc.html": {
+      "x": 4230,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H10 Profile and addresses",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "History.dc.html": {
+      "x": 4700,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H11 Pickup history",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Rates.dc.html": {
+      "x": 5170,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H12 All rates",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Notifications.dc.html": {
+      "x": 5640,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H13 Notifications",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "ReportProblem.dc.html": {
+      "x": 6110,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H14 Report a problem",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "CollectorHome.dc.html": {
+      "x": 0,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C1 Nearby requests",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "RequestDetail.dc.html": {
+      "x": 470,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C2 Request detail",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "ActivePickup.dc.html": {
+      "x": 940,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C3 Arrive and verify",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "WeighEntry.dc.html": {
+      "x": 1410,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C4 Weigh items",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "CollectorPay.dc.html": {
+      "x": 1880,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C5 Pay and complete",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "CollectorSignup.dc.html": {
+      "x": 2350,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C6 Sign up",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "CollectorPending.dc.html": {
+      "x": 2820,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C7 Waiting for approval",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "MyPickups.dc.html": {
+      "x": 3290,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C8 My pickups",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Ledger.dc.html": {
+      "x": 3760,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C9 Ledger",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "Reweigh.dc.html": {
+      "x": 4230,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C10 Re-weigh after a dispute",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "AdminPickups.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "A1 Live pickups",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminRates.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "A2 Daily rates",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminCollectors.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "A3 Collector approvals",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminDisputes.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "A4 Disputes",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminUsers.dc.html": {
+      "x": 6080,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "A5 Users",
+      "page": "admin",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "CollectorProfile.dc.html": {
+      "x": 4700,
+      "y": 1244,
+      "w": 390,
+      "h": 844,
+      "title": "C11 Profile",
+      "is_interactive": true,
+      "radius": 28
+    },
+    "LogoBadge.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 800,
+      "h": 720,
+      "title": "L1 Badge",
+      "page": "logo",
+      "radius": 16
+    },
+    "LogoSignboard.dc.html": {
+      "x": 880,
+      "y": 0,
+      "w": 960,
+      "h": 480,
+      "title": "L2 Signboard",
+      "page": "logo",
+      "radius": 16
+    },
+    "LogoIcon.dc.html": {
+      "x": 1920,
+      "y": 0,
+      "w": 800,
+      "h": 560,
+      "title": "L3 Mustache scale",
+      "page": "logo",
+      "radius": 16
+    },
+    "LogoSack.dc.html": {
+      "x": 2800,
+      "y": 0,
+      "w": 600,
+      "h": 600,
+      "title": "L4 With sack, in a circle",
+      "page": "logo",
+      "radius": 16
+    },
+    "LogoFront.dc.html": {
+      "x": 3480,
+      "y": 0,
+      "w": 600,
+      "h": 600,
+      "title": "L5 Scale in front",
+      "page": "logo",
+      "radius": 16
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Home.dc.html",
+    "SelectItems.dc.html",
+    "Schedule.dc.html",
+    "Searching.dc.html",
+    "Tracking.dc.html",
+    "ConfirmWeight.dc.html",
+    "Receipt.dc.html",
+    "OTP.dc.html",
+    "Profile.dc.html",
+    "History.dc.html",
+    "Rates.dc.html",
+    "Notifications.dc.html",
+    "ReportProblem.dc.html",
+    "CollectorHome.dc.html",
+    "RequestDetail.dc.html",
+    "ActivePickup.dc.html",
+    "WeighEntry.dc.html",
+    "CollectorPay.dc.html",
+    "CollectorSignup.dc.html",
+    "CollectorPending.dc.html",
+    "MyPickups.dc.html",
+    "Ledger.dc.html",
+    "Reweigh.dc.html",
+    "CollectorProfile.dc.html",
+    "AdminPickups.dc.html",
+    "AdminRates.dc.html",
+    "AdminCollectors.dc.html",
+    "AdminDisputes.dc.html",
+    "AdminUsers.dc.html",
+    "LogoBadge.dc.html",
+    "LogoSignboard.dc.html",
+    "LogoIcon.dc.html",
+    "LogoSack.dc.html",
+    "LogoFront.dc.html"
+  ],
+  "notes": {
+    "household-title": {
+      "x": 0,
+      "y": -300,
+      "text": "Household app (বিক্রেতা)",
+      "kind": "title1",
+      "maxW": 6500
+    },
+    "collector-title": {
+      "x": 0,
+      "y": 944,
+      "text": "Collector app (সংগ্রাহক)",
+      "kind": "title1",
+      "maxW": 5090
+    },
+    "how-it-works": {
+      "x": -560,
+      "y": 0,
+      "w": 440,
+      "fill": "blue",
+      "size": "m",
+      "text": "How the flow works\n\n1. Household picks items and a time slot, then sends a request.\n2. Nearby collectors see it. The first to accept gets it.\n3. Collector arrives, checks the 4-digit pickup code, and weighs the items.\n4. Household confirms the weights and picks cash, bKash or Nagad.\n5. Collector pays and completes the pickup.\n\nPress Play on any screen to click through. On the sign-in screen, a household goes to OTP; switching to আমি সংগ্রাহক opens collector sign-up.\n\nDashed ডেমো chips are prototype-only shortcuts for steps that would happen automatically.\n\nRates, names and numbers are sample data. The admin panel is on the Admin panel page."
+    },
+    "admin-title": {
+      "x": 0,
+      "y": -300,
+      "text": "Admin panel (web)",
+      "kind": "title1",
+      "maxW": 7520,
+      "page": "admin"
+    },
+    "admin-note": {
+      "x": -560,
+      "y": 0,
+      "w": 440,
+      "fill": "blue",
+      "size": "m",
+      "page": "admin",
+      "text": "Admin panel\n\nInternal web tool for the BhangariWala team. English by default, with a বাংলা toggle.\n\nIn Play mode the sidebar links all five pages. Daily rates, Collector approvals and Disputes have working controls.\n\nNames, IDs and counts are sample data."
+    },
+    "logo-title": {
+      "x": 0,
+      "y": -300,
+      "text": "Logo options",
+      "kind": "title1",
+      "maxW": 4080,
+      "page": "logo"
+    },
+    "logo-note": {
+      "x": -560,
+      "y": 0,
+      "w": 440,
+      "fill": "blue",
+      "size": "m",
+      "page": "logo",
+      "text": "Five logo directions\n\nL1 Badge: the bhangariwala holding a level hand scale, the sign of a fair weight, inside a yellow badge. Main logo for the splash screen, stickers and the van.\n\nL2 Signboard: a rickshaw-art style sign with flowers. For shop banners, social posts and flyers.\n\nL3 Mustache scale: his mustache is the scale beam. Simple enough for the app icon and small sizes.\n\nL4 With sack: the full street bhangariwala, sack on his shoulder and scale raised, inside a yellow circle. No name.\n\nL5 Scale in front: a front-facing bust holding the scale across his chest. No name, no background.\n\nAll five use the app colours: signal yellow, navy, green, and the red gamcha."
+    }
+  },
+  "designSystems": []
+}

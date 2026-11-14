@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Confirm the weight</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 12px 20px 8px; display: flex; flex-direction: column; gap: 6px">
+    <a href="Tracking.dc.html" aria-label="পেছনে যান" style="width: 44px; height: 44px; margin-left: -10px; display: flex; align-items: center; justify-content: center; color: #13304A">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 28px; font-weight: 700; line-height: 1.2">ওজন মিলিয়ে নিন</h1>
+    <p style="margin: 0; font-size: 15px; color: #4F5B66">জসিম উদ্দিন আপনার সামনে ওজন করেছেন।</p>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 18px">
+    <section aria-label="মোট হিসাব" style="background: #13304A; color: #FFFFFF; border-radius: 16px; padding: 16px 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #D3DCE5">মোট ওজন</span>
+        <span style="font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 32px; font-weight: 800; color: #FFC72C; line-height: 1.1">১৭.৫ কেজি</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px; text-align: right">
+        <span style="font-size: 14px; color: #D3DCE5">আপনি পাবেন</span>
+        <span style="font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 32px; font-weight: 800; color: #FFC72C; line-height: 1.1">৳৭১০</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="lines-label" style="background: #FFFFFF; border-radius: 14px; padding: 4px 16px">
+      <h2 id="lines-label" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); margin: 0">হিসাবের বিবরণ</h2>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #D5D9D3">
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">লোহা</span><span style="font-size: 14px; color: #4F5B66">৮.৫ কেজি × ৳৫০</span></div>
+        <span style="font-family: 'Anek Bangla', sans-serif; font-size: 19px; font-weight: 700">৳৪২৫</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #D5D9D3">
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">পুরোনো পত্রিকা</span><span style="font-size: 14px; color: #4F5B66">৬ কেজি × ৳৩০</span></div>
+        <span style="font-family: 'Anek Bangla', sans-serif; font-size: 19px; font-weight: 700">৳১৮০</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #D5D9D3">
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">প্লাস্টিক</span><span style="font-size: 14px; color: #4F5B66">৩ কেজি × ৳৩৫</span></div>
+        <span style="font-family: 'Anek Bangla', sans-serif; font-size: 19px; font-weight: 700">৳১০৫</span>
+      </div>
+      <button type="button" style="display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 0; border: 0; background: transparent; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+        পাল্লার ছবি দেখুন
+      </button>
+    </section>
+
+    <div role="radiogroup" aria-labelledby="pay-label" style="display: flex; flex-direction: column; gap: 10px">
+      <span id="pay-label" style="font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 19px; font-weight: 700">কীভাবে টাকা নেবেন?</span>
+      <button type="button" role="radio" aria-checked="{{cashChecked}}" onClick="{{pickCash}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 0 16px; border-radius: 12px; border: 2px solid {{cashBd}}; background: {{cashBg}}; color: #13304A; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer">
+        <span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: 700">হাতে ক্যাশ</span><span style="font-size: 13px; color: #4F5B66">সংগ্রাহক এখনই দেবেন</span></span>
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{cashDot}}"></span>
+      </button>
+      <button type="button" role="radio" aria-checked="{{bkashChecked}}" onClick="{{pickBkash}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 0 16px; border-radius: 12px; border: 2px solid {{bkashBd}}; background: {{bkashBg}}; color: #13304A; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer">
+        <span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: 700">বিকাশ</span><span style="font-size: 13px; color: #4F5B66">০১৭XX-XXX৪৫৬</span></span>
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{bkashDot}}"></span>
+      </button>
+      <button type="button" role="radio" aria-checked="{{nagadChecked}}" onClick="{{pickNagad}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 0 16px; border-radius: 12px; border: 2px solid {{nagadBd}}; background: {{nagadBg}}; color: #13304A; font-family: 'Hind Siliguri', sans-serif; text-align: left; cursor: pointer">
+        <span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: 700">নগদ</span><span style="font-size: 13px; color: #4F5B66">০১৭XX-XXX৪৫৬</span></span>
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{nagadDot}}"></span>
+      </button>
+    </div>
+  </main>
+
+  <footer style="padding: 12px 20px 18px; background: #FFFFFF; border-top: 1px solid #D5D9D3; display: flex; flex-direction: column; gap: 6px">
+    <a href="Receipt.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: #FFC72C; color: #13304A; border: 2px solid #13304A; font-family: 'Anek Bangla', sans-serif; font-size: 20px; font-weight: 700; text-decoration: none">ওজন ঠিক আছে</a>
+    <a href="ReportProblem.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 44px; color: #A63D16; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; text-decoration: none">ওজনে সমস্যা? জানান</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const pay = (this.state && this.state.pay) || 'bkash';
+    const v = {};
+    ['cash', 'bkash', 'nagad'].forEach((k) => {
+      const on = pay === k;
+      v[k + 'Checked'] = on ? 'true' : 'false';
+      v[k + 'Bg'] = on ? '#FFF4CC' : '#FFFFFF';
+      v[k + 'Bd'] = on ? '#13304A' : '#D5D9D3';
+      v[k + 'Dot'] = on ? '7px solid #13304A' : '2px solid #8A949E';
+    });
+    v.pickCash = () => this.setState({ pay: 'cash' });
+    v.pickBkash = () => this.setState({ pay: 'bkash' });
+    v.pickNagad = () => this.setState({ pay: 'nagad' });
+    return v;
+  }
+}
+</script>
+</body>
+</html>

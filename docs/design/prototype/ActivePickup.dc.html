@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Active pickup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+input::placeholder{color:#8A949E}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="background: #13304A; color: #FFFFFF; padding: 10px 20px 16px; display: flex; flex-direction: column; gap: 4px">
+    <a href="CollectorHome.dc.html" aria-label="পেছনে যান" style="width: 44px; height: 44px; margin-left: -10px; display: flex; align-items: center; justify-content: center; color: #FFFFFF">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2">চলতি পিকআপ</h1>
+    <span style="font-size: 15px; color: #FFC72C; font-weight: 600">গ্রাহকের দিকে যাচ্ছেন</span>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 18px">
+    <section aria-labelledby="cust-name" style="background: #FFFFFF; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h2 id="cust-name" style="margin: 0; font-size: 18px; font-weight: 700">রাশেদা বেগম</h2>
+        <span style="font-size: 15px; line-height: 1.45">বাড়ি ১২, রোড ৪, ব্লক সি, মিরপুর ১০, ঢাকা</span>
+      </div>
+      <p style="margin: 0; padding: 10px 12px; border-radius: 10px; background: #EEF0EC; font-size: 14px; line-height: 1.45">নোট: বাড়ির নিচে কেয়ারটেকারকে বলবেন</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px">
+        <span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #D5D9D3; font-size: 14px">লোহা</span>
+        <span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #D5D9D3; font-size: 14px">পুরোনো পত্রিকা</span>
+        <span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #D5D9D3; font-size: 14px">প্লাস্টিক</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button type="button" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 12px; border: 2px solid #13304A; background: #FFFFFF; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>
+          কল করুন
+        </button>
+        <button type="button" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 12px; border: 2px solid #13304A; background: #13304A; color: #FFFFFF; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"></path></svg>
+          পথ দেখুন
+        </button>
+      </div>
+    </section>
+
+    <section aria-labelledby="verify-label" style="border: 2px solid #13304A; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <h2 id="verify-label" style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 20px; font-weight: 700">পৌঁছে কোড মিলিয়ে নিন</h2>
+      <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #4F5B66">গ্রাহকের কাছ থেকে ৪ সংখ্যার পিকআপ কোড জেনে নিচে লিখুন।</p>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="কোডের ১ম সংখ্যা" placeholder="–" style="min-width: 0; height: 60px; text-align: center; border: 2px solid #13304A; border-radius: 12px; font-family: 'Anek Bangla', sans-serif; font-size: 28px; font-weight: 700; color: #13304A; background: #FFFFFF">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="কোডের ২য় সংখ্যা" placeholder="–" style="min-width: 0; height: 60px; text-align: center; border: 2px solid #13304A; border-radius: 12px; font-family: 'Anek Bangla', sans-serif; font-size: 28px; font-weight: 700; color: #13304A; background: #FFFFFF">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="কোডের ৩য় সংখ্যা" placeholder="–" style="min-width: 0; height: 60px; text-align: center; border: 2px solid #13304A; border-radius: 12px; font-family: 'Anek Bangla', sans-serif; font-size: 28px; font-weight: 700; color: #13304A; background: #FFFFFF">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="কোডের ৪র্থ সংখ্যা" placeholder="–" style="min-width: 0; height: 60px; text-align: center; border: 2px solid #13304A; border-radius: 12px; font-family: 'Anek Bangla', sans-serif; font-size: 28px; font-weight: 700; color: #13304A; background: #FFFFFF">
+      </div>
+    </section>
+  </main>
+
+  <footer style="padding: 12px 20px 18px; background: #FFFFFF; border-top: 1px solid #D5D9D3; display: flex; flex-direction: column; gap: 6px">
+    <a href="WeighEntry.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: #FFC72C; color: #13304A; border: 2px solid #13304A; font-family: 'Anek Bangla', sans-serif; font-size: 20px; font-weight: 700; text-decoration: none">কোড মিলিয়ে ওজন শুরু করুন</a>
+    <button type="button" style="min-height: 44px; border: 0; background: transparent; color: #A63D16; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">গ্রাহককে পাওয়া যাচ্ছে না</button>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

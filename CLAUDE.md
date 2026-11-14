@@ -9,6 +9,9 @@ Households in Dhaka sell scrap (iron, old newspaper, plastic, carton, aluminium,
 - `apps/admin`: React 19 + Vite 8. English UI with a Bangla toggle.
 - `packages/shared` (`@bw/shared`): brand tokens, Bangla/English strings, enums, matching constants, and API types generated from `docs/openapi.yaml`.
 - `docs/openapi.yaml`: the API contract (OpenAPI 3.1). Source of truth for endpoints, shapes and error codes.
+- `docs/README.md`: index of every project document, with its claude.ai link and the local copy to read (the links need Rafsun's sign-in; use the copies).
+- `docs/product.md`: what v1 is, users, decisions, non-functional requirements.
+- `docs/design/`: the prototype. `docs/design/README.md` maps every screen (H1-H14 household, C1-C11 collector, A1-A5 admin) to its source file in `docs/design/prototype/`; build screens from those files' layout, colours and Bangla copy. Logos in `docs/design/logos/`.
 
 ## Commands
 
@@ -79,4 +82,4 @@ Any other change is refused with INVALID_STATE. Live events (Socket.IO): `reques
 - [ ] M5 Admin panel
 - [ ] M6 Pilot readiness: tests, FCM push, monitoring, deployment
 
-The product spec, technical blueprint and clickable prototype (30 screens, logos) live in Rafsun's claude.ai artifacts; the rules above are copied from them.
+The product spec, technical blueprint and clickable prototype live in Rafsun's claude.ai account; `docs/product.md`, `docs/design/` and this file are copies of what they decided. If they disagree, ask Rafsun.

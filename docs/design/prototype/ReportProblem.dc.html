@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Report a problem</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+textarea::placeholder{color:#6B7580}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 12px 20px 8px; display: flex; flex-direction: column; gap: 6px">
+    <a href="ConfirmWeight.dc.html" aria-label="পেছনে যান" style="width: 44px; height: 44px; margin-left: -10px; display: flex; align-items: center; justify-content: center; color: #13304A">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 28px; font-weight: 700; line-height: 1.2">সমস্যা জানান</h1>
+    <span style="font-size: 15px; color: #4F5B66">আজ, জসিম উদ্দিন, ১৭.৫ কেজি, ৳৭১০</span>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 18px">
+    <div role="radiogroup" aria-labelledby="type-label" style="display: flex; flex-direction: column; gap: 8px">
+      <span id="type-label" style="font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 19px; font-weight: 700">কী সমস্যা হয়েছে?</span>
+      <button type="button" role="radio" aria-checked="{{weightChecked}}" onClick="{{pickWeight}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; border-radius: 12px; border: 2px solid {{weightBd}}; background: {{weightBg}}; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 16px; font-weight: 600; text-align: left; cursor: pointer">ওজন ঠিক মনে হচ্ছে না<span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{weightDot}}"></span></button>
+      <button type="button" role="radio" aria-checked="{{paymentChecked}}" onClick="{{pickPayment}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; border-radius: 12px; border: 2px solid {{paymentBd}}; background: {{paymentBg}}; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 16px; font-weight: 600; text-align: left; cursor: pointer">টাকা পাইনি<span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{paymentDot}}"></span></button>
+      <button type="button" role="radio" aria-checked="{{behaviourChecked}}" onClick="{{pickBehaviour}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; border-radius: 12px; border: 2px solid {{behaviourBd}}; background: {{behaviourBg}}; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 16px; font-weight: 600; text-align: left; cursor: pointer">সংগ্রাহকের আচরণ<span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{behaviourDot}}"></span></button>
+      <button type="button" role="radio" aria-checked="{{otherChecked}}" onClick="{{pickOther}}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; border-radius: 12px; border: 2px solid {{otherBd}}; background: {{otherBg}}; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 16px; font-weight: 600; text-align: left; cursor: pointer">অন্য কিছু<span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box; border: {{otherDot}}"></span></button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="details" style="font-size: 15px; font-weight: 600">বিস্তারিত লিখুন</label>
+      <textarea id="details" rows="3" placeholder="যেমন: লোহার ওজন কম দেখাচ্ছে মনে হচ্ছে" style="resize: none; border: 2px solid #D5D9D3; border-radius: 12px; padding: 10px 12px; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; color: #13304A; background: #FFFFFF"></textarea>
+    </div>
+
+    <button type="button" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px; border-radius: 12px; border: 2px dashed #8A949E; background: transparent; color: #13304A; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+      ছবি যোগ করুন (ঐচ্ছিক)
+    </button>
+
+    <div style="display: flex; align-items: flex-start; gap: 10px; padding: 14px; border-radius: 12px; background: #FFF4CC; font-size: 15px; line-height: 1.5">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8v.5"></path></svg>
+      <span>{{helpText}}</span>
+    </div>
+  </main>
+
+  <footer style="padding: 12px 20px 18px; background: #FFFFFF; border-top: 1px solid #D5D9D3">
+    <a href="{{nextHref}}" style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: #FFC72C; color: #13304A; border: 2px solid #13304A; font-family: 'Anek Bangla', sans-serif; font-size: 20px; font-weight: 700; text-decoration: none">জমা দিন</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const type = (this.state && this.state.type) || 'weight';
+    const help = {
+      weight: 'সংগ্রাহক আপনার সামনে আবার ওজন করবেন। তারপরও না মিললে আমাদের টিম দেখবে, ততক্ষণ পিকআপ থেমে থাকবে।',
+      payment: 'আমরা সংগ্রাহকের দেওয়া ট্রানজেকশন আইডি যাচাই করে আপনাকে জানাব।',
+      behaviour: 'আমাদের টিম আপনার সাথে যোগাযোগ করবে। আপনার তথ্য সংগ্রাহককে দেখানো হবে না।',
+      other: 'আমাদের টিম আপনার বার্তা পড়ে যোগাযোগ করবে।'
+    };
+    const v = { helpText: help[type], nextHref: type === 'weight' ? 'ConfirmWeight.dc.html' : 'Home.dc.html' };
+    ['weight', 'payment', 'behaviour', 'other'].forEach((k) => {
+      const on = type === k;
+      v[k + 'Checked'] = on ? 'true' : 'false';
+      v[k + 'Bg'] = on ? '#FFF4CC' : '#FFFFFF';
+      v[k + 'Bd'] = on ? '#13304A' : '#D5D9D3';
+      v[k + 'Dot'] = on ? '7px solid #13304A' : '2px solid #8A949E';
+      v['pick' + k.charAt(0).toUpperCase() + k.slice(1)] = () => this.setState({ type: k });
+    });
+    return v;
+  }
+}
+</script>
+</body>
+</html>

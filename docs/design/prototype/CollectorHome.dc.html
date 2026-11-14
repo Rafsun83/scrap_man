@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Collector nearby requests</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400..800&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B7A5C}
+:focus-visible{outline:3px solid #0B7A5C;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #EEF0EC; color: #13304A; font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+  <header style="background: #13304A; color: #FFFFFF; padding: 18px 20px 18px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.2">শুভ সকাল, জসিম</h1>
+      <button type="button" aria-pressed="{{onlinePressed}}" onClick="{{toggleOnline}}" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 6px 0 14px; border-radius: 999px; border: 2px solid {{pillBd}}; background: transparent; color: #FFFFFF; font-family: 'Hind Siliguri', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">
+        {{onlineLabel}}
+        <span aria-hidden="true" style="width: 44px; height: 26px; border-radius: 13px; background: {{trackBg}}; display: flex; align-items: center; justify-content: {{knobSide}}; padding: 3px; box-sizing: border-box"><span style="width: 20px; height: 20px; border-radius: 50%; background: {{knobBg}}"></span></span>
+      </button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: #1E4466">
+        <span style="font-family: 'Anek Bangla', sans-serif; font-size: 22px; font-weight: 700; color: #FFC72C">৩টি</span>
+        <span style="font-size: 13px; color: #D3DCE5">আজকের পিকআপ</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: #1E4466">
+        <span style="font-family: 'Anek Bangla', sans-serif; font-size: 22px; font-weight: 700; color: #FFC72C">৪২ কেজি</span>
+        <span style="font-size: 13px; color: #D3DCE5">সংগ্রহ</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: #1E4466">
+        <span style="font-family: 'Anek Bangla', sans-serif; font-size: 22px; font-weight: 700; color: #FFC72C">৳১,৮৬০</span>
+        <span style="font-size: 13px; color: #D3DCE5">পরিশোধ</span>
+      </div>
+    </div>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+      <h2 style="margin: 0; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 21px; font-weight: 700">কাছের অনুরোধ</h2>
+      <span style="font-size: 14px; color: #4F5B66">৩ কিমির মধ্যে</span>
+    </div>
+
+    <sc-if value="{{isOffline}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #FFFFFF; border-radius: 14px; padding: 24px 18px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center">
+        <span style="font-size: 17px; font-weight: 700">আপনি এখন অফলাইনে</span>
+        <span style="font-size: 15px; color: #4F5B66">নতুন অনুরোধ পেতে উপরের সুইচটি চালু করুন।</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isOnline}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <article style="background: #FFFFFF; border: 2px solid #13304A; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <h3 style="margin: 0; font-size: 17px; font-weight: 700">মিরপুর ১০, ব্লক সি</h3>
+              <span style="font-size: 14px; color: #0B7A5C; font-weight: 700">নতুন</span>
+            </div>
+            <span style="flex: none; padding: 4px 10px; border-radius: 999px; background: #FFC72C; font-size: 14px; font-weight: 700">১.২ কিমি</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px">
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">লোহা</span>
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">পুরোনো পত্রিকা</span>
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">প্লাস্টিক</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: #4F5B66">
+              <span>আজ, সকাল ৯টা–১২টা</span>
+              <span>আনুমানিক ৫–১৫ কেজি</span>
+            </div>
+            <a href="RequestDetail.dc.html" style="flex: none; display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 12px; background: #13304A; color: #FFFFFF; font-size: 16px; font-weight: 700; text-decoration: none">দেখুন</a>
+          </div>
+        </article>
+
+        <article style="background: #FFFFFF; border: 2px solid #D5D9D3; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 700">মিরপুর ১১, এভিনিউ ৫</h3>
+            <span style="flex: none; padding: 4px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px; font-weight: 700">১.৮ কিমি</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px">
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">পুরোনো পত্রিকা</span>
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">কার্টন</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: #4F5B66">
+              <span>আজ, দুপুর ১২টা–৩টা</span>
+              <span>আনুমানিক ৫ কেজির কম</span>
+            </div>
+            <a href="RequestDetail.dc.html" style="flex: none; display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 12px; background: #13304A; color: #FFFFFF; font-size: 16px; font-weight: 700; text-decoration: none">দেখুন</a>
+          </div>
+        </article>
+
+        <article style="background: #FFFFFF; border: 2px solid #D5D9D3; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <h3 style="margin: 0; font-size: 17px; font-weight: 700">পল্লবী, সেকশন ১২</h3>
+              <span style="display: flex; align-items: center; gap: 4px; font-size: 14px; color: #4F5B66"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>ছবি আছে</span>
+            </div>
+            <span style="flex: none; padding: 4px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px; font-weight: 700">২.৬ কিমি</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px">
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">লোহা</span>
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">অ্যালুমিনিয়াম</span>
+            <span style="padding: 3px 10px; border-radius: 999px; background: #EEF0EC; font-size: 14px">ইলেকট্রনিক্স</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: #4F5B66">
+              <span>আগামীকাল, সকাল ৯টা–১২টা</span>
+              <span>আনুমানিক ১৫ কেজির বেশি</span>
+            </div>
+            <a href="RequestDetail.dc.html" style="flex: none; display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 12px; background: #13304A; color: #FFFFFF; font-size: 16px; font-weight: 700; text-decoration: none">দেখুন</a>
+          </div>
+        </article>
+      </div>
+    </sc-if>
+  </main>
+
+  <nav aria-label="সংগ্রাহক মেনু" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #D5D9D3; padding: 6px 8px 10px">
+    <a href="CollectorHome.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; font-weight: 700; color: #13304A; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFC72C" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5" fill="#FFFFFF"></circle></svg>
+      অনুরোধ
+    </a>
+    <a href="MyPickups.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"></path><circle cx="7" cy="17.5" r="1.8"></circle><circle cx="17" cy="17.5" r="1.8"></circle></svg>
+      আমার পিকআপ
+    </a>
+    <a href="Ledger.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18M16 15h2"></path></svg>
+      হিসাব
+    </a>
+    <a href="CollectorProfile.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; font-size: 13px; color: #4F5B66; text-decoration: none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+      প্রোফাইল
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const online = !(this.state && this.state.online === false);
+    return {
+      isOnline: online,
+      isOffline: !online,
+      onlinePressed: online ? 'true' : 'false',
+      onlineLabel: online ? 'অনলাইন' : 'অফলাইন',
+      pillBd: online ? '#FFC72C' : '#8A949E',
+      trackBg: online ? '#FFC72C' : '#4F5B66',
+      knobBg: online ? '#13304A' : '#FFFFFF',
+      knobSide: online ? 'flex-end' : 'flex-start',
+      toggleOnline: () => this.setState({ online: !online })
+    };
+  }
+}
+</script>
+</body>
+</html>
