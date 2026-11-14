@@ -1,0 +1,2705 @@
+{
+  "info": {
+    "name": "BhangariWala API",
+    "_postman_id": "b6f1d0a2-6c3e-4a51-9d5e-2f8a1c7e4b90",
+    "description": "Every route implemented in `apps/api` up to M2 (all 33 routes, 46 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.\n\n## Before you start\n1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).\n2. Run the folders in order (or the whole collection with the Runner). Requests save ids, tokens and the pickup code into collection variables for the next steps.\n3. Every OTP in development is `123456`. The admin phone is `+8801700000000`.\n\n## Approving the collector (no endpoint until M4)\nCollector sign-up and admin approval arrive in M4. After **1. Auth → Verify OTP (collector)**, give the collector an approved profile with SQL (the same thing the e2e tests do):\n\n```\ndocker compose exec postgres psql -U bw -d bhangariwala -c \"INSERT INTO collector_profiles (user_id, nid_number, vehicle_type, has_scale, verification_status) SELECT id, '1234567890', 'VAN', true, 'APPROVED' FROM users WHERE phone = '+8801812000002' ON CONFLICT (user_id) DO UPDATE SET verification_status = 'APPROVED';\"\n```\n\n## Notes\n- Requests marked with an `Idempotency-Key` header use `{{$guid}}`, so every send is a new action. To test a safe retry, replace it with a fixed value.\n- Photo uploads are two steps: ask for an upload slot, then PUT the file to `{{uploadUrl}}` / `{{scaleUploadUrl}}` (choose a JPEG under Body → binary).\n- The collector must be within the search radius of the address (1 km, 3 km after 5 minutes). The collection uses the same Mirpur 10 point for both.\n- Live events (Socket.IO at the API origin, path `/socket.io`, `auth.token` = access token) are not part of this collection; see `SocketEvents` in the contract.\n- To run it again from the start, change `householdPhone` and `collectorPhone` or reuse them (existing numbers keep their role).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "otpCode",
+      "value": "123456",
+      "type": "string"
+    },
+    {
+      "key": "householdPhone",
+      "value": "+8801712000001",
+      "type": "string"
+    },
+    {
+      "key": "collectorPhone",
+      "value": "+8801812000002",
+      "type": "string"
+    },
+    {
+      "key": "adminPhone",
+      "value": "+8801700000000",
+      "type": "string"
+    },
+    {
+      "key": "lat",
+      "value": "23.8069",
+      "type": "string"
+    },
+    {
+      "key": "lng",
+      "value": "90.3687",
+      "type": "string"
+    },
+    {
+      "key": "householdToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "householdRefresh",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "householdId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "collectorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "collectorRefresh",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "collectorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminRefresh",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "today",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "slotDate",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "addressId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pickupId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pickupCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "uploadUrl",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "itemsPhotoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "scaleUploadUrl",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "scalePhotoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "disputeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trxId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Public. Reports whether the database and Redis answer."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "description": "OTP sign-in for the three roles, token refresh and logout. All public.",
+      "item": [
+        {
+          "name": "Request OTP (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{householdPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "request"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP → sign in (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.accessToken !== undefined && body.accessToken !== null) pm.collectionVariables.set('householdToken', body.accessToken);",
+                  "  if (body.refreshToken !== undefined && body.refreshToken !== null) pm.collectionVariables.set('householdRefresh', body.refreshToken);",
+                  "  if (body.user && body.user.id !== undefined && body.user && body.user.id !== null) pm.collectionVariables.set('householdId', body.user && body.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{householdPhone}}\",\n  \"code\": \"{{otpCode}}\",\n  \"role\": \"HOUSEHOLD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "New numbers sign up with the role sent; existing numbers keep their role (check user.role). In development every code is 123456. Saves the access and refresh tokens to collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Request OTP (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{collectorPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "request"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP → sign in (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.accessToken !== undefined && body.accessToken !== null) pm.collectionVariables.set('collectorToken', body.accessToken);",
+                  "  if (body.refreshToken !== undefined && body.refreshToken !== null) pm.collectionVariables.set('collectorRefresh', body.refreshToken);",
+                  "  if (body.user && body.user.id !== undefined && body.user && body.user.id !== null) pm.collectionVariables.set('collectorId', body.user && body.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{collectorPhone}}\",\n  \"code\": \"{{otpCode}}\",\n  \"role\": \"COLLECTOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "New numbers sign up with the role sent; existing numbers keep their role (check user.role). In development every code is 123456. Saves the access and refresh tokens to collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Request OTP (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{adminPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "request"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP → sign in (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.accessToken !== undefined && body.accessToken !== null) pm.collectionVariables.set('adminToken', body.accessToken);",
+                  "  if (body.refreshToken !== undefined && body.refreshToken !== null) pm.collectionVariables.set('adminRefresh', body.refreshToken);",
+                  "  if (body.user && body.user.id !== undefined && body.user && body.user.id !== null) pm.collectionVariables.set('adminId', body.user && body.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{adminPhone}}\",\n  \"code\": \"{{otpCode}}\",\n  \"role\": \"HOUSEHOLD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "New numbers sign up with the role sent; existing numbers keep their role (check user.role). In development every code is 123456. Saves the access and refresh tokens to collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh tokens (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.accessToken !== undefined && body.accessToken !== null) pm.collectionVariables.set('householdToken', body.accessToken);",
+                  "  if (body.refreshToken !== undefined && body.refreshToken !== null) pm.collectionVariables.set('householdRefresh', body.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{householdRefresh}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Each refresh token works once; the response carries a new pair, saved automatically."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Catalog and rates",
+      "item": [
+        {
+          "name": "List categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "description": "Public. Active categories in display order."
+          },
+          "response": []
+        },
+        {
+          "name": "Today's rates",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rates/today",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rates",
+                "today"
+              ]
+            },
+            "description": "Public. Latest published rate per category, with the change from yesterday."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish today's rates (admin)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Today's date in Dhaka (UTC+6).",
+                  "pm.collectionVariables.set('today', new Date(Date.now() + 6 * 3600 * 1000).toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"effectiveDate\": \"{{today}}\",\n  \"rates\": [\n    {\n      \"categoryCode\": \"IRON\",\n      \"ratePerKg\": 50\n    },\n    {\n      \"categoryCode\": \"NEWSPAPER\",\n      \"ratePerKg\": 30\n    },\n    {\n      \"categoryCode\": \"PLASTIC\",\n      \"ratePerKg\": 35\n    },\n    {\n      \"categoryCode\": \"CARTON\",\n      \"ratePerKg\": 18\n    },\n    {\n      \"categoryCode\": \"ALUMINIUM\",\n      \"ratePerKg\": 160\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/rates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "rates"
+              ]
+            },
+            "description": "Admin only. Publishes (or corrects) the per-kg rates for today or a later date. ELECTRONICS is priced on inspection and takes no rate."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Household profile",
+      "item": [
+        {
+          "name": "Get me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update name and language",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rasheda Begum\",\n  \"language\": \"BN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.id !== undefined && body.id !== null) pm.collectionVariables.set('addressId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"line\": \"House 12, Road 4, Block C\",\n  \"area\": \"Mirpur 10\",\n  \"city\": \"Dhaka\",\n  \"location\": {\n    \"lat\": 23.8069,\n    \"lng\": 90.3687\n  },\n  \"note\": \"Ask the caretaker downstairs\",\n  \"isDefault\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "addresses"
+              ]
+            },
+            "description": "Household only. Location is { lat, lng } inside Bangladesh."
+          },
+          "response": []
+        },
+        {
+          "name": "List addresses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "addresses"
+              ]
+            },
+            "description": "Household only. Default first."
+          },
+          "response": []
+        },
+        {
+          "name": "Edit address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Blue gate, 3rd floor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/addresses/:addressId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "addresses",
+                ":addressId"
+              ],
+              "variable": [
+                {
+                  "key": "addressId",
+                  "value": "{{addressId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Collector setup",
+      "description": "Run the SQL in the collection description first, so this collector is APPROVED.",
+      "item": [
+        {
+          "name": "Go online at a location",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"online\": true,\n  \"location\": {\n    \"lat\": 23.8069,\n    \"lng\": 90.3687\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/collector/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "status"
+              ]
+            },
+            "description": "Approved collectors only (else 403 NOT_APPROVED)."
+          },
+          "response": []
+        },
+        {
+          "name": "Send location",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 23.8069,\n  \"lng\": 90.3687\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/collector/location",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "location"
+              ]
+            },
+            "description": "Location ping. While a pickup is ACCEPTED it also goes to the household as collector.location."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Pickup: happy path",
+      "description": "Request → accept → arrive with the code → weigh with a scale photo → confirm → pay → rate.",
+      "item": [
+        {
+          "name": "Create pickup request (household)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Tomorrow's date in Dhaka (UTC+6), so the MORNING slot is always still open.",
+                  "const d = new Date(Date.now() + 6 * 3600 * 1000 + 24 * 3600 * 1000);",
+                  "pm.collectionVariables.set('slotDate', d.toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.id !== undefined && body.id !== null) pm.collectionVariables.set('pickupId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressId\": \"{{addressId}}\",\n  \"categoryCodes\": [\n    \"IRON\",\n    \"NEWSPAPER\"\n  ],\n  \"weightBand\": \"FROM_5_TO_15\",\n  \"slotDate\": \"{{slotDate}}\",\n  \"slot\": \"MORNING\",\n  \"note\": \"Ask the caretaker\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups"
+              ]
+            },
+            "description": "Household only. slotDate is today to 2 days ahead (Dhaka); the slot must not have ended. Sent to online approved collectors within 1 km."
+          },
+          "response": []
+        },
+        {
+          "name": "Item photo: get upload slot (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.uploadUrl !== undefined && body.uploadUrl !== null) pm.collectionVariables.set('uploadUrl', body.uploadUrl);",
+                  "  if (body.photoId !== undefined && body.photoId !== null) pm.collectionVariables.set('itemsPhotoId', body.photoId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"ITEMS\",\n  \"contentType\": \"image/jpeg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/photos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "photos"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Item photo: upload file",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "image/jpeg"
+              }
+            ],
+            "body": {
+              "mode": "file",
+              "file": {
+                "src": ""
+              }
+            },
+            "url": {
+              "raw": "{{uploadUrl}}"
+            },
+            "description": "Pick any JPEG in Body → binary before sending. The URL is the presigned link from the previous request (valid 15 minutes); send the same Content-Type it was issued for. The photo only counts once this upload succeeds."
+          },
+          "response": []
+        },
+        {
+          "name": "Nearby requests (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/collector/requests/nearby?lat={{lat}}&lng={{lng}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "requests",
+                "nearby"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "{{lat}}"
+                },
+                {
+                  "key": "lng",
+                  "value": "{{lng}}"
+                }
+              ]
+            },
+            "description": "Approved collectors only. Area, distance, items, slot and estimate; never the address or phone."
+          },
+          "response": []
+        },
+        {
+          "name": "Accept (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "accept"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "First accept wins; others get 409 ALREADY_TAKEN. Copies today's rates and creates the 4-digit pickup code. The response now includes the address and household phone."
+          },
+          "response": []
+        },
+        {
+          "name": "Get pickup (household) → saves pickup code",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.pickupCode !== undefined && body.pickupCode !== null) pm.collectionVariables.set('pickupCode', body.pickupCode);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "Owner, assigned collector or admin. pickupCode is returned to the household only, while ACCEPTED."
+          },
+          "response": []
+        },
+        {
+          "name": "Get pickup (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Arrive with the pickup code (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{pickupCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/arrive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "arrive"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "Wrong code → 422 CODE_MISMATCH with details.attemptsLeft; the 5th wrong code locks the pickup (423 CODE_LOCKED) and alerts admins."
+          },
+          "response": []
+        },
+        {
+          "name": "Scale photo: get upload slot (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.uploadUrl !== undefined && body.uploadUrl !== null) pm.collectionVariables.set('scaleUploadUrl', body.uploadUrl);",
+                  "  if (body.photoId !== undefined && body.photoId !== null) pm.collectionVariables.set('scalePhotoId', body.photoId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"SCALE\",\n  \"contentType\": \"image/jpeg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/photos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "photos"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Scale photo: upload file",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "image/jpeg"
+              }
+            ],
+            "body": {
+              "mode": "file",
+              "file": {
+                "src": ""
+              }
+            },
+            "url": {
+              "raw": "{{scaleUploadUrl}}"
+            },
+            "description": "Pick any JPEG in Body → binary before sending. The URL is the presigned link from the previous request (valid 15 minutes); send the same Content-Type it was issued for. The photo only counts once this upload succeeds."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit weights (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lines\": [\n    {\n      \"categoryCode\": \"IRON\",\n      \"kg\": 8.5\n    },\n    {\n      \"categoryCode\": \"NEWSPAPER\",\n      \"kg\": 6\n    }\n  ],\n  \"scalePhotoId\": \"{{scalePhotoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/weights",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "weights"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "kg to 0.1. Each line is one of the request's categories, at most once; ON_INSPECTION lines need quotedAmount. The server computes every amount. scalePhotoId must be an uploaded, unused SCALE photo (else 422 SCALE_PHOTO_REQUIRED)."
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm weights, pick bKash (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"BKASH\",\n  \"walletNumber\": \"{{householdPhone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "confirm"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "Household only, while WEIGHED. walletNumber is required for BKASH and NAGAD; use { \"paymentMethod\": \"CASH\" } for cash."
+          },
+          "response": []
+        },
+        {
+          "name": "Record payment (collector)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// A fresh TrxID each run: a TrxID can be used once per method.",
+                  "pm.collectionVariables.set('trxId', 'TRX' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"BKASH\",\n  \"trxId\": \"{{trxId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "payment"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "Must match the confirmed method. trxId is required for BKASH and NAGAD (422 TRX_ID_REQUIRED) and can be used once (409 TRX_ID_REUSED). Status COMPLETED."
+          },
+          "response": []
+        },
+        {
+          "name": "Rate the collector (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stars\": 5,\n  \"comment\": \"Weighed in front of me, paid at once.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/rating",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "rating"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "Once per pickup, after COMPLETED. A second rating is 409 INVALID_STATE."
+          },
+          "response": []
+        },
+        {
+          "name": "My pickups (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/pickups?status=COMPLETED&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "pickups"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "COMPLETED",
+                  "description": "ACTIVE | COMPLETED | CANCELLED (CANCELLED includes EXPIRED). Omit for all."
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true,
+                  "description": "nextCursor from the previous page"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My pickups (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/pickups?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "pickups"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Disputes and admin",
+      "description": "Run after folder 5. \"Report not paid\" opens a PAYMENT dispute on the completed pickup; the admin then resolves it.",
+      "item": [
+        {
+          "name": "Report a problem: payment not received (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.id !== undefined && body.id !== null) pm.collectionVariables.set('disputeId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"PAYMENT\",\n  \"reason\": \"No bKash message arrived.\",\n  \"photoIds\": [\n    \"{{itemsPhotoId}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/dispute",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "dispute"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "description": "Types: WEIGHT (while WEIGHED; 1st is REWEIGH, later ADMIN_REVIEW, pickup goes DISPUTED), PAYMENT (while COMPLETED; payment REPORTED), BEHAVIOUR and OTHER (any time after accept). One open dispute per pickup. photoIds are ITEMS photos uploaded by the household."
+          },
+          "response": []
+        },
+        {
+          "name": "List disputes (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/disputes?status=ADMIN_REVIEW",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "disputes"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ADMIN_REVIEW",
+                  "description": "REWEIGH | ADMIN_REVIEW | RESOLVED. Omit for all."
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve dispute (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"outcome\": \"PAYMENT_VERIFIED\",\n  \"note\": \"TrxID checked with bKash statement.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/disputes/:disputeId/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "disputes",
+                ":disputeId",
+                "resolve"
+              ],
+              "variable": [
+                {
+                  "key": "disputeId",
+                  "value": "{{disputeId}}"
+                }
+              ]
+            },
+            "description": "Outcomes per type: WEIGHT → ACCEPT_WEIGHTS, TEAM_REWEIGH, CANCEL; PAYMENT → PAYMENT_VERIFIED, PAY_AGAIN, SUSPEND_COLLECTOR; BEHAVIOUR / OTHER → NO_ACTION, SUSPEND_COLLECTOR, CANCEL. REWEIGHED is set by the system."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Other actions",
+      "description": "Cancel, release and admin cancel need a fresh pickup: each folder starts by creating one.",
+      "item": [
+        {
+          "name": "Household cancels",
+          "item": [
+            {
+              "name": "Create pickup request (household)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Tomorrow's date in Dhaka (UTC+6), so the MORNING slot is always still open.",
+                      "const d = new Date(Date.now() + 6 * 3600 * 1000 + 24 * 3600 * 1000);",
+                      "pm.collectionVariables.set('slotDate', d.toISOString().slice(0, 10));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status 201', () => pm.response.to.have.status(201));",
+                      "if (pm.response.code < 300 && pm.response.text()) {",
+                      "  const body = pm.response.json();",
+                      "  if (body.id !== undefined && body.id !== null) pm.collectionVariables.set('pickupId', body.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{householdToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}",
+                    "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"addressId\": \"{{addressId}}\",\n  \"categoryCodes\": [\n    \"PLASTIC\"\n  ],\n  \"weightBand\": \"UNDER_5\",\n  \"slotDate\": \"{{slotDate}}\",\n  \"slot\": \"AFTERNOON\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/pickups",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pickups"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel pickup (household)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status 200', () => pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{householdToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Sold it to a neighbour.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/pickups/:pickupId/cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pickups",
+                    ":pickupId",
+                    "cancel"
+                  ],
+                  "variable": [
+                    {
+                      "key": "pickupId",
+                      "value": "{{pickupId}}"
+                    }
+                  ]
+                },
+                "description": "Household owner only, while REQUESTED or ACCEPTED."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Collector releases",
+          "item": [
+            {
+              "name": "Create pickup request (household)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Tomorrow's date in Dhaka (UTC+6), so the MORNING slot is always still open.",
+                      "const d = new Date(Date.now() + 6 * 3600 * 1000 + 24 * 3600 * 1000);",
+                      "pm.collectionVariables.set('slotDate', d.toISOString().slice(0, 10));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status 201', () => pm.response.to.have.status(201));",
+                      "if (pm.response.code < 300 && pm.response.text()) {",
+                      "  const body = pm.response.json();",
+                      "  if (body.id !== undefined && body.id !== null) pm.collectionVariables.set('pickupId', body.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{householdToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}",
+                    "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"addressId\": \"{{addressId}}\",\n  \"categoryCodes\": [\n    \"CARTON\",\n    \"ELECTRONICS\"\n  ],\n  \"weightBand\": \"UNSURE\",\n  \"slotDate\": \"{{slotDate}}\",\n  \"slot\": \"MIDDAY\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/pickups",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pickups"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Accept (collector)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status 200', () => pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{collectorToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}",
+                    "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/pickups/:pickupId/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pickups",
+                    ":pickupId",
+                    "accept"
+                  ],
+                  "variable": [
+                    {
+                      "key": "pickupId",
+                      "value": "{{pickupId}}"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Release (collector)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status 204', () => pm.response.to.have.status(204));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{collectorToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Van broke down.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/pickups/:pickupId/release",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pickups",
+                    ":pickupId",
+                    "release"
+                  ],
+                  "variable": [
+                    {
+                      "key": "pickupId",
+                      "value": "{{pickupId}}"
+                    }
+                  ]
+                },
+                "description": "Assigned collector only, while ACCEPTED. Back to REQUESTED at 1 km; clears collector, code and copied rates."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Admin cancels",
+          "item": [
+            {
+              "name": "Create pickup request (household)",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Tomorrow's date in Dhaka (UTC+6), so the MORNING slot is always still open.",
+                      "const d = new Date(Date.now() + 6 * 3600 * 1000 + 24 * 3600 * 1000);",
+                      "pm.collectionVariables.set('slotDate', d.toISOString().slice(0, 10));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status 201', () => pm.response.to.have.status(201));",
+                      "if (pm.response.code < 300 && pm.response.text()) {",
+                      "  const body = pm.response.json();",
+                      "  if (body.id !== undefined && body.id !== null) pm.collectionVariables.set('pickupId', body.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{householdToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}",
+                    "description": "Required. Repeat a call with the same key to get the first response back without doing the work twice."
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"addressId\": \"{{addressId}}\",\n  \"categoryCodes\": [\n    \"ALUMINIUM\"\n  ],\n  \"weightBand\": \"OVER_15\",\n  \"slotDate\": \"{{slotDate}}\",\n  \"slot\": \"MORNING\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/pickups",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pickups"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel pickup (admin)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status 200', () => pm.response.to.have.status(200));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Duplicate request reported by the household.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/pickups/:pickupId/cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "pickups",
+                    ":pickupId",
+                    "cancel"
+                  ],
+                  "variable": [
+                    {
+                      "key": "pickupId",
+                      "value": "{{pickupId}}"
+                    }
+                  ]
+                },
+                "description": "Admin only. Any active status; reason required."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Delete address (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/addresses/:addressId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "addresses",
+                ":addressId"
+              ],
+              "variable": [
+                {
+                  "key": "addressId",
+                  "value": "{{addressId}}"
+                }
+              ]
+            },
+            "description": "Run last: the other requests use this address."
+          },
+          "response": []
+        },
+        {
+          "name": "Log out (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{householdRefresh}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes the refresh token. The access token stays valid until it expires."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
