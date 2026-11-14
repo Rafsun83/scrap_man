@@ -10,6 +10,13 @@ The originals live in Rafsun's claude.ai account. The links open after signing i
 | Logos | Logo page of the prototype | [`docs/design/logos/`](design/logos/) |
 | Prototype Test Guide: tasks and questions for user testing | https://claude.ai/artifact/Rf6d3CbFgY5z7mcqvghCJU | Not copied; not needed for building |
 
+Made in this repo (no claude.ai original):
+
+| Document | What it is |
+| --- | --- |
+| [`docs/api.md`](api.md) | API reference: every endpoint served today, who may call it, rules, errors, and a real request and response for each, plus the Socket.IO events. Samples were recorded from the running API on 2026-11-14; update this page whenever an endpoint changes |
+| [`milestones/`](../milestones/README.md) | One note per finished milestone with its checklist |
+
 ## Which copy wins
 
 The repo copies are what the code follows. When a decision changes in claude.ai, update the matching local file in the same commit. If a local copy and a request disagree, ask Rafsun before building.

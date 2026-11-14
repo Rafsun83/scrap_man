@@ -13,6 +13,7 @@ This repository is the v1 monorepo. Milestones **M0** (project setup) and **M1**
 | `apps/admin` | Admin panel for the operations team | React 19, Vite 8 |
 | `packages/shared` | Brand tokens, Bangla/English strings, enums, API types | TypeScript, generated from `docs/openapi.yaml` |
 | `docs/openapi.yaml` | The API contract (OpenAPI 3.1) | |
+| `docs/api.md` | API reference: every endpoint, its purpose, real sample requests and responses, live events | |
 
 ## First run
 
