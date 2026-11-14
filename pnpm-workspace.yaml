@@ -6,3 +6,7 @@ peerDependencyRules:
   allowedVersions:
     # openapi-typescript is a build-time generator; it works with TypeScript 6
     openapi-typescript>typescript: '6'
+
+# @parcel/watcher (via jest) ships prebuilt binaries; its install script is only a source-build fallback
+allowBuilds:
+  '@parcel/watcher': false

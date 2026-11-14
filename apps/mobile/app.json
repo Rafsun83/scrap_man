@@ -23,6 +23,25 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "bhangariwala"
+    "scheme": "bhangariwala",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-splash-screen",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Your location is saved with your address so the collector can find your home."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Photos of your scrap help the collector know what to expect.",
+          "cameraPermission": "Take a photo of your scrap so the collector knows what to expect."
+        }
+      ]
+    ]
   }
 }
