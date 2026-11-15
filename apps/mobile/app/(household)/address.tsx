@@ -7,12 +7,13 @@ import type { AddressInput } from '../../src/api/types';
 import { useT } from '../../src/i18n/lang';
 import { insideBangladesh } from '../../src/lib/format';
 import { BackButton, Button, Card, Field, LoadingView, Note, Screen } from '../../src/ui/components';
+import { mapsEnabled, PinPicker } from '../../src/ui/maps';
 import { errorMessage } from '../../src/ui/errors';
 import { body, colors, display, minTouch } from '../../src/ui/theme';
 
 /**
- * Add or edit a saved address (opened from H10 and H4). The location comes from the phone's GPS; the
- * prototype's map pin waits for a maps key.
+ * Add or edit a saved address (opened from H10 and H4). The location starts from the phone's GPS; with a maps
+ * key the household can drag the pin to the exact spot.
  */
 export default function AddressForm() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -116,6 +117,12 @@ export default function AddressForm() {
           <Text style={[body(14), { color: tried ? colors.alert : colors.muted }]}>{t('locationNeeded')}</Text>
         )}
         {locError ? <Text style={[body(14, 600), { color: colors.alert }]}>{locError}</Text> : null}
+        {v.location ? (
+          <>
+            <PinPicker value={v.location} onChange={(p) => insideBangladesh(p) && setLocation(p)} label={t('pinHint')} />
+            {mapsEnabled ? <Text style={[body(14), { color: colors.muted }]}>{t('pinHint')}</Text> : null}
+          </>
+        ) : null}
         <Button label={t('useCurrentLocation')} icon="crosshair" variant="outline" loading={locating} onPress={locate} />
       </Card>
 

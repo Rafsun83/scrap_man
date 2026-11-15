@@ -17,6 +17,10 @@ export type DisputeType = S['DisputeType'];
 export type PaymentMethod = S['PaymentMethod'];
 export type Photo = S['Photo'];
 export type ErrorCode = S['Error']['code'];
+export type MeSummary = S['MeSummary'];
+export type Notification = S['Notification'];
+export type NotificationPage = S['NotificationPage'];
+export type NotificationType = S['NotificationType'];
 
 export type TodayRates = {
   effectiveDate?: string;

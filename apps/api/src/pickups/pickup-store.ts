@@ -55,7 +55,10 @@ const PICKUP_COLUMNS = `
   p.payment_method, p.wallet_number, p.total_kg, p.total_amount, p.requested_at, p.accepted_at, p.arrived_at,
   p.weighed_at, p.confirmed_at, p.completed_at, p.cancelled_at, p.expires_at,
   h.name AS household_name, h.phone AS household_phone,
-  c.name AS collector_name, c.phone AS collector_phone, cp.rating_avg AS collector_rating`;
+  c.name AS collector_name, c.phone AS collector_phone, cp.rating_avg AS collector_rating,
+  ST_Y(cp.last_location::geometry) AS collector_lat, ST_X(cp.last_location::geometry) AS collector_lng,
+  cp.last_seen_at AS collector_seen_at,
+  r.stars AS rating_stars, r.comment AS rating_comment, r.created_at AS rated_at`;
 
 const codeKey = (pickupId: string) => `bw:pcode:${pickupId}`;
 const CODE_TTL_SEC = 3 * 86_400;
@@ -93,6 +96,7 @@ export class PickupStore {
            JOIN users h ON h.id = p.household_id
            LEFT JOIN users c ON c.id = p.collector_id
            LEFT JOIN collector_profiles cp ON cp.user_id = p.collector_id
+           LEFT JOIN ratings r ON r.pickup_id = p.id
           WHERE p.id = ANY($1::uuid[])`,
         [ids],
       ),

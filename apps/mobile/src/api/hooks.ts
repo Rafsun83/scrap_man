@@ -7,6 +7,8 @@ import type {
   AddressInput,
   Category,
   CreatePickup,
+  MeSummary,
+  NotificationPage,
   Dispute,
   DisputeType,
   PaymentMethod,
@@ -26,6 +28,8 @@ export const keys = {
   myPickups: (filter: PickupFilter | 'ALL', limit?: number) => ['me', 'pickups', filter, limit ?? 'pages'] as const,
   allMyPickups: ['me', 'pickups'] as const,
   pickup: (id: string) => ['pickup', id] as const,
+  summary: ['me', 'summary'] as const,
+  notifications: ['me', 'notifications'] as const,
 };
 
 /**
@@ -101,6 +105,33 @@ export function useUpdateMe() {
   return useMutation({
     mutationFn: (changes: { name?: string; language?: 'BN' | 'EN' }) => api.request<User>('PATCH', '/me', { body: changes }),
     onSuccess: (user) => setUser(user),
+  });
+}
+
+/** H11 totals over completed pickups. */
+export function useSummary() {
+  const { api } = useSession();
+  return useQuery({ queryKey: keys.summary, queryFn: () => api.request<MeSummary>('GET', '/me/summary') });
+}
+
+/** H13 feed, newest first, cursor paging. The first page also carries the unread count for the bell. */
+export function useNotifications() {
+  const { api } = useSession();
+  return useInfiniteQuery({
+    queryKey: keys.notifications,
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      api.request<NotificationPage>('GET', '/me/notifications', { query: { limit: 20, cursor: pageParam } }),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
+}
+
+export function useMarkNotificationsRead() {
+  const { api } = useSession();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.request<void>('POST', '/me/notifications/read'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.notifications }),
   });
 }
 

@@ -143,6 +143,22 @@ export class PickupsService {
     };
   }
 
+  /** H11 totals: completed pickups, their final kg and the taka paid, summed in the database. */
+  async summary(household: Viewer): Promise<{ completedCount: number; totalKg: number; totalAmount: number }> {
+    const row = await one<{ completed_count: string; total_kg: string; total_amount: string }>(
+      this.store.db,
+      `SELECT count(*) AS completed_count, COALESCE(sum(total_kg), 0) AS total_kg,
+              COALESCE(sum(total_amount), 0) AS total_amount
+         FROM pickups WHERE household_id = $1 AND status = 'COMPLETED'`,
+      [household.id],
+    );
+    return {
+      completedCount: Number(row?.completed_count ?? 0),
+      totalKg: Number(row?.total_kg ?? 0),
+      totalAmount: Number(row?.total_amount ?? 0),
+    };
+  }
+
   /** Household cancels while REQUESTED or ACCEPTED; admins cancel any active pickup. */
   async cancel(actor: Viewer, pickupId: string, reason?: string): Promise<PickupDto> {
     const now = this.store.now();

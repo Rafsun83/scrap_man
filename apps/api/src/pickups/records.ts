@@ -34,6 +34,13 @@ export interface PickupRow {
   collector_name: string | null;
   collector_phone: string | null;
   collector_rating: string | null;
+  /** The collector's last ping (collector_profiles.last_location); null if never sent. */
+  collector_lat: number | null;
+  collector_lng: number | null;
+  collector_seen_at: Date | null;
+  rating_stars: number | null;
+  rating_comment: string | null;
+  rated_at: Date | null;
 }
 
 export interface ItemRow {

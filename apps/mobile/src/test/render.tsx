@@ -62,6 +62,8 @@ export function makePickup(overrides: Partial<Pickup> = {}): Pickup {
     completedAt: null,
     cancelledAt: null,
     expiresAt: '2026-11-14T06:00:00Z',
+    collectorLocation: null,
+    rating: null,
     ...overrides,
   };
 }

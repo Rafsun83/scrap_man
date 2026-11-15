@@ -1,7 +1,7 @@
-import { formatKg, formatTaka } from '@bw/shared';
+import { formatKg, formatTaka, localDigits } from '@bw/shared';
 import { Link, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useCategories, useDefaultAddress, useMyPickups, useTodayRates } from '../../../src/api/hooks';
+import { useCategories, useDefaultAddress, useMyPickups, useNotifications, useTodayRates } from '../../../src/api/hooks';
 import { useSession } from '../../../src/auth/session';
 import { rateRows, ratesPublished } from '../../../src/household/RateBoard';
 import { useT } from '../../../src/i18n/lang';
@@ -21,6 +21,8 @@ export default function Home() {
   const { address } = useDefaultAddress();
   const active = useMyPickups('ACTIVE', 1);
   const recent = useMyPickups('COMPLETED', 3);
+  const feed = useNotifications();
+  const unread = feed.data?.pages[0]?.unreadCount ?? 0;
 
   const greeting = t(greetingKey());
   const title = user?.name ? t('greetName', { greeting, name: user.name }) : greeting;
@@ -45,12 +47,28 @@ export default function Home() {
 
   return (
     <Screen edges={['top']}>
-      <View style={{ gap: 4 }}>
-        <Text style={[display(26), { lineHeight: 32 }]}>{title}</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push(address ? '/profile' : '/address')} style={s.place}>
-          <Icon name="map-pin" size={18} />
-          <Text style={body(16)}>{address ? address.area : t('noAddressYet')}</Text>
-          <Icon name="chevron-down" size={16} />
+      <View style={s.header}>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={[display(26), { lineHeight: 32 }]}>{title}</Text>
+          <Pressable accessibilityRole="button" onPress={() => router.push(address ? '/profile' : '/address')} style={s.place}>
+            <Icon name="map-pin" size={18} />
+            <Text style={body(16)}>{address ? address.area : t('noAddressYet')}</Text>
+            <Icon name="chevron-down" size={16} />
+          </Pressable>
+        </View>
+        <Pressable
+          testID="bell"
+          accessibilityRole="button"
+          accessibilityLabel={unread > 0 ? `${t('notifications')}, ${t('unreadCount', { count: localDigits(unread, lang) })}` : t('notifications')}
+          onPress={() => router.push('/notifications')}
+          style={s.bell}
+        >
+          <Icon name="bell" size={22} />
+          {unread > 0 ? (
+            <View style={s.badge}>
+              <Text style={[body(12, 700), { color: colors.surface }]}>{localDigits(unread > 9 ? '9+' : unread, lang)}</Text>
+            </View>
+          ) : null}
         </Pressable>
       </View>
 
@@ -157,6 +175,27 @@ export default function Home() {
 }
 
 const s = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  bell: {
+    width: minTouch,
+    height: minTouch,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    backgroundColor: colors.gamcha,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   place: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: minTouch, alignSelf: 'flex-start' },
   activeBanner: {
     flexDirection: 'row',

@@ -10,6 +10,8 @@ describe('live events', () => {
     handleEvent(qc, 'pickup.weighed', { pickupId: 'p1', displayNo: 'BW-1', status: 'WEIGHED', at: '' });
     expect(spy).toHaveBeenCalledWith({ queryKey: ['pickup', 'p1'] });
     expect(spy).toHaveBeenCalledWith({ queryKey: ['me', 'pickups'] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['me', 'notifications'] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['me', 'summary'] });
   });
 
   it('refetches for dispute events and expiry', () => {

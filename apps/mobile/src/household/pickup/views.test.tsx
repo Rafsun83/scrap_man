@@ -50,6 +50,17 @@ describe('H6 tracking', () => {
     expect(screen.getByText(/প্রায় .* মিনিট/)).toBeTruthy();
   });
 
+  it('starts from the saved collector location before any live event', async () => {
+    await renderScreen(<TrackingView pickup={{ ...accepted, id: 'p-saved', collectorLocation: { lat: 23.7957, lng: 90.3537, at: '2026-11-14T03:15:00Z' } }} />);
+    expect(screen.getByText('২.০ কিমি দূরে')).toBeTruthy();
+  });
+
+  it('prefers a newer live position over the saved one', async () => {
+    setCollectorLocation('p-live', { lat: 23.8069, lng: 90.3687, at: '2026-11-14T03:20:00Z' });
+    await renderScreen(<TrackingView pickup={{ ...accepted, id: 'p-live', collectorLocation: { lat: 23.7957, lng: 90.3537, at: '2026-11-14T03:15:00Z' } }} />);
+    expect(screen.getByText('০.০ কিমি দূরে')).toBeTruthy();
+  });
+
   it('hides the code after arrival and warns when it is locked', async () => {
     const { rerender } = await renderScreen(<TrackingView pickup={{ ...accepted, status: 'ARRIVED', pickupCode: null }} />);
     expect(screen.queryByTestId('pickup-code')).toBeNull();
@@ -128,6 +139,14 @@ describe('H8 receipt', () => {
     await fireEvent.press(screen.getByTestId('star-4'));
     await waitFor(() => expect(screen.getByText('ধন্যবাদ! আপনার রেটিং জমা হয়েছে।')).toBeTruthy());
     expect(onRate).toHaveBeenCalledWith(4);
+  });
+
+  it('shows a saved rating without asking again', async () => {
+    const onRate = jest.fn();
+    await renderScreen(<ReceiptView pickup={{ ...completed, rating: { stars: 4, comment: null, createdAt: '' } }} categories={categories} onRate={onRate} onReportPayment={jest.fn()} />);
+    expect(screen.getByText('আপনি ৪ স্টার দিয়েছেন। ধন্যবাদ!')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('star-5'));
+    expect(onRate).not.toHaveBeenCalled();
   });
 
   it('says so when the pickup was already rated', async () => {

@@ -53,6 +53,9 @@ export function handleEvent(qc: QueryClient, event: string, payload: unknown) {
     const pickupId = (payload as { pickupId?: string }).pickupId;
     if (pickupId) qc.invalidateQueries({ queryKey: keys.pickup(pickupId) });
     qc.invalidateQueries({ queryKey: keys.allMyPickups });
+    // The notification feed and the history totals are built from the same events.
+    qc.invalidateQueries({ queryKey: keys.notifications });
+    qc.invalidateQueries({ queryKey: keys.summary });
   }
 }
 

@@ -162,4 +162,10 @@ export class MyPickupsController {
   list(@CurrentUser() user: UserEntity, @Query(new ZodPipe(listMineSchema)) query: z.infer<typeof listMineSchema>) {
     return this.pickups.listMine(user, query.status, query.limit, query.cursor);
   }
+
+  @Get('summary')
+  @Roles('HOUSEHOLD')
+  summary(@CurrentUser() user: UserEntity) {
+    return this.pickups.summary(user);
+  }
 }

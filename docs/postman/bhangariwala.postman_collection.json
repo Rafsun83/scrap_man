@@ -2,7 +2,7 @@
   "info": {
     "name": "BhangariWala API",
     "_postman_id": "b6f1d0a2-6c3e-4a51-9d5e-2f8a1c7e4b90",
-    "description": "Every route implemented in `apps/api` up to M2 (all 33 routes, 46 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.\n\n## Before you start\n1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).\n2. Run the folders in order (or the whole collection with the Runner). Requests save ids, tokens and the pickup code into collection variables for the next steps.\n3. Every OTP in development is `123456`. The admin phone is `+8801700000000`.\n\n## Approving the collector (no endpoint until M4)\nCollector sign-up and admin approval arrive in M4. After **1. Auth → Verify OTP (collector)**, give the collector an approved profile with SQL (the same thing the e2e tests do):\n\n```\ndocker compose exec postgres psql -U bw -d bhangariwala -c \"INSERT INTO collector_profiles (user_id, nid_number, vehicle_type, has_scale, verification_status) SELECT id, '1234567890', 'VAN', true, 'APPROVED' FROM users WHERE phone = '+8801812000002' ON CONFLICT (user_id) DO UPDATE SET verification_status = 'APPROVED';\"\n```\n\n## Notes\n- Requests marked with an `Idempotency-Key` header use `{{$guid}}`, so every send is a new action. To test a safe retry, replace it with a fixed value.\n- Photo uploads are two steps: ask for an upload slot, then PUT the file to `{{uploadUrl}}` / `{{scaleUploadUrl}}` (choose a JPEG under Body → binary).\n- The collector must be within the search radius of the address (1 km, 3 km after 5 minutes). The collection uses the same Mirpur 10 point for both.\n- Live events (Socket.IO at the API origin, path `/socket.io`, `auth.token` = access token) are not part of this collection; see `SocketEvents` in the contract.\n- To run it again from the start, change `householdPhone` and `collectorPhone` or reuse them (existing numbers keep their role).",
+    "description": "Every route implemented in `apps/api` up to M3 (all 36 routes, 49 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.\n\n## Before you start\n1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).\n2. Run the folders in order (or the whole collection with the Runner). Requests save ids, tokens and the pickup code into collection variables for the next steps.\n3. Every OTP in development is `123456`. The admin phone is `+8801700000000`.\n\n## Approving the collector (no endpoint until M4)\nCollector sign-up and admin approval arrive in M4. After **1. Auth → Verify OTP (collector)**, give the collector an approved profile with SQL (the same thing the e2e tests do):\n\n```\ndocker compose exec postgres psql -U bw -d bhangariwala -c \"INSERT INTO collector_profiles (user_id, nid_number, vehicle_type, has_scale, verification_status) SELECT id, '1234567890', 'VAN', true, 'APPROVED' FROM users WHERE phone = '+8801812000002' ON CONFLICT (user_id) DO UPDATE SET verification_status = 'APPROVED';\"\n```\n\n## Notes\n- Requests marked with an `Idempotency-Key` header use `{{$guid}}`, so every send is a new action. To test a safe retry, replace it with a fixed value.\n- Photo uploads are two steps: ask for an upload slot, then PUT the file to `{{uploadUrl}}` / `{{scaleUploadUrl}}` (choose a JPEG under Body → binary).\n- The collector must be within the search radius of the address (1 km, 3 km after 5 minutes). The collection uses the same Mirpur 10 point for both.\n- Live events (Socket.IO at the API origin, path `/socket.io`, `auth.token` = access token) are not part of this collection; see `SocketEvents` in the contract.\n- To run it again from the start, change `householdPhone` and `collectorPhone` or reuse them (existing numbers keep their role).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1950,6 +1950,139 @@
                 }
               ]
             }
+          },
+          "response": []
+        },
+        {
+          "name": "History totals (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "summary"
+              ]
+            },
+            "description": "Household only (M3, screen H11). Completed pickups, kg sold and taka earned."
+          },
+          "response": []
+        },
+        {
+          "name": "Notifications (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/notifications?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true,
+                  "description": "nextCursor from the previous page"
+                }
+              ]
+            },
+            "description": "Household only (M3, screen H13). Built from what happened: accepted, released, weighed, paid, expired, cancelled by an admin, dispute resolved, rates published. The household's own actions are not listed. unreadCount covers every page."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark all notifications read (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/notifications/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "notifications",
+                "read"
+              ]
+            },
+            "description": "Household only. Everything up to now becomes read; unreadCount drops to 0."
           },
           "response": []
         }

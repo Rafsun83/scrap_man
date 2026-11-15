@@ -8,26 +8,29 @@ import { distanceM, etaMinutes, formatKm, initials } from '../../lib/format';
 import { trackingSteps, type StepState } from '../../lib/pickupView';
 import { useCollectorLocation } from '../../realtime/socket';
 import { Button, Icon, Note } from '../../ui/components';
+import { mapsEnabled, TrackingMap } from '../../ui/maps';
 import { body, colors, display, minTouch, radius, tones } from '../../ui/theme';
 import { collectorName } from './shared';
 
 /**
- * H6: collector on the way (ACCEPTED) and at the door (ARRIVED). The prototype's map needs a maps key and
- * the collector's last position from the API; until then the top panel shows distance and a rough ETA from
- * live `collector.location` events.
+ * H6: collector on the way (ACCEPTED) and at the door (ARRIVED). The collector's position starts from the
+ * pickup's collectorLocation and follows live `collector.location` events. With a maps key the top panel is a
+ * map; without one it shows distance and a rough ETA.
  */
 export function TrackingView({ pickup }: { pickup: Pickup }) {
   const { t, lang } = useT();
   const router = useRouter();
-  const location = useCollectorLocation(pickup.id);
+  const live = useCollectorLocation(pickup.id);
+  const saved = pickup.collectorLocation;
+  // Whichever position is newer: the live event or the one saved with the pickup.
+  const location = live && (!saved || Date.parse(live.at) >= Date.parse(saved.at)) ? live : (saved ?? null);
+  const home = pickup.address?.lat != null && pickup.address?.lng != null ? { lat: pickup.address.lat, lng: pickup.address.lng } : null;
   const name = collectorName(pickup, t('collectorFallbackName'));
   const firstName = name.split(/\s+/)[0];
   const arrived = pickup.status === 'ARRIVED';
 
-  const metres =
-    !arrived && location && pickup.address?.lat != null && pickup.address?.lng != null
-      ? distanceM(location, { lat: pickup.address.lat, lng: pickup.address.lng })
-      : null;
+  const metres = !arrived && location && home ? distanceM(location, home) : null;
+  const showMap = mapsEnabled && home !== null;
 
   const steps = trackingSteps(pickup.status);
   const stepLabels = [t('stepAccepted'), t('stepOnTheWay'), t('stepWeigh'), t('stepPaid')];
@@ -35,20 +38,30 @@ export function TrackingView({ pickup }: { pickup: Pickup }) {
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom']}>
       <View style={s.panel}>
+        {showMap ? (
+          <TrackingMap
+            home={home!}
+            collector={arrived ? null : location}
+            style={StyleSheet.absoluteFill}
+            label={t('mapLabel')}
+          />
+        ) : null}
         <Pressable accessibilityRole="button" accessibilityLabel={t('goHome')} onPress={() => router.dismissTo('/home')} style={s.homeBtn}>
           <Icon name="arrow-left" />
           <Text style={body(14, 600)}>{t('goHome')}</Text>
         </Pressable>
-        <View style={s.panelBody}>
-          <View style={s.truck}>
-            <Icon name={arrived ? 'home' : 'truck'} size={26} color={colors.signal} />
+        {showMap ? null : (
+          <View style={s.panelBody}>
+            <View style={s.truck}>
+              <Icon name={arrived ? 'home' : 'truck'} size={26} color={colors.signal} />
+            </View>
+            {arrived ? null : metres !== null ? (
+              <Text style={display(22)}>{t('distanceAway', { km: formatKm(metres, lang) })}</Text>
+            ) : (
+              <Text style={[body(15, 600), { textAlign: 'center', color: colors.muted }]}>{t('waitingForLocation')}</Text>
+            )}
           </View>
-          {arrived ? null : metres !== null ? (
-            <Text style={display(22)}>{t('distanceAway', { km: formatKm(metres, lang) })}</Text>
-          ) : (
-            <Text style={[body(15, 600), { textAlign: 'center', color: colors.muted }]}>{t('waitingForLocation')}</Text>
-          )}
-        </View>
+        )}
       </View>
 
       <ScrollView style={s.sheet} contentContainerStyle={s.sheetContent}>
@@ -57,9 +70,14 @@ export function TrackingView({ pickup }: { pickup: Pickup }) {
             {t(arrived ? 'collectorArrived' : 'collectorComing', { name: firstName })}
           </Text>
           {metres !== null ? (
-            <Text style={[body(16, 700), { color: colors.money }]}>
-              {t('aboutMinutes', { minutes: localDigits(etaMinutes(metres), lang) })}
-            </Text>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={[body(16, 700), { color: colors.money }]}>
+                {t('aboutMinutes', { minutes: localDigits(etaMinutes(metres), lang) })}
+              </Text>
+              {showMap ? (
+                <Text style={[body(13), { color: colors.muted }]}>{t('distanceAway', { km: formatKm(metres, lang) })}</Text>
+              ) : null}
+            </View>
           ) : null}
         </View>
 
@@ -152,7 +170,7 @@ function Step({ n, label, state }: { n: number; label: string; state: StepState 
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
-  panel: { height: 200, backgroundColor: tones.mapGround, padding: 12 },
+  panel: { height: 220, backgroundColor: tones.mapGround, padding: 12, overflow: 'hidden' },
   homeBtn: {
     flexDirection: 'row',
     alignItems: 'center',

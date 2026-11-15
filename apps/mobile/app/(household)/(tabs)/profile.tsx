@@ -10,8 +10,8 @@ import { errorMessage } from '../../../src/ui/errors';
 import { body, colors, display, minTouch, radius } from '../../../src/ui/theme';
 
 /**
- * H10: name, saved addresses, language, log out. The prototype's notifications, help and terms rows are
- * left out until there is a notifications API and approved help/terms content.
+ * H10: name, saved addresses, language, notifications, log out. The prototype's help and terms rows wait
+ * for approved help/terms content.
  */
 export default function Profile() {
   const { t, lang } = useT();
@@ -125,6 +125,14 @@ export default function Profile() {
               ))}
             </View>
           </View>
+          <Divider />
+          <Pressable accessibilityRole="button" onPress={() => router.push('/notifications')} style={s.setting}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Icon name="bell" size={20} />
+              <Text style={body(16, 600)}>{t('notifications')}</Text>
+            </View>
+            <Icon name="chevron-right" size={20} />
+          </Pressable>
         </Card>
       </View>
 

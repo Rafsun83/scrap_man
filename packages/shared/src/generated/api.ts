@@ -487,6 +487,131 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Household totals for the history screen (H11)
+         * @description Household only. Counts COMPLETED pickups; totalAmount is what the household was paid.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Totals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MeSummary"];
+                    };
+                };
+                403: components["responses"]["Error"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The household's notifications, newest first (H13)
+         * @description Household only in v1 (collectors get theirs in M4). Built from what already happened, so it always
+         *     matches the pickup history: a collector accepted, released, weighed, was paid, a request expired or was
+         *     cancelled by someone else, a dispute was resolved, and the day's rates were published (from the day
+         *     the account was created). The household's own actions are not listed. `read` is true for items at or
+         *     before the last POST /me/notifications/read. The apps write the text from `type` and `data`.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: components["parameters"]["Limit"];
+                    cursor?: components["parameters"]["Cursor"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of notifications */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotificationPage"];
+                    };
+                };
+                403: components["responses"]["Error"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark every notification up to now as read
+         * @description Household only. Sets the user's "seen up to" time to now; unreadCount becomes 0.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Marked read */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pickups": {
         parameters: {
             query?: never;
@@ -2078,6 +2203,70 @@ export interface components {
              * @description End of the booked slot
              */
             expiresAt: string;
+            /**
+             * @description The assigned collector's last known position, so the household's map (H6) has a point before the
+             *     next `collector.location` event. Only for the household (and admins) while ACCEPTED; null otherwise
+             *     or if the collector has never sent a location.
+             */
+            collectorLocation: {
+                lat: number;
+                lng: number;
+                /** Format: date-time */
+                at: string;
+            } | null;
+            /** @description The household's rating of this pickup; for the household, the assigned collector and admins. Null until rated. */
+            rating: {
+                stars: number;
+                comment: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            } | null;
+        };
+        MeSummary: {
+            completedCount: number;
+            /** @description Sum of final weights */
+            totalKg: number;
+            totalAmount: components["schemas"]["Money"];
+        };
+        /**
+         * @description PICKUP_ACCEPTED, PICKUP_RELEASED (the collector gave the request back; it is searching again),
+         *     PICKUP_WEIGHED (weights ready to check; data.weighVersion > 1 for a re-weigh), PICKUP_PAID,
+         *     PICKUP_EXPIRED, PICKUP_CANCELLED (by an admin), DISPUTE_RESOLVED, RATES_PUBLISHED.
+         * @enum {string}
+         */
+        NotificationType: "PICKUP_ACCEPTED" | "PICKUP_RELEASED" | "PICKUP_WEIGHED" | "PICKUP_PAID" | "PICKUP_EXPIRED" | "PICKUP_CANCELLED" | "DISPUTE_RESOLVED" | "RATES_PUBLISHED";
+        Notification: {
+            /** @description Stable id, e.g. "se:123", "dr:<uuid>", "rp:2026-11-15" */
+            id: string;
+            type: components["schemas"]["NotificationType"];
+            /** Format: date-time */
+            at: string;
+            read: boolean;
+            /**
+             * Format: uuid
+             * @description Null for RATES_PUBLISHED
+             */
+            pickupId: string | null;
+            displayNo: string | null;
+            /** @description Only the fields that apply to the type are present. */
+            data: {
+                categoryCodes?: string[];
+                collectorName?: string | null;
+                amount?: components["schemas"]["Money"];
+                totalKg?: components["schemas"]["Kg"];
+                method?: components["schemas"]["PaymentMethod"];
+                weighVersion?: number;
+                disputeType?: components["schemas"]["DisputeType"];
+                outcome?: components["schemas"]["DisputeOutcome"];
+                /** Format: date */
+                effectiveDate?: string;
+            };
+        };
+        NotificationPage: {
+            items: components["schemas"]["Notification"][];
+            nextCursor: string | null;
+            /** @description Unread items across all pages */
+            unreadCount: number;
         };
         PickupPage: {
             items?: components["schemas"]["Pickup"][];

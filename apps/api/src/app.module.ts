@@ -10,6 +10,7 @@ import { validateEnv, type Env } from './config/env.js';
 import { databaseOptions } from './database/database.options.js';
 import { HealthModule } from './health/health.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { PickupsModule } from './pickups/pickups.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
 import { RedisModule } from './redis/redis.module.js';
@@ -36,6 +37,7 @@ import { UsersModule } from './users/users.module.js';
     RealtimeModule,
     PickupsModule,
     JobsModule,
+    NotificationsModule,
   ],
   providers: [{ provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor }],
 })

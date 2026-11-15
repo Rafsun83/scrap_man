@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCategories, useMyPickupPages } from '../../../src/api/hooks';
+import { useCategories, useMyPickupPages, useSummary } from '../../../src/api/hooks';
 import type { Pickup, PickupFilter } from '../../../src/api/types';
 import { useT } from '../../../src/i18n/lang';
 import { formatDate } from '../../../src/lib/dhaka';
@@ -28,16 +28,14 @@ const BADGE = {
   active: { bg: colors.selectedTint, fg: colors.ink },
 };
 
-/**
- * H11: filters and past pickups with cursor paging. The prototype's totals header ("earned so far",
- * "total sold") is left out: the API has no summary endpoint yet, and adding up one page would be wrong.
- */
+/** H11: totals (GET /me/summary), filters and past pickups with cursor paging. */
 export default function History() {
   const { t, lang } = useT();
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>('ALL');
   const categories = useCategories();
   const pages = useMyPickupPages(filter);
+  const summary = useSummary();
   const items = pages.data?.pages.flatMap((p) => p.items ?? []) ?? [];
   const current = FILTERS.find((f) => f.key === filter)!;
 
@@ -67,6 +65,18 @@ export default function History() {
     <SafeAreaView style={s.screen} edges={['top']}>
       <View style={s.header}>
         <Text style={[display(28), { lineHeight: 34 }]}>{t('mySales')}</Text>
+        {summary.data ? (
+          <View style={s.totals}>
+            <View style={s.total}>
+              <Text style={[body(13), { color: tones.ink200 }]}>{t('earnedSoFar')}</Text>
+              <Text testID="earned" style={[display(26, 800), { color: colors.signal }]}>{formatTaka(summary.data.totalAmount, lang)}</Text>
+            </View>
+            <View style={s.total}>
+              <Text style={[body(13), { color: tones.ink200 }]}>{t('totalSold')}</Text>
+              <Text testID="sold" style={[display(26, 800), { color: colors.signal }]}>{formatKg(summary.data.totalKg, lang)}</Text>
+            </View>
+          </View>
+        ) : null}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} accessibilityLabel={t('filters')}>
           {FILTERS.map((f) => (
             <Chip key={f.key} label={t(f.label)} selected={filter === f.key} onPress={() => setFilter(f.key)} />
@@ -106,6 +116,8 @@ export default function History() {
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ground },
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, gap: 14 },
+  totals: { flexDirection: 'row', gap: 10 },
+  total: { flex: 1, gap: 2, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: colors.ink },
   list: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, gap: 10, flexGrow: 1 },
   row: {
     flexDirection: 'row',

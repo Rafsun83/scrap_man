@@ -70,7 +70,7 @@ export async function createTestApp(): Promise<TestContext> {
 export async function resetData(ctx: TestContext): Promise<void> {
   await ctx.db.query(
     `TRUNCATE status_events, ratings, disputes, payments, pickup_photos, weigh_lines, pickup_items,
-              pickups, daily_rates, collector_profiles, addresses, users RESTART IDENTITY CASCADE`,
+              pickups, daily_rates, notification_reads, collector_profiles, addresses, users RESTART IDENTITY CASCADE`,
   );
   await ctx.redis.flushdb();
   ctx.sms.codes.clear();

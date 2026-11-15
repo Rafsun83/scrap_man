@@ -154,6 +154,14 @@ export function toPickupDto(
     completedAt: iso(row.completed_at),
     cancelledAt: iso(row.cancelled_at),
     expiresAt: row.expires_at.toISOString(),
+    collectorLocation:
+      (isOwner || isAdmin) && row.status === 'ACCEPTED' && row.collector_lat !== null && row.collector_lng !== null
+        ? { lat: Number(row.collector_lat), lng: Number(row.collector_lng), at: iso(row.collector_seen_at) ?? iso(row.accepted_at)! }
+        : null,
+    rating:
+      (isOwner || isAssigned || isAdmin) && row.rating_stars !== null
+        ? { stars: Number(row.rating_stars), comment: row.rating_comment, createdAt: row.rated_at!.toISOString() }
+        : null,
   };
 }
 

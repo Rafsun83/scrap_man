@@ -247,6 +247,49 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PickupPage' }
 
+  /me/summary:
+    get:
+      tags: [Me]
+      summary: Household totals for the history screen (H11)
+      description: Household only. Counts COMPLETED pickups; totalAmount is what the household was paid.
+      responses:
+        '200':
+          description: Totals
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MeSummary' }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /me/notifications:
+    get:
+      tags: [Me]
+      summary: The household's notifications, newest first (H13)
+      description: |
+        Household only in v1 (collectors get theirs in M4). Built from what already happened, so it always
+        matches the pickup history: a collector accepted, released, weighed, was paid, a request expired or was
+        cancelled by someone else, a dispute was resolved, and the day's rates were published (from the day
+        the account was created). The household's own actions are not listed. `read` is true for items at or
+        before the last POST /me/notifications/read. The apps write the text from `type` and `data`.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of notifications
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationPage' }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /me/notifications/read:
+    post:
+      tags: [Me]
+      summary: Mark every notification up to now as read
+      description: Household only. Sets the user's "seen up to" time to now; unreadCount becomes 0.
+      responses:
+        '204': { description: Marked read }
+        '403': { $ref: '#/components/responses/Error' }
+
   /pickups:
     post:
       tags: [Pickups]
@@ -1137,7 +1180,8 @@ components:
       required: [id, displayNo, status, slotDate, slot, weightBand, categoryCodes, area, estimate, address,
                  household, collector, pickupCode, codeLocked, lines, weighVersion, weighRounds, photos, totalKg,
                  totalAmount, paymentMethod, walletNumber, payment, openDispute, searchRadiusM, requestedAt,
-                 acceptedAt, arrivedAt, weighedAt, confirmedAt, completedAt, cancelledAt, expiresAt]
+                 acceptedAt, arrivedAt, weighedAt, confirmedAt, completedAt, cancelledAt, expiresAt,
+                 collectorLocation, rating]
       properties:
         id: { type: string, format: uuid }
         displayNo: { type: string, examples: [BW-1052] }
@@ -1205,7 +1249,73 @@ components:
         completedAt: { type: [string, 'null'], format: date-time }
         cancelledAt: { type: [string, 'null'], format: date-time }
         expiresAt: { type: string, format: date-time, description: End of the booked slot }
+        collectorLocation:
+          type: [object, 'null']
+          description: |
+            The assigned collector's last known position, so the household's map (H6) has a point before the
+            next `collector.location` event. Only for the household (and admins) while ACCEPTED; null otherwise
+            or if the collector has never sent a location.
+          required: [lat, lng, at]
+          properties:
+            lat: { type: number }
+            lng: { type: number }
+            at: { type: string, format: date-time }
+        rating:
+          type: [object, 'null']
+          description: The household's rating of this pickup; for the household, the assigned collector and admins. Null until rated.
+          required: [stars, comment, createdAt]
+          properties:
+            stars: { type: integer, minimum: 1, maximum: 5 }
+            comment: { type: [string, 'null'] }
+            createdAt: { type: string, format: date-time }
 
+    MeSummary:
+      type: object
+      required: [completedCount, totalKg, totalAmount]
+      properties:
+        completedCount: { type: integer, minimum: 0 }
+        totalKg: { type: number, minimum: 0, description: Sum of final weights, 1 decimal }
+        totalAmount: { $ref: '#/components/schemas/Money' }
+    NotificationType:
+      type: string
+      description: |
+        PICKUP_ACCEPTED, PICKUP_RELEASED (the collector gave the request back; it is searching again),
+        PICKUP_WEIGHED (weights ready to check; data.weighVersion > 1 for a re-weigh), PICKUP_PAID,
+        PICKUP_EXPIRED, PICKUP_CANCELLED (by an admin), DISPUTE_RESOLVED, RATES_PUBLISHED.
+      enum: [PICKUP_ACCEPTED, PICKUP_RELEASED, PICKUP_WEIGHED, PICKUP_PAID, PICKUP_EXPIRED, PICKUP_CANCELLED,
+             DISPUTE_RESOLVED, RATES_PUBLISHED]
+    Notification:
+      type: object
+      required: [id, type, at, read, pickupId, displayNo, data]
+      properties:
+        id: { type: string, description: 'Stable id, e.g. "se:123", "dr:<uuid>", "rp:2026-11-15"' }
+        type: { $ref: '#/components/schemas/NotificationType' }
+        at: { type: string, format: date-time }
+        read: { type: boolean }
+        pickupId: { type: [string, 'null'], format: uuid, description: Null for RATES_PUBLISHED }
+        displayNo: { type: [string, 'null'] }
+        data:
+          type: object
+          description: Only the fields that apply to the type are present.
+          properties:
+            categoryCodes: { type: array, items: { type: string } }
+            collectorName: { type: [string, 'null'] }
+            amount: { $ref: '#/components/schemas/Money' }
+            totalKg: { $ref: '#/components/schemas/Kg' }
+            method: { $ref: '#/components/schemas/PaymentMethod' }
+            weighVersion: { type: integer }
+            disputeType: { $ref: '#/components/schemas/DisputeType' }
+            outcome: { $ref: '#/components/schemas/DisputeOutcome' }
+            effectiveDate: { type: string, format: date }
+    NotificationPage:
+      type: object
+      required: [items, nextCursor, unreadCount]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Notification' }
+        nextCursor: { type: [string, 'null'] }
+        unreadCount: { type: integer, minimum: 0, description: Unread items across all pages }
     PickupPage:
       type: object
       properties:

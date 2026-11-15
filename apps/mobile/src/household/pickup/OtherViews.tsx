@@ -80,8 +80,9 @@ export function ReceiptView({
 }) {
   const { t, lang } = useT();
   const router = useRouter();
-  const [stars, setStars] = useState(0);
-  const [ratingNote, setRatingNote] = useState<string | null>(null);
+  const saved = pickup.rating?.stars ?? 0;
+  const [stars, setStars] = useState(saved);
+  const [ratingNote, setRatingNote] = useState<string | null>(saved ? t('ratedStars', { count: localDigits(saved, lang) }) : null);
   const [saving, setSaving] = useState(false);
   const pay = pickup.payment;
   const amount = formatTaka(pay?.amount ?? pickup.totalAmount ?? 0, lang);
@@ -98,7 +99,7 @@ export function ReceiptView({
       await onRate(n);
       setRatingNote(t('ratingSaved'));
     } catch (e) {
-      // The API has no "already rated" flag on the pickup; a second rating is refused with INVALID_STATE.
+      // Rated from another device since this screen loaded: the API refuses a second rating.
       if (e instanceof ApiError && e.code === 'INVALID_STATE') setRatingNote(t('ratingAlready'));
       else setStars(0);
     } finally {

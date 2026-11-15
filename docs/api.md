@@ -1,8 +1,8 @@
 # BhangariWala API reference
 
-Every endpoint the API serves today (milestones M0 to M2), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
+Every endpoint the API serves today (milestones M0 to M3), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
 
-> **How the samples were made:** every sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
+> **How the samples were made:** the M3 samples (summary, notifications, `collectorLocation`, `rating`) come from a second scripted sale on 2026-11-15. Every other sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
 
 ## Contents
 
@@ -16,6 +16,7 @@ Every endpoint the API serves today (milestones M0 to M2), what it is for, who m
 - [Pickups](#pickups)
 - [Collector](#collector)
 - [Admin](#admin)
+- [Notifications](#notifications)
 - [Live events (Socket.IO)](#live-events-socketio)
 - [Planned endpoints](#planned-endpoints)
 
@@ -121,6 +122,7 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `POST` | [`/pickups`](#post-pickups) | Household | Requests a doorstep pickup | M2 |
 | `GET` | [`/pickups/{pickupId}`](#get-pickupspickupid) | The household, the assigned collector, or an admin | One pickup, shaped for the viewer | M2 |
 | `GET` | [`/me/pickups`](#get-mepickups) | Household or collector | Own pickups, newest first: the household's requests, or the collector's assigned pickups (history screens H11 and C8) | M2 |
+| `GET` | [`/me/summary`](#get-mesummary) | Household | Totals for the history screen: completed pickups, kg sold, taka earned (H11) | M3 |
 | `POST` | [`/pickups/{pickupId}/cancel`](#post-pickupspickupidcancel) | Household (own pickup) | The household cancels before the collector arrives | M2 |
 | `POST` | [`/pickups/{pickupId}/accept`](#post-pickupspickupidaccept) | Collector (approved, online) | Claims a request | M2 |
 | `POST` | [`/pickups/{pickupId}/release`](#post-pickupspickupidrelease) | Assigned collector | Gives an accepted request back before arriving | M2 |
@@ -137,6 +139,8 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `POST` | [`/admin/pickups/{pickupId}/cancel`](#post-adminpickupspickupidcancel) | Admin | Cancels any active pickup (REQUESTED to CONFIRMED), with a reason | M2 |
 | `GET` | [`/admin/disputes`](#get-admindisputes) | Admin | Disputes, open first (screen A4) | M2 |
 | `POST` | [`/admin/disputes/{disputeId}/resolve`](#post-admindisputesdisputeidresolve) | Admin | Closes a dispute in `ADMIN_REVIEW` with an outcome | M2 |
+| `GET` | [`/me/notifications`](#get-menotifications) | Household | The household's notifications, newest first, with the unread count (H13) | M3 |
+| `POST` | [`/me/notifications/read`](#post-menotificationsread) | Household | Marks every notification up to now as read | M3 |
 
 ## Health
 
@@ -1334,6 +1338,76 @@ _Each item is a full Pickup; shortened here._
 | --- | --- | --- |
 | `VALIDATION_ERROR` | 400 | Bad cursor or limit |
 
+### GET /me/summary
+
+Totals for the history screen header (H11): how many pickups were completed, the kg sold and the taka earned.
+
+**Who:** Household · **Since:** M3
+
+- Counts `COMPLETED` pickups only; `totalAmount` is the server-computed total the household was paid.
+
+**Request**
+
+```http
+GET /api/v1/me/summary
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`200`
+
+```json
+{
+  "completedCount": 1,
+  "totalKg": 14.5,
+  "totalAmount": 605
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `FORBIDDEN` | 403 | Called by a collector or admin |
+
+### Pickup fields added in M3
+
+Every Pickup response now also has:
+
+- `collectorLocation`: the assigned collector's last known position (`{ lat, lng, at }`), so the household's map (H6) has a point before the next `collector.location` event. Only for the household and admins, and only while `ACCEPTED`; `null` otherwise.
+- `rating`: the household's rating of the pickup (`{ stars, comment, createdAt }`), for the household, the assigned collector and admins; `null` until rated.
+
+While `ACCEPTED`, as the household:
+
+```json
+{
+  "status": "ACCEPTED",
+  "collectorLocation": {
+    "lat": 23.8081,
+    "lng": 90.3684,
+    "at": "2026-11-14T18:49:57.835Z"
+  },
+  "rating": null
+}
+```
+
+After payment and rating:
+
+```json
+{
+  "status": "COMPLETED",
+  "collectorLocation": null,
+  "rating": {
+    "stars": 5,
+    "comment": "Weighed in front of me",
+    "createdAt": "2026-11-14T18:49:57.953Z"
+  }
+}
+```
+
+_Shortened to the new fields._
+
 ### POST /pickups/{pickupId}/cancel
 
 The household cancels before the collector arrives.
@@ -2383,6 +2457,159 @@ Response:
 | `VALIDATION_ERROR` | 400 | Outcome not allowed for the type, or no note |
 | `INVALID_STATE` | 409 | Already resolved, or the collector is re-weighing |
 | `NOT_FOUND` | 404 | Unknown dispute |
+
+## Notifications
+
+### GET /me/notifications
+
+The household's notifications (H13), newest first. The feed is built from what already happened (status changes, resolved disputes, published rates), so it always matches the pickup history; there is nothing separate to keep in sync.
+
+**Who:** Household (collectors get a feed in M4) · **Since:** M3
+
+- Listed: a collector accepted (`PICKUP_ACCEPTED`), gave the request back (`PICKUP_RELEASED`), sent weights (`PICKUP_WEIGHED`, `data.weighVersion` > 1 for a re-weigh), was paid (`PICKUP_PAID`); a request expired (`PICKUP_EXPIRED`) or was cancelled by an admin (`PICKUP_CANCELLED`); a dispute was resolved (`DISPUTE_RESOLVED`, except re-weighs and cancels, which already appear); the day's rates were published (`RATES_PUBLISHED`, from the day the account was created).
+- The household's own actions (request, confirm, dispute, cancel) are not listed.
+- `data` carries only the facts for the type; the apps write the sentence in Bangla or English.
+- `read` is `true` for items at or before the last [`POST /me/notifications/read`](#post-menotificationsread); `unreadCount` covers every page.
+- Query: `limit` 1-50 (default 20); `cursor` from the previous page.
+
+**Request**
+
+```http
+GET /api/v1/me/notifications?limit=2
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`200`
+
+```json
+{
+  "items": [
+    {
+      "id": "se:35",
+      "type": "PICKUP_PAID",
+      "at": "2026-11-14T18:49:57.937Z",
+      "read": false,
+      "pickupId": "3e2fffe6-eab8-4b8a-b69a-d98fe3389299",
+      "displayNo": "BW-1008",
+      "data": {
+        "categoryCodes": [
+          "IRON",
+          "NEWSPAPER"
+        ],
+        "collectorName": "Jasim Uddin",
+        "method": "BKASH",
+        "amount": 605
+      }
+    },
+    {
+      "id": "se:33",
+      "type": "PICKUP_WEIGHED",
+      "at": "2026-11-14T18:49:57.904Z",
+      "read": false,
+      "pickupId": "3e2fffe6-eab8-4b8a-b69a-d98fe3389299",
+      "displayNo": "BW-1008",
+      "data": {
+        "categoryCodes": [
+          "IRON",
+          "NEWSPAPER"
+        ],
+        "collectorName": "Jasim Uddin",
+        "weighVersion": 1,
+        "totalKg": 14.5,
+        "amount": 605
+      }
+    }
+  ],
+  "nextCursor": "MjAyNi0xMS0xNFQxODo0OTo1Ny45MDRafHNlOjMz",
+  "unreadCount": 3
+}
+```
+
+**Example: The next page**
+
+`GET /api/v1/me/notifications?limit=2&cursor=…` → `200`
+
+```json
+{
+  "items": [
+    {
+      "id": "se:31",
+      "type": "PICKUP_ACCEPTED",
+      "at": "2026-11-14T18:49:57.815Z",
+      "read": false,
+      "pickupId": "3e2fffe6-eab8-4b8a-b69a-d98fe3389299",
+      "displayNo": "BW-1008",
+      "data": {
+        "categoryCodes": [
+          "IRON",
+          "NEWSPAPER"
+        ],
+        "collectorName": "Jasim Uddin"
+      }
+    }
+  ],
+  "nextCursor": null,
+  "unreadCount": 3
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Bad cursor or limit |
+| `FORBIDDEN` | 403 | Called by a collector or admin |
+
+### POST /me/notifications/read
+
+Marks every notification up to now as read (the H13 "সব পড়া হয়েছে" action).
+
+**Who:** Household · **Since:** M3
+
+**Request**
+
+```http
+POST /api/v1/me/notifications/read
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`204` (no body). Afterwards:
+
+```json
+{
+  "items": [
+    {
+      "id": "se:35",
+      "type": "PICKUP_PAID",
+      "at": "2026-11-14T18:49:57.937Z",
+      "read": true,
+      "pickupId": "3e2fffe6-eab8-4b8a-b69a-d98fe3389299",
+      "displayNo": "BW-1008",
+      "data": {
+        "categoryCodes": [
+          "IRON",
+          "NEWSPAPER"
+        ],
+        "collectorName": "Jasim Uddin",
+        "method": "BKASH",
+        "amount": 605
+      }
+    }
+  ],
+  "nextCursor": "MjAyNi0xMS0xNFQxODo0OTo1Ny45MzdafHNlOjM1",
+  "unreadCount": 0
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `FORBIDDEN` | 403 | Called by a collector or admin |
 
 ## Live events (Socket.IO)
 
