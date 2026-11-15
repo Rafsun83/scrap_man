@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type request from 'supertest';
 import { dhakaToday } from '../src/common/time.js';
-import { addDays } from '../src/pickups/slots.js';
+import { slotUtil } from '../src/modules/pickups/utils/slot.util.js';
+
+const { addDays } = slotUtil;
 import { bearer, signIn, type TestContext } from './helpers.js';
 
 /** Mirpur 10, Dhaka. Other points are placed north of it by metres. */

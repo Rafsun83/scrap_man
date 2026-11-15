@@ -1,7 +1,7 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
-import { MatchingJobs } from '../src/jobs/matching-jobs.service.js';
+import { MatchingJobsService } from '../src/modules/jobs/services/matching-jobs.service.js';
 import { bearer, createTestApp, resetData, type TestContext } from './helpers.js';
 import {
   accept,
@@ -82,7 +82,7 @@ describe('Live events over Socket.IO (e2e)', () => {
     expect(admin.named('request.created')).toHaveLength(1);
 
     // After widening, the collector 2 km away hears about it; the near one is not told twice
-    await ctx.app.get(MatchingJobs).runOnce(new Date(Date.now() + 6 * 60_000));
+    await ctx.app.get(MatchingJobsService).runOnce(new Date(Date.now() + 6 * 60_000));
     await settle();
     expect(far.named('request.created')).toHaveLength(1);
     expect(near.named('request.created')).toHaveLength(1);
@@ -188,7 +188,7 @@ describe('Live events over Socket.IO (e2e)', () => {
     const near = await connect(await makeCollector(ctx, { at: north(300) }));
     const hc = await connect(household);
     const p = await createPickup(ctx, household);
-    await ctx.app.get(MatchingJobs).runOnce(new Date(p.expiresAt as string));
+    await ctx.app.get(MatchingJobsService).runOnce(new Date(p.expiresAt as string));
     await settle();
     expect(hc.named('request.expired')).toEqual([{ pickupId: p.id, displayNo: p.displayNo, status: 'EXPIRED', at: expect.any(String) }]);
     expect(near.named('request.taken')).toEqual([{ pickupId: p.id, reason: 'EXPIRED' }]);

@@ -1,4 +1,4 @@
-import { MatchingJobs } from '../src/jobs/matching-jobs.service.js';
+import { MatchingJobsService } from '../src/modules/jobs/services/matching-jobs.service.js';
 import { bearer, createTestApp, resetData, type TestContext } from './helpers.js';
 import {
   accept,
@@ -16,10 +16,10 @@ const minutes = (n: number) => n * 60_000;
 
 describe('Matching jobs: widening and expiry (e2e)', () => {
   let ctx: TestContext;
-  let jobs: MatchingJobs;
+  let jobs: MatchingJobsService;
   beforeAll(async () => {
     ctx = await createTestApp();
-    jobs = ctx.app.get(MatchingJobs);
+    jobs = ctx.app.get(MatchingJobsService);
   });
   afterAll(() => ctx.app.close());
   beforeEach(async () => {

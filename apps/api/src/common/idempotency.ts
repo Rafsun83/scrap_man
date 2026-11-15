@@ -13,7 +13,7 @@ import type { Request, Response } from 'express';
 import type { Redis } from 'ioredis';
 import { createHash } from 'node:crypto';
 import { catchError, from, mergeMap, type Observable, of, throwError } from 'rxjs';
-import { REDIS } from '../redis/redis.module.js';
+import { REDIS } from '../modules/redis/redis.module.js';
 import { AppError } from './errors.js';
 
 const IDEMPOTENT = 'bw:idempotent';

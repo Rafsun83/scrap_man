@@ -5,10 +5,11 @@ import type { App } from 'supertest/types.js';
 import { DataSource } from 'typeorm';
 import type { Redis } from 'ioredis';
 import { AppModule } from '../src/app.module.js';
-import { SMS_SENDER, type SmsSender } from '../src/auth/sms/sms-sender.js';
+import { SMS_SENDER, type SmsSender } from '../src/modules/auth/services/sms.service.js';
 import { configureApp } from '../src/configure-app.js';
-import { REDIS } from '../src/redis/redis.module.js';
-import { PHOTO_STORAGE, type PhotoStorage } from '../src/storage/storage.js';
+import { REDIS } from '../src/modules/redis/redis.module.js';
+import { PHOTO_STORAGE } from '../src/modules/storage/storage.module.js';
+import type { PhotoStorage } from '../src/modules/storage/types/photo-storage.type.js';
 
 /** Catches outgoing SMS so tests can read the OTP. */
 export class FakeSms implements SmsSender {

@@ -1,6 +1,6 @@
 import { createParamDecorator, type ExecutionContext, SetMetadata } from '@nestjs/common';
 import type { Role } from '@bw/shared';
-import type { UserEntity } from '../users/user.entity.js';
+import type { UserEntity } from '../modules/users/entities/user.entity.js';
 
 export const IS_PUBLIC = 'bw:isPublic';
 export const ROLES = 'bw:roles';

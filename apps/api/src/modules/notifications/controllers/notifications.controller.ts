@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
 import { CurrentUser, Roles } from '../../../common/auth.decorators.js';
 import { ZodPipe } from '../../../common/zod.pipe.js';
-import type { UserEntity } from '../../../users/user.entity.js';
+import type { UserEntity } from '../../users/entities/user.entity.js';
 import { listNotificationsDto, type ListNotificationsDto } from '../dtos/list-notifications.dto.js';
 import type { NotificationPageDto } from '../dtos/notification.dto.js';
 import { NotificationsService } from '../services/notifications.service.js';
