@@ -10,7 +10,9 @@ import {
   type CollectorStatusDto,
   type NearbyQueryDto,
 } from '../dtos/collector-status.dto.js';
+import { ledgerQueryDto, type LedgerDto, type LedgerQueryDto } from '../dtos/ledger.dto.js';
 import type { NearbyRequestDto } from '../dtos/pickup.dto.js';
+import { CollectorLedgerService } from '../services/collector-ledger.service.js';
 import { CollectorService } from '../services/collector.service.js';
 import { MatchingService } from '../services/matching.service.js';
 
@@ -20,6 +22,7 @@ export class CollectorController {
   constructor(
     private readonly collectorService: CollectorService,
     private readonly matchingService: MatchingService,
+    private readonly collectorLedgerService: CollectorLedgerService,
   ) {}
 
   @Put('status')
@@ -37,5 +40,10 @@ export class CollectorController {
   @Get('requests/nearby')
   nearby(@CurrentUser() user: UserEntity, @Query(new ZodPipe(nearbyQueryDto)) query: NearbyQueryDto): Promise<NearbyRequestDto[]> {
     return this.matchingService.nearby(user, query.lat, query.lng);
+  }
+
+  @Get('ledger')
+  ledger(@CurrentUser() user: UserEntity, @Query(new ZodPipe(ledgerQueryDto)) query: LedgerQueryDto): Promise<LedgerDto> {
+    return this.collectorLedgerService.ledger(user.id, query);
   }
 }

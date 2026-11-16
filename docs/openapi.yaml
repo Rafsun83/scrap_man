@@ -233,11 +233,12 @@ paths:
       summary: Own pickups, newest first (household or collector)
       description: |
         Households see pickups they requested; collectors see pickups assigned to them.
-        ACTIVE is REQUESTED to CONFIRMED; CANCELLED includes EXPIRED.
+        ACTIVE is REQUESTED to CONFIRMED (DISPUTED included); CANCELLED includes EXPIRED;
+        PAST is COMPLETED, CANCELLED and EXPIRED (the collector's "past" tab, C8).
       parameters:
         - name: status
           in: query
-          schema: { type: string, enum: [ACTIVE, COMPLETED, CANCELLED] }
+          schema: { type: string, enum: [ACTIVE, COMPLETED, CANCELLED, PAST] }
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -481,8 +482,11 @@ paths:
         First weigh: assigned collector while ARRIVED (version 1).
         Re-weigh: assigned collector while DISPUTED with an open REWEIGH dispute, or an admin while
         DISPUTED after resolving with TEAM_REWEIGH (version + 1). Either closes the open weight dispute.
-        Each line is one of the request's categories, at most once. PER_KG lines use the rate copied at
-        accept; ON_INSPECTION lines need quotedAmount. The server computes every amount and the totals.
+        Each line is an active category, at most once. A category the household did not list (found at the
+        door) is added to the pickup: a PER_KG one takes the rate in effect today, at that moment (400
+        VALIDATION_ERROR if it has never had a rate). Listed PER_KG categories use the rate copied at accept;
+        ON_INSPECTION lines need quotedAmount. Listed categories left out of the lines are not sold.
+        The server computes every amount and the totals.
         scalePhotoId must be an uploaded SCALE photo of this pickup not used by an earlier round
         (else 422 SCALE_PHOTO_REQUIRED).
       requestBody:
@@ -623,10 +627,38 @@ paths:
         '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
 
+  /collector/selfie:
+    post:
+      tags: [Collector]
+      summary: Get a presigned upload URL for the sign-up selfie (C6)
+      description: |
+        Collector only, before or after sign-up. Upload the file with an HTTP PUT to uploadUrl, sending the same
+        Content-Type, before expiresAt, then pass photoId to POST /collector/signup. Selfies are private: only
+        the collector and admins get a short-lived link (CollectorProfile.selfieUrl).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contentType: { type: string, enum: [image/jpeg, image/png, image/webp], default: image/jpeg }
+      responses:
+        '201':
+          description: Upload slot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UploadSlot' }
+        '400': { $ref: '#/components/responses/Error' }
+
   /collector/signup:
     post:
       tags: [Collector]
       summary: Submit a collector application
+      description: |
+        Collector only. Saves the profile with verification PENDING and sets the account name.
+        A REJECTED collector may submit again (back to PENDING, the old note is cleared); a PENDING or APPROVED
+        one gets 409 INVALID_STATE. selfiePhotoId must be this collector's selfie and already uploaded
+        (else 400 VALIDATION_ERROR).
       requestBody:
         required: true
         content:
@@ -638,28 +670,34 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CollectorProfile' }
+        '400': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
 
   /collector/profile:
     get:
       tags: [Collector]
       summary: Own collector profile, rating and verification status
+      description: 404 NOT_FOUND until the collector has signed up (the app then shows C6).
       responses:
         '200':
           description: Profile
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CollectorProfile' }
+        '404': { $ref: '#/components/responses/Error' }
     patch:
       tags: [Collector]
       summary: Change work areas, vehicle or scale
+      description: Any signed-up collector. Does not change the verification status.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              minProperties: 1
               properties:
-                workAreas: { type: array, items: { type: string } }
+                workAreas: { $ref: '#/components/schemas/WorkAreas' }
                 vehicleType: { $ref: '#/components/schemas/VehicleType' }
                 hasScale: { type: boolean }
       responses:
@@ -668,6 +706,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CollectorProfile' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
 
   /collector/status:
     put:
@@ -733,7 +773,10 @@ paths:
   /collector/ledger:
     get:
       tags: [Collector]
-      summary: Payouts and kg collected for a date range
+      summary: Payouts and kg collected for a date range (C1 today's totals, C9)
+      description: |
+        Collector only. from and to are Dhaka calendar dates, inclusive; from must not be after to and the
+        range is at most 92 days (else 400 VALIDATION_ERROR).
       parameters:
         - name: from
           in: query
@@ -749,6 +792,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Ledger' }
+        '400': { $ref: '#/components/responses/Error' }
 
   /admin/rates:
     put:
@@ -778,6 +822,7 @@ paths:
     get:
       tags: [Admin]
       summary: Collectors by verification status
+      description: Admin only. Oldest application first, so the queue is handled in order.
       parameters:
         - name: status
           in: query
@@ -789,13 +834,8 @@ paths:
           description: A page of collector profiles
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: '#/components/schemas/CollectorProfile' }
-                  nextCursor: { type: [string, 'null'] }
+              schema: { $ref: '#/components/schemas/CollectorProfilePage' }
+        '400': { $ref: '#/components/responses/Error' }
 
   /admin/collectors/{userId}/decision:
     parameters:
@@ -806,6 +846,10 @@ paths:
     post:
       tags: [Admin]
       summary: Approve or reject a collector
+      description: |
+        Admin only, while the application is PENDING (else 409 INVALID_STATE); 404 NOT_FOUND if the user has not
+        signed up as a collector. note is required when rejecting and is shown to the collector. The collector
+        gets an SMS and the `collector.verification` event.
       requestBody:
         required: true
         content:
@@ -818,6 +862,9 @@ paths:
                 note: { type: string, maxLength: 500 }
       responses:
         '204': { description: Saved; collector notified }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
 
   /admin/pickups:
     get:
@@ -1181,7 +1228,7 @@ components:
                  household, collector, pickupCode, codeLocked, lines, weighVersion, weighRounds, photos, totalKg,
                  totalAmount, paymentMethod, walletNumber, payment, openDispute, searchRadiusM, requestedAt,
                  acceptedAt, arrivedAt, weighedAt, confirmedAt, completedAt, cancelledAt, expiresAt,
-                 collectorLocation, rating]
+                 collectorLocation, rating, lockedRates]
       properties:
         id: { type: string, format: uuid }
         displayNo: { type: string, examples: [BW-1052] }
@@ -1268,6 +1315,18 @@ components:
             stars: { type: integer, minimum: 1, maximum: 5 }
             comment: { type: [string, 'null'] }
             createdAt: { type: string, format: date-time }
+        lockedRates:
+          type: [array, 'null']
+          description: |
+            The rate copied onto each item at accept, so the collector's weigh screen (C4) can preview totals.
+            For the household, the assigned collector and admins from ACCEPTED on; null before accept.
+            A category added at weighing gets its rate when weighed. rate is null for ON_INSPECTION categories.
+          items:
+            type: object
+            required: [categoryCode, rate]
+            properties:
+              categoryCode: { type: string }
+              rate: { anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }] }
 
     MeSummary:
       type: object
@@ -1366,35 +1425,75 @@ components:
       properties:
         name: { type: string, maxLength: 80 }
         nidNumber: { type: string, pattern: '^([0-9]{10}|[0-9]{13}|[0-9]{17})$' }
-        selfiePhotoId: { type: string, format: uuid }
-        workAreas:
-          type: array
-          minItems: 1
-          items: { type: string }
+        selfiePhotoId: { type: string, format: uuid, description: From POST /collector/selfie, uploaded }
+        workAreas: { $ref: '#/components/schemas/WorkAreas' }
         vehicleType: { $ref: '#/components/schemas/VehicleType' }
         hasScale: { type: boolean }
         acceptedAgreement: { type: boolean, const: true }
 
+    WorkArea:
+      type: string
+      description: Dhaka areas a collector works in. Bangla and English names are in @bw/shared (workAreas).
+      enum: [ADABOR, BADDA, BANANI, BHASANTEK, CANTONMENT, CHAWKBAZAR, DAKSHINKHAN, DEMRA, DHANMONDI, GENDARIA,
+             GULSHAN, HAZARIBAGH, JATRABARI, KADAMTALI, KAFRUL, KALABAGAN, KAMRANGIRCHAR, KHILGAON, KHILKHET,
+             KOTWALI, LALBAGH, MIRPUR, MOHAMMADPUR, MOTIJHEEL, MUGDA, NEW_MARKET, PALLABI, PALTAN, RAMNA, RAMPURA,
+             SABUJBAGH, SHAH_ALI, SHAHBAGH, SHER_E_BANGLA_NAGAR, SHYAMOLI, SHYAMPUR, SUTRAPUR, TEJGAON, TURAG,
+             UTTARA, UTTARKHAN, VATARA, WARI]
+
+    WorkAreas:
+      type: array
+      minItems: 1
+      maxItems: 10
+      uniqueItems: true
+      items: { $ref: '#/components/schemas/WorkArea' }
+
     CollectorProfile:
       type: object
+      required: [userId, name, phone, nidNumberMasked, nidVerified, selfieUrl, workAreas, vehicleType, hasScale,
+                 verificationStatus, verificationNote, submittedAt, decidedAt, isOnline, ratingAvg, pickups30d,
+                 releases30d]
       properties:
         userId: { type: string, format: uuid }
-        name: { type: string }
+        name: { type: [string, 'null'] }
         phone: { $ref: '#/components/schemas/Phone' }
-        nidNumberMasked: { type: string, examples: ['19XX XXX 4821'] }
+        nidNumberMasked: { type: string, examples: ['19XX XXX 4821'], description: First 2 and last 4 digits }
         nidVerified: { type: boolean }
-        selfieUrl: { type: [string, 'null'], format: uri }
-        workAreas: { type: array, items: { type: string } }
+        selfieUrl: { type: [string, 'null'], format: uri, description: Short-lived link to the private selfie }
+        workAreas: { type: array, items: { $ref: '#/components/schemas/WorkArea' } }
         vehicleType: { $ref: '#/components/schemas/VehicleType' }
         hasScale: { type: boolean }
         verificationStatus: { $ref: '#/components/schemas/VerificationStatus' }
+        verificationNote:
+          type: [string, 'null']
+          description: The admin's note with the last decision (shown on C7 when REJECTED)
+        submittedAt: { type: string, format: date-time, description: When the application was last submitted }
+        decidedAt: { type: [string, 'null'], format: date-time }
         isOnline: { type: boolean }
         ratingAvg: { type: [number, 'null'] }
-        pickups30d: { type: integer }
-        releases30d: { type: integer }
+        pickups30d: { type: integer, description: Pickups completed in the last 30 days }
+        releases30d: { type: integer, description: Requests given back in the last 30 days }
+
+    CollectorProfilePage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CollectorProfile' }
+        nextCursor: { type: [string, 'null'] }
+
+    UploadSlot:
+      type: object
+      required: [photoId, uploadUrl, expiresAt]
+      properties:
+        photoId: { type: string, format: uuid }
+        uploadUrl: { type: string, format: uri }
+        expiresAt: { type: string, format: date-time }
 
     NearbyRequest:
       type: object
+      required: [id, area, distanceM, categoryCodes, weightBand, slotDate, slot, hasPhoto, estimate, requestedAt,
+                 expiresAt]
       properties:
         id: { type: string, format: uuid }
         area: { type: string, examples: ['Mirpur 10, Block C'] }
@@ -1405,13 +1504,19 @@ components:
         slot: { $ref: '#/components/schemas/TimeSlot' }
         hasPhoto: { type: boolean }
         estimate:
-          type: object
+          type: [object, 'null']
           properties:
             min: { $ref: '#/components/schemas/Money' }
             max: { $ref: '#/components/schemas/Money' }
+        requestedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time, description: End of the booked slot }
 
     Ledger:
       type: object
+      description: |
+        COMPLETED pickups of this collector whose payment is PAID or VERIFIED and was made between the start of
+        `from` and the end of `to`, in Dhaka time. byCategory is sorted by kg, largest first; payments newest first.
+      required: [from, to, totalPaid, totalKg, pickupCount, byMethod, byCategory, payments]
       properties:
         from: { type: string, format: date }
         to: { type: string, format: date }
@@ -1420,6 +1525,7 @@ components:
         pickupCount: { type: integer }
         byMethod:
           type: object
+          required: [CASH, BKASH, NAGAD]
           properties:
             CASH: { $ref: '#/components/schemas/Money' }
             BKASH: { $ref: '#/components/schemas/Money' }
@@ -1428,6 +1534,7 @@ components:
           type: array
           items:
             type: object
+            required: [categoryCode, kg]
             properties:
               categoryCode: { type: string }
               kg: { type: number }
@@ -1435,6 +1542,7 @@ components:
           type: array
           items:
             type: object
+            required: [pickupId, householdName, method, trxId, amount, paidAt]
             properties:
               pickupId: { type: string, format: uuid }
               householdName: { type: [string, 'null'] }
@@ -1451,9 +1559,20 @@ components:
         or after a release). request.taken: collectors who were sent the request, when it is accepted, cancelled
         or expired. pickup.*: the household and the assigned collector. collector.location: the household while
         ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
+        collector.verification: the collector an admin approved or rejected.
       enum: [request.created, request.taken, request.expired, pickup.accepted, pickup.released, collector.location,
              pickup.arrived, pickup.code_locked, pickup.weighed, pickup.confirmed, pickup.disputed, pickup.paid,
-             pickup.cancelled, dispute.opened, dispute.resolved]
+             pickup.cancelled, dispute.opened, dispute.resolved, collector.verification]
+
+    EventCollectorVerification:
+      description: collector.verification (the collector; also admins)
+      type: object
+      required: [userId, verificationStatus, verificationNote, at]
+      properties:
+        userId: { type: string, format: uuid }
+        verificationStatus: { $ref: '#/components/schemas/VerificationStatus' }
+        verificationNote: { type: [string, 'null'] }
+        at: { type: string, format: date-time }
 
     EventRequestCreated:
       description: request.created

@@ -112,5 +112,66 @@ export const SOCKET_EVENTS = [
   'pickup.cancelled',
   'dispute.opened',
   'dispute.resolved',
+  'collector.verification',
 ] as const;
 export type SocketEvent = (typeof SOCKET_EVENTS)[number];
+
+export const VERIFICATION_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
+export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number];
+
+export const VEHICLE_TYPES = ['VAN', 'PUSHCART', 'ON_FOOT'] as const;
+export type VehicleType = (typeof VEHICLE_TYPES)[number];
+
+/** Dhaka areas a collector can work in (contract WorkArea), in the order the sign-up screen shows them. */
+export const WORK_AREAS = [
+  { code: 'MIRPUR', bn: 'মিরপুর', en: 'Mirpur' },
+  { code: 'PALLABI', bn: 'পল্লবী', en: 'Pallabi' },
+  { code: 'KAFRUL', bn: 'কাফরুল', en: 'Kafrul' },
+  { code: 'SHYAMOLI', bn: 'শ্যামলী', en: 'Shyamoli' },
+  { code: 'MOHAMMADPUR', bn: 'মোহাম্মদপুর', en: 'Mohammadpur' },
+  { code: 'ADABOR', bn: 'আদাবর', en: 'Adabor' },
+  { code: 'SHER_E_BANGLA_NAGAR', bn: 'শেরেবাংলা নগর', en: 'Sher-e-Bangla Nagar' },
+  { code: 'DHANMONDI', bn: 'ধানমন্ডি', en: 'Dhanmondi' },
+  { code: 'KALABAGAN', bn: 'কলাবাগান', en: 'Kalabagan' },
+  { code: 'NEW_MARKET', bn: 'নিউ মার্কেট', en: 'New Market' },
+  { code: 'HAZARIBAGH', bn: 'হাজারীবাগ', en: 'Hazaribagh' },
+  { code: 'LALBAGH', bn: 'লালবাগ', en: 'Lalbagh' },
+  { code: 'KAMRANGIRCHAR', bn: 'কামরাঙ্গীরচর', en: 'Kamrangirchar' },
+  { code: 'CHAWKBAZAR', bn: 'চকবাজার', en: 'Chawkbazar' },
+  { code: 'KOTWALI', bn: 'কোতোয়ালী', en: 'Kotwali' },
+  { code: 'SUTRAPUR', bn: 'সূত্রাপুর', en: 'Sutrapur' },
+  { code: 'WARI', bn: 'ওয়ারী', en: 'Wari' },
+  { code: 'GENDARIA', bn: 'গেন্ডারিয়া', en: 'Gendaria' },
+  { code: 'SHYAMPUR', bn: 'শ্যামপুর', en: 'Shyampur' },
+  { code: 'KADAMTALI', bn: 'কদমতলী', en: 'Kadamtali' },
+  { code: 'JATRABARI', bn: 'যাত্রাবাড়ী', en: 'Jatrabari' },
+  { code: 'DEMRA', bn: 'ডেমরা', en: 'Demra' },
+  { code: 'SABUJBAGH', bn: 'সবুজবাগ', en: 'Sabujbagh' },
+  { code: 'MUGDA', bn: 'মুগদা', en: 'Mugda' },
+  { code: 'MOTIJHEEL', bn: 'মতিঝিল', en: 'Motijheel' },
+  { code: 'PALTAN', bn: 'পল্টন', en: 'Paltan' },
+  { code: 'RAMNA', bn: 'রমনা', en: 'Ramna' },
+  { code: 'SHAHBAGH', bn: 'শাহবাগ', en: 'Shahbagh' },
+  { code: 'KHILGAON', bn: 'খিলগাঁও', en: 'Khilgaon' },
+  { code: 'RAMPURA', bn: 'রামপুরা', en: 'Rampura' },
+  { code: 'TEJGAON', bn: 'তেজগাঁও', en: 'Tejgaon' },
+  { code: 'BADDA', bn: 'বাড্ডা', en: 'Badda' },
+  { code: 'GULSHAN', bn: 'গুলশান', en: 'Gulshan' },
+  { code: 'BANANI', bn: 'বনানী', en: 'Banani' },
+  { code: 'VATARA', bn: 'ভাটারা', en: 'Vatara' },
+  { code: 'CANTONMENT', bn: 'ক্যান্টনমেন্ট', en: 'Cantonment' },
+  { code: 'BHASANTEK', bn: 'ভাসানটেক', en: 'Bhasantek' },
+  { code: 'KHILKHET', bn: 'খিলক্ষেত', en: 'Khilkhet' },
+  { code: 'UTTARA', bn: 'উত্তরা', en: 'Uttara' },
+  { code: 'UTTARKHAN', bn: 'উত্তরখান', en: 'Uttarkhan' },
+  { code: 'DAKSHINKHAN', bn: 'দক্ষিণখান', en: 'Dakshinkhan' },
+  { code: 'TURAG', bn: 'তুরাগ', en: 'Turag' },
+  { code: 'SHAH_ALI', bn: 'শাহ আলী', en: 'Shah Ali' },
+] as const;
+export type WorkArea = (typeof WORK_AREAS)[number]['code'];
+export const WORK_AREA_CODES = WORK_AREAS.map((a) => a.code) as readonly WorkArea[];
+/** A collector picks between 1 and this many work areas. */
+export const MAX_WORK_AREAS = 10;
+
+/** The collector ledger covers at most this many days per request. */
+export const LEDGER_MAX_DAYS = 92;

@@ -42,6 +42,8 @@ describe('Matching: nearby, accept, release, cancel (e2e)', () => {
         slot: 'MORNING',
         hasPhoto: false,
         estimate: { min: 200, max: 600 },
+        requestedAt: p.requestedAt,
+        expiresAt: p.expiresAt,
       },
     ]);
     expect(res.body[0].distanceM).toBeGreaterThan(780);
@@ -94,8 +96,10 @@ describe('Matching: nearby, accept, release, cancel (e2e)', () => {
     expect(forHousehold.pickupCode).toMatch(/^[0-9]{4}$/);
     expect(forHousehold.collector.phone).toBe(c.phone);
     const [{ pickup_code_hash }] = await ctx.db.query(`SELECT pickup_code_hash FROM pickups WHERE id = $1`, [p.id]);
-    expect(pickup_code_hash).toHaveLength(64);
-    expect(pickup_code_hash).not.toContain(forHousehold.pickupCode);
+    // Stored as a SHA-256 hex digest, never the plain code. (A substring check would fail by chance
+    // about 1 run in 100, since 4 digits can appear inside a hex digest.)
+    expect(pickup_code_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(pickup_code_hash).not.toBe(forHousehold.pickupCode);
 
     // A rate change after accept does not touch the locked rate
     await publishRates(ctx, { IRON: 70 });

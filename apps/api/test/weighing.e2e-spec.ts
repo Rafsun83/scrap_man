@@ -101,15 +101,61 @@ describe('Pickup code, weighing, confirmation and payment (e2e)', () => {
     expect(res.body.photos.find((ph: { kind: string }) => ph.kind === 'SCALE').weighVersion).toBe(1);
   });
 
-  it('refuses lines that are not in the request, duplicated, or priced wrongly', async () => {
+  it('refuses unknown categories, duplicates, or wrong pricing', async () => {
     const { collector, id } = await pickupAt(ctx, 'ARRIVED');
     const bad = async (lines: object[]) => (await weigh(ctx, collector, id, lines as never)).status;
-    expect(await bad([{ categoryCode: 'CARTON', kg: 2 }])).toBe(400);
+    expect(await bad([{ categoryCode: 'GOLD', kg: 2 }])).toBe(400);
+    expect(await bad([{ categoryCode: 'CARTON', kg: 2 }, { categoryCode: 'CARTON', kg: 3 }])).toBe(400);
     expect(await bad([{ categoryCode: 'IRON', kg: 2 }, { categoryCode: 'IRON', kg: 3 }])).toBe(400);
     expect(await bad([{ categoryCode: 'IRON', kg: 2, quotedAmount: 100 }])).toBe(400);
     expect(await bad([{ categoryCode: 'IRON', kg: 2.25 }])).toBe(400);
     expect(await bad([{ categoryCode: 'IRON', kg: 0 }])).toBe(400);
     expect(await bad([])).toBe(400);
+  });
+
+  it('shows the locked rates to the collector and household from accept on', async () => {
+    const household = await makeHousehold(ctx);
+    const collector = await makeCollector(ctx, { at: north(100) });
+    const p = await createPickup(ctx, household);
+    expect((await getPickup(ctx, household.token, p.id).expect(200)).body.lockedRates).toBeNull();
+    await accept(ctx, collector, p.id).expect(200);
+    await publishRates(ctx, { IRON: 99 }); // a correction later the same day does not change the locked rate
+    const expected = [
+      { categoryCode: 'IRON', rate: 50 },
+      { categoryCode: 'NEWSPAPER', rate: 30 },
+    ];
+    expect((await getPickup(ctx, collector.token, p.id).expect(200)).body.lockedRates).toEqual(expected);
+    expect((await getPickup(ctx, household.token, p.id).expect(200)).body.lockedRates).toEqual(expected);
+  });
+
+  it('adds an item found at the door at the rate in effect now', async () => {
+    const { household, collector, id } = await pickupAt(ctx, 'ARRIVED');
+    const res = await weigh(ctx, collector, id, [
+      { categoryCode: 'IRON', kg: 9.5 },
+      { categoryCode: 'CARTON', kg: 4 },
+      { categoryCode: 'ELECTRONICS', kg: 3, quotedAmount: 250 },
+    ]);
+    expect(res.status).toBe(200);
+    expect(res.body.categoryCodes).toEqual(['IRON', 'NEWSPAPER', 'CARTON', 'ELECTRONICS']);
+    expect(res.body.lines).toEqual([
+      { categoryCode: 'IRON', kg: 9.5, rate: 50, amount: 475 },
+      { categoryCode: 'CARTON', kg: 4, rate: 18, amount: 72 },
+      { categoryCode: 'ELECTRONICS', kg: 3, rate: null, amount: 250 },
+    ]);
+    expect(res.body.totalAmount).toBe(797);
+    expect(res.body.lockedRates).toContainEqual({ categoryCode: 'CARTON', rate: 18 });
+    expect((await getPickup(ctx, household.token, id).expect(200)).body.totalAmount).toBe(797);
+  });
+
+  it('refuses an item found at the door that has never had a rate', async () => {
+    await resetData(ctx);
+    await publishRates(ctx, { IRON: 50, NEWSPAPER: 30 });
+    const { collector, id } = await pickupAt(ctx, 'ARRIVED');
+    const res = await weigh(ctx, collector, id, [{ categoryCode: 'PLASTIC', kg: 3 }]);
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION_ERROR');
+    const [{ n }] = await ctx.db.query(`SELECT count(*)::int AS n FROM pickup_items WHERE pickup_id = $1`, [id]);
+    expect(n).toBe(2);
   });
 
   it('electronics need a quoted amount', async () => {

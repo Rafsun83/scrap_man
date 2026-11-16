@@ -4,6 +4,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
+import { CollectorsModule } from './modules/collectors/collectors.module.js';
 import { ClockModule } from './common/clock.js';
 import { IdempotencyInterceptor } from './common/idempotency.js';
 import { validateEnv, type Env } from './config/env.js';
@@ -38,6 +39,7 @@ import { UsersModule } from './modules/users/users.module.js';
     PickupsModule,
     JobsModule,
     NotificationsModule,
+    CollectorsModule,
   ],
   providers: [{ provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor }],
 })

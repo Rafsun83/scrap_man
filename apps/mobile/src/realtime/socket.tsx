@@ -3,6 +3,8 @@ import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { io, type Socket } from 'socket.io-client';
 import { keys } from '../api/hooks';
+import type { NearbyRequest } from '../api/types';
+import type { EventRequestTaken } from '@bw/shared';
 import { useSession } from '../auth/session';
 import { SOCKET_ORIGIN } from '../config';
 
@@ -42,8 +44,29 @@ export function useCollectorLocation(pickupId: string): Location | null {
   );
 }
 
+/** C1's nearby list: a new request is added (nearest first), a taken one removed. Only once the list is loaded. */
+function applyNearby(qc: QueryClient, event: string, payload: unknown) {
+  if (event === 'request.created') {
+    const req = payload as NearbyRequest;
+    qc.setQueryData<NearbyRequest[]>(keys.nearby, (list) =>
+      list ? [...list.filter((r) => r.id !== req.id), req].sort((a, b) => a.distanceM - b.distanceM) : list,
+    );
+  } else {
+    const { pickupId } = payload as EventRequestTaken;
+    qc.setQueryData<NearbyRequest[]>(keys.nearby, (list) => list?.filter((r) => r.id !== pickupId));
+  }
+}
+
 /** Applies one live event to the query cache. Exported for tests. */
 export function handleEvent(qc: QueryClient, event: string, payload: unknown) {
+  if (event === 'request.created' || event === 'request.taken') {
+    applyNearby(qc, event, payload);
+    return;
+  }
+  if (event === 'collector.verification') {
+    qc.invalidateQueries({ queryKey: keys.collectorProfile });
+    return;
+  }
   if (event === 'collector.location') {
     const p = payload as { pickupId: string } & Location;
     setCollectorLocation(p.pickupId, { lat: p.lat, lng: p.lng, at: p.at });
@@ -56,6 +79,11 @@ export function handleEvent(qc: QueryClient, event: string, payload: unknown) {
     // The notification feed and the history totals are built from the same events.
     qc.invalidateQueries({ queryKey: keys.notifications });
     qc.invalidateQueries({ queryKey: keys.summary });
+    // The collector's ledger and 30-day counts change when a payment lands.
+    if (event === 'pickup.paid') {
+      qc.invalidateQueries({ queryKey: keys.allLedgers });
+      qc.invalidateQueries({ queryKey: keys.collectorProfile });
+    }
   }
 }
 

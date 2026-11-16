@@ -29,6 +29,7 @@ const LIST_FILTERS: Record<NonNullable<ListMyPickupsDto['status']>, readonly Pic
   ACTIVE: ACTIVE_PICKUP_STATUSES,
   COMPLETED: ['COMPLETED'],
   CANCELLED: ['CANCELLED', 'EXPIRED'],
+  PAST: ['COMPLETED', 'CANCELLED', 'EXPIRED'],
 };
 
 /** Creating, reading, listing and cancelling pickups, photo upload slots and ratings. */

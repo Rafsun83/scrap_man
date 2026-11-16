@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import * as Crypto from 'expo-crypto';
 import { useRef } from 'react';
 import { useSession } from '../auth/session';
+import type { ApiClient } from './client';
 import type {
   Address,
   AddressInput,
@@ -30,6 +31,10 @@ export const keys = {
   pickup: (id: string) => ['pickup', id] as const,
   summary: ['me', 'summary'] as const,
   notifications: ['me', 'notifications'] as const,
+  collectorProfile: ['collector', 'profile'] as const,
+  nearby: ['collector', 'nearby'] as const,
+  ledger: (from: string, to: string) => ['collector', 'ledger', from, to] as const,
+  allLedgers: ['collector', 'ledger'] as const,
 };
 
 /**
@@ -136,11 +141,12 @@ export function useMarkNotificationsRead() {
 }
 
 /** A short list (home: active banner, recent sales). */
-export function useMyPickups(filter: PickupFilter, limit: number) {
+export function useMyPickups(filter: PickupFilter, limit: number, enabled = true) {
   const { api } = useSession();
   return useQuery({
     queryKey: keys.myPickups(filter, limit),
     queryFn: () => api.request<PickupPage>('GET', '/me/pickups', { query: { status: filter, limit } }),
+    enabled,
   });
 }
 
@@ -164,7 +170,7 @@ export function usePickup(id: string) {
 }
 
 /** Stores the server's answer so the screen moves on without waiting for the socket event. */
-function usePickupMutation<V>(fn: (vars: V) => Promise<Pickup>) {
+export function usePickupMutation<V>(fn: (vars: V) => Promise<Pickup>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
@@ -217,15 +223,20 @@ export function useRateCollector(id: string) {
   });
 }
 
-/** Asks for an upload slot, then PUTs the file straight to storage. Returns the photo id. */
+export type LocalPhoto = { uri: string; mimeType?: string | null };
+
+/** Asks the API for an upload slot at `path`, then PUTs the file straight to storage. Returns the photo id. */
+export async function uploadPhoto(api: ApiClient, path: string, body: Record<string, unknown>, file: LocalPhoto): Promise<string> {
+  const contentType = file.mimeType === 'image/png' || file.mimeType === 'image/webp' ? file.mimeType : 'image/jpeg';
+  const slot = await api.request<UploadSlot>('POST', path, { body: { ...body, contentType } });
+  const blob = await (await fetch(file.uri)).blob();
+  const res = await fetch(slot.uploadUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: blob });
+  if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+  return slot.photoId;
+}
+
+/** Item photos from the household (H4, H14). */
 export function usePhotoUpload() {
   const { api } = useSession();
-  return async (pickupId: string, file: { uri: string; mimeType?: string | null }): Promise<string> => {
-    const contentType = file.mimeType === 'image/png' || file.mimeType === 'image/webp' ? file.mimeType : 'image/jpeg';
-    const slot = await api.request<UploadSlot>('POST', `/pickups/${pickupId}/photos`, { body: { kind: 'ITEMS', contentType } });
-    const blob = await (await fetch(file.uri)).blob();
-    const res = await fetch(slot.uploadUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: blob });
-    if (!res.ok) throw new Error(`Upload failed (${res.status})`);
-    return slot.photoId;
-  };
+  return (pickupId: string, file: LocalPhoto): Promise<string> => uploadPhoto(api, `/pickups/${pickupId}/photos`, { kind: 'ITEMS' }, file);
 }

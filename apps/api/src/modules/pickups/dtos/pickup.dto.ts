@@ -81,6 +81,13 @@ export interface PickupDto {
   expiresAt: string;
   collectorLocation: { lat: number; lng: number; at: string } | null;
   rating: { stars: number; comment: string | null; createdAt: string } | null;
+  lockedRates: LockedRateDto[] | null;
+}
+
+/** A rate copied onto one item of the pickup (null for ON_INSPECTION categories). */
+export interface LockedRateDto {
+  categoryCode: string;
+  rate: number | null;
 }
 
 /** The contract's PickupPage. */
@@ -107,4 +114,6 @@ export interface NearbyRequestDto {
   slot: TimeSlot;
   hasPhoto: boolean;
   estimate: PayoutEstimateDto | null;
+  requestedAt: string;
+  expiresAt: string;
 }

@@ -7,6 +7,7 @@ import { apiLanguage, useLang, useT } from '../../../src/i18n/lang';
 import { formatPhone, initials } from '../../../src/lib/format';
 import { Button, Card, Divider, ErrorView, Icon, LoadingView, Screen } from '../../../src/ui/components';
 import { errorMessage } from '../../../src/ui/errors';
+import { LanguageSwitch } from '../../../src/ui/LanguageSwitch';
 import { body, colors, display, minTouch, radius } from '../../../src/ui/theme';
 
 /**
@@ -22,12 +23,6 @@ export default function Profile() {
   const updateMe = useUpdateMe();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.name ?? '');
-
-  const switchLang = (next: 'bn' | 'en') => {
-    if (next === lang) return;
-    setLang(next);
-    updateMe.mutate({ language: apiLanguage(next) });
-  };
 
   const saveName = () =>
     updateMe.mutate({ name: name.trim() }, { onSuccess: () => setEditing(false) });
@@ -109,21 +104,7 @@ export default function Profile() {
         <Card>
           <View style={s.setting}>
             <Text style={body(16, 600)}>{t('language')}</Text>
-            <View style={s.segment} accessibilityRole="radiogroup">
-              {(['bn', 'en'] as const).map((l) => (
-                <Pressable
-                  key={l}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: lang === l }}
-                  onPress={() => switchLang(l)}
-                  style={[s.segBtn, lang === l && { backgroundColor: colors.ink }]}
-                >
-                  <Text style={[body(15, 600), { color: lang === l ? colors.surface : colors.ink }]}>
-                    {t(l === 'bn' ? 'langBn' : 'langEn')}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <LanguageSwitch />
           </View>
           <Divider />
           <Pressable accessibilityRole="button" onPress={() => router.push('/notifications')} style={s.setting}>
@@ -165,6 +146,4 @@ const s = StyleSheet.create({
     overflow: 'hidden',
   },
   setting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 56 },
-  segment: { flexDirection: 'row', gap: 4, padding: 3, borderRadius: radius.sm, backgroundColor: colors.ground },
-  segBtn: { minHeight: minTouch, paddingHorizontal: 14, borderRadius: 8, justifyContent: 'center' },
 });

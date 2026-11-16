@@ -3,7 +3,7 @@ import type { GeoPoint } from '../../../common/geo.js';
 import { VEHICLE_TYPES, type VehicleType } from '../enums/vehicle-type.enum.js';
 import { VERIFICATION_STATUSES, type VerificationStatus } from '../enums/verification-status.enum.js';
 
-/** Collector sign-up and verification; the endpoints arrive with the collector app in M4. */
+/** Collector sign-up and verification (C6, C7) and availability for matching. */
 @Entity({ name: 'collector_profiles' })
 export class CollectorProfileEntity {
   @PrimaryColumn({ name: 'user_id', type: 'uuid' })
@@ -15,8 +15,9 @@ export class CollectorProfileEntity {
   @Column({ name: 'nid_verified', type: 'boolean', nullable: false, default: false })
   nidVerified: boolean;
 
-  @Column({ name: 'selfie_url', type: 'text', nullable: true })
-  selfieUrl: string | null;
+  /** The selfie submitted with the application (collector_selfies). */
+  @Column({ name: 'selfie_id', type: 'uuid', nullable: true })
+  selfieId: string | null;
 
   @Column({ name: 'work_areas', type: 'text', array: true, nullable: false, default: () => "'{}'" })
   workAreas: string[];
@@ -36,6 +37,18 @@ export class CollectorProfileEntity {
     default: 'PENDING',
   })
   verificationStatus: VerificationStatus;
+
+  @Column({ name: 'verification_note', type: 'varchar', length: 500, nullable: true })
+  verificationNote: string | null;
+
+  @Column({ name: 'submitted_at', type: 'timestamptz', nullable: false, default: () => 'now()' })
+  submittedAt: Date;
+
+  @Column({ name: 'decided_at', type: 'timestamptz', nullable: true })
+  decidedAt: Date | null;
+
+  @Column({ name: 'decided_by', type: 'uuid', nullable: true })
+  decidedBy: string | null;
 
   @Column({ name: 'is_online', type: 'boolean', nullable: false, default: false })
   isOnline: boolean;
