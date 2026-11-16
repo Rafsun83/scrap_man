@@ -5,12 +5,14 @@ import { CollectorController } from './controllers/collector.controller.js';
 import { MyPickupsController } from './controllers/my-pickups.controller.js';
 import { PickupsController } from './controllers/pickups.controller.js';
 import { DisputesRepository } from './repositories/disputes.repository.js';
+import { LedgerRepository } from './repositories/ledger.repository.js';
 import { MatchingRepository } from './repositories/matching.repository.js';
 import { PaymentsRepository } from './repositories/payments.repository.js';
 import { PhotosRepository } from './repositories/photos.repository.js';
 import { PickupCodeRepository } from './repositories/pickup-code.repository.js';
 import { PickupsRepository } from './repositories/pickups.repository.js';
 import { WeighingRepository } from './repositories/weighing.repository.js';
+import { CollectorLedgerService } from './services/collector-ledger.service.js';
 import { CollectorService } from './services/collector.service.js';
 import { DisputesService } from './services/disputes.service.js';
 import { MatchingService } from './services/matching.service.js';
@@ -32,6 +34,7 @@ import { WeighingService } from './services/weighing.service.js';
     PaymentsRepository,
     DisputesRepository,
     PickupCodeRepository,
+    LedgerRepository,
     PickupStateService,
     PickupCodeService,
     PickupViewsService,
@@ -41,7 +44,8 @@ import { WeighingService } from './services/weighing.service.js';
     WeighingService,
     DisputesService,
     CollectorService,
+    CollectorLedgerService,
   ],
-  exports: [MatchingService],
+  exports: [MatchingService, CollectorLedgerService],
 })
 export class PickupsModule {}

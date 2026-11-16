@@ -2,7 +2,7 @@
   "info": {
     "name": "BhangariWala API",
     "_postman_id": "b6f1d0a2-6c3e-4a51-9d5e-2f8a1c7e4b90",
-    "description": "Every route implemented in `apps/api` up to M3 (all 36 routes, 49 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.\n\n## Before you start\n1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).\n2. Run the folders in order (or the whole collection with the Runner). Requests save ids, tokens and the pickup code into collection variables for the next steps.\n3. Every OTP in development is `123456`. The admin phone is `+8801700000000`.\n\n## Approving the collector (no endpoint until M4)\nCollector sign-up and admin approval arrive in M4. After **1. Auth → Verify OTP (collector)**, give the collector an approved profile with SQL (the same thing the e2e tests do):\n\n```\ndocker compose exec postgres psql -U bw -d bhangariwala -c \"INSERT INTO collector_profiles (user_id, nid_number, vehicle_type, has_scale, verification_status) SELECT id, '1234567890', 'VAN', true, 'APPROVED' FROM users WHERE phone = '+8801812000002' ON CONFLICT (user_id) DO UPDATE SET verification_status = 'APPROVED';\"\n```\n\n## Notes\n- Requests marked with an `Idempotency-Key` header use `{{$guid}}`, so every send is a new action. To test a safe retry, replace it with a fixed value.\n- Photo uploads are two steps: ask for an upload slot, then PUT the file to `{{uploadUrl}}` / `{{scaleUploadUrl}}` (choose a JPEG under Body → binary).\n- The collector must be within the search radius of the address (1 km, 3 km after 5 minutes). The collection uses the same Mirpur 10 point for both.\n- Live events (Socket.IO at the API origin, path `/socket.io`, `auth.token` = access token) are not part of this collection; see `SocketEvents` in the contract.\n- To run it again from the start, change `householdPhone` and `collectorPhone` or reuse them (existing numbers keep their role).",
+    "description": "Every route implemented in `apps/api` up to M4 (all 43 routes, 59 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.\n\n## Before you start\n1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).\n2. Run the folders in order (or the whole collection with the Runner). Requests save ids, tokens and the pickup code into collection variables for the next steps.\n3. Every OTP in development is `123456`. The admin phone is `+8801700000000`.\n\n## Collector sign-up and approval\nFolder **4. Collector setup** runs the real flow (M4): ask for a selfie upload slot, PUT a JPEG to it, sign up, then the admin approves. Re-running with the same `collectorPhone` is fine: sign-up and approval then answer 409, which the tests accept.\n\n## Notes\n- Requests marked with an `Idempotency-Key` header use `{{$guid}}`, so every send is a new action. To test a safe retry, replace it with a fixed value.\n- Photo uploads are two steps: ask for an upload slot, then PUT the file to `{{uploadUrl}}` / `{{scaleUploadUrl}}` (choose a JPEG under Body → binary).\n- The collector must be within the search radius of the address (1 km, 3 km after 5 minutes). The collection uses the same Mirpur 10 point for both.\n- Live events (Socket.IO at the API origin, path `/socket.io`, `auth.token` = access token) are not part of this collection; see `SocketEvents` in the contract.\n- To run it again from the start, change `householdPhone` and `collectorPhone` or reuse them (existing numbers keep their role).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -138,6 +138,16 @@
     },
     {
       "key": "trxId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "selfieUploadUrl",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "selfiePhotoId",
       "value": "",
       "type": "string"
     }
@@ -930,8 +940,348 @@
     },
     {
       "name": "4. Collector setup",
-      "description": "Run the SQL in the collection description first, so this collector is APPROVED.",
+      "description": "Sign-up and approval (C6, C7), then going online. Run 1. Auth first (collector and admin tokens).",
       "item": [
+        {
+          "name": "Profile before sign-up (collector) → 404 the first time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404 or 200', () => pm.expect(pm.response.code === 404 || pm.response.code === 200).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/collector/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "profile"
+              ]
+            },
+            "description": "404 NOT_FOUND until the collector has applied (the app then opens sign-up, C6). 200 on later runs with the same phone."
+          },
+          "response": []
+        },
+        {
+          "name": "Selfie: get upload slot (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code < 300 && pm.response.text()) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.uploadUrl !== undefined && body.uploadUrl !== null) pm.collectionVariables.set('selfieUploadUrl', body.uploadUrl);",
+                  "  if (body.photoId !== undefined && body.photoId !== null) pm.collectionVariables.set('selfiePhotoId', body.photoId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/collector/selfie",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "selfie"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contentType\": \"image/jpeg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Selfie: upload file",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "image/jpeg"
+              }
+            ],
+            "body": {
+              "mode": "file",
+              "file": {
+                "src": ""
+              }
+            },
+            "url": {
+              "raw": "{{selfieUploadUrl}}"
+            },
+            "description": "Pick any JPEG in Body → binary before sending. The URL is the presigned link from the previous request (valid 10 minutes); send the same Content-Type it was issued for."
+          },
+          "response": []
+        },
+        {
+          "name": "Sign up (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201 or 409', () => pm.expect(pm.response.code === 201 || pm.response.code === 409).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/collector/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jasim Uddin\",\n  \"nidNumber\": \"1987654321\",\n  \"selfiePhotoId\": \"{{selfiePhotoId}}\",\n  \"workAreas\": [\n    \"MIRPUR\",\n    \"PALLABI\"\n  ],\n  \"vehicleType\": \"VAN\",\n  \"hasScale\": true,\n  \"acceptedAgreement\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Saves the application as PENDING. 409 INVALID_STATE on later runs, once this phone is PENDING or APPROVED."
+          },
+          "response": []
+        },
+        {
+          "name": "Applications waiting (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/collectors?status=PENDING&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "collectors"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve the collector (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204 or 409', () => pm.expect(pm.response.code === 204 || pm.response.code === 409).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/collectors/:collectorId/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "collectors",
+                ":collectorId",
+                "decision"
+              ],
+              "variable": [
+                {
+                  "key": "collectorId",
+                  "value": "{{collectorId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sends an SMS and the collector.verification event. To reject, send {\"decision\": \"REJECTED\", \"note\": \"...\"}. 409 on later runs (already decided)."
+          },
+          "response": []
+        },
+        {
+          "name": "Collector profile (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('approved', () => pm.expect(pm.response.json().verificationStatus).to.eql('APPROVED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/collector/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
         {
           "name": "Go online at a location",
           "event": [
@@ -1949,6 +2299,158 @@
                   "value": "20"
                 }
               ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ledger today (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/collector/ledger?from={{today}}&to={{today}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "ledger"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{today}}"
+                }
+              ]
+            },
+            "description": "Set the collection variable `today` to today's Dhaka date (YYYY-MM-DD) first. C1 shows its totals; C9 asks for a week or month."
+          },
+          "response": []
+        },
+        {
+          "name": "Past pickups (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/pickups?status=PAST&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "pickups"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PAST"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change work details (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/collector/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "collector",
+                "profile"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workAreas\": [\n    \"MIRPUR\",\n    \"KAFRUL\"\n  ],\n  \"hasScale\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
           "response": []

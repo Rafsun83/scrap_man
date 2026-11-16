@@ -93,6 +93,8 @@ export class PickupViewsService {
       slot: rec.row.slot,
       hasPhoto: rec.photos.some((p) => p.kind === 'ITEMS'),
       estimate: this.estimate(rec),
+      requestedAt: rec.row.requested_at.toISOString(),
+      expiresAt: rec.row.expires_at.toISOString(),
     };
   }
 
@@ -172,6 +174,8 @@ export class PickupViewsService {
       };
     });
     const latest = versions.at(-1);
+    const sortedItems = [...rec.items].sort((a, b) => a.sort_order - b.sort_order);
+    const ratesLocked = row.collector_id !== null && row.accepted_at !== null && (isOwner || isAssigned || isAdmin);
     const openDispute = rec.disputes.find((d) => d.status !== 'RESOLVED');
 
     return {
@@ -181,7 +185,7 @@ export class PickupViewsService {
       slotDate: row.slot_date,
       slot: row.slot,
       weightBand: row.weight_band,
-      categoryCodes: [...rec.items].sort((a, b) => a.sort_order - b.sort_order).map((i) => i.code),
+      categoryCodes: sortedItems.map((i) => i.code),
       area: row.area,
       estimate: this.estimate(rec),
       address: seesAddress ? { text: row.address_text, lat: row.lat, lng: row.lng, note: row.note } : null,
@@ -244,6 +248,7 @@ export class PickupViewsService {
         (isOwner || isAssigned || isAdmin) && row.rating_stars !== null
           ? { stars: Number(row.rating_stars), comment: row.rating_comment, createdAt: row.rated_at!.toISOString() }
           : null,
+      lockedRates: ratesLocked ? sortedItems.map((i) => ({ categoryCode: i.code, rate: num(i.rate_snapshot) })) : null,
     };
   }
 }

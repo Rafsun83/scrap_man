@@ -453,12 +453,13 @@ export interface paths {
         /**
          * Own pickups, newest first (household or collector)
          * @description Households see pickups they requested; collectors see pickups assigned to them.
-         *     ACTIVE is REQUESTED to CONFIRMED; CANCELLED includes EXPIRED.
+         *     ACTIVE is REQUESTED to CONFIRMED (DISPUTED included); CANCELLED includes EXPIRED;
+         *     PAST is COMPLETED, CANCELLED and EXPIRED (the collector's "past" tab, C8).
          */
         get: {
             parameters: {
                 query?: {
-                    status?: "ACTIVE" | "COMPLETED" | "CANCELLED";
+                    status?: "ACTIVE" | "COMPLETED" | "CANCELLED" | "PAST";
                     limit?: components["parameters"]["Limit"];
                     cursor?: components["parameters"]["Cursor"];
                 };
@@ -1008,8 +1009,11 @@ export interface paths {
          * @description First weigh: assigned collector while ARRIVED (version 1).
          *     Re-weigh: assigned collector while DISPUTED with an open REWEIGH dispute, or an admin while
          *     DISPUTED after resolving with TEAM_REWEIGH (version + 1). Either closes the open weight dispute.
-         *     Each line is one of the request's categories, at most once. PER_KG lines use the rate copied at
-         *     accept; ON_INSPECTION lines need quotedAmount. The server computes every amount and the totals.
+         *     Each line is an active category, at most once. A category the household did not list (found at the
+         *     door) is added to the pickup: a PER_KG one takes the rate in effect today, at that moment (400
+         *     VALIDATION_ERROR if it has never had a rate). Listed PER_KG categories use the rate copied at accept;
+         *     ON_INSPECTION lines need quotedAmount. Listed categories left out of the lines are not sold.
+         *     The server computes every amount and the totals.
          *     scalePhotoId must be an uploaded SCALE photo of this pickup not used by an earlier round
          *     (else 422 SCALE_PHOTO_REQUIRED).
          */
@@ -1281,6 +1285,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/collector/selfie": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a presigned upload URL for the sign-up selfie (C6)
+         * @description Collector only, before or after sign-up. Upload the file with an HTTP PUT to uploadUrl, sending the same
+         *     Content-Type, before expiresAt, then pass photoId to POST /collector/signup. Selfies are private: only
+         *     the collector and admins get a short-lived link (CollectorProfile.selfieUrl).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default image/jpeg
+                         * @enum {string}
+                         */
+                        contentType?: "image/jpeg" | "image/png" | "image/webp";
+                    };
+                };
+            };
+            responses: {
+                /** @description Upload slot */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UploadSlot"];
+                    };
+                };
+                400: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/collector/signup": {
         parameters: {
             query?: never;
@@ -1290,7 +1346,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Submit a collector application */
+        /**
+         * Submit a collector application
+         * @description Collector only. Saves the profile with verification PENDING and sets the account name.
+         *     A REJECTED collector may submit again (back to PENDING, the old note is cleared); a PENDING or APPROVED
+         *     one gets 409 INVALID_STATE. selfiePhotoId must be this collector's selfie and already uploaded
+         *     (else 400 VALIDATION_ERROR).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -1313,6 +1375,8 @@ export interface paths {
                         "application/json": components["schemas"]["CollectorProfile"];
                     };
                 };
+                400: components["responses"]["Error"];
+                409: components["responses"]["Error"];
             };
         };
         delete?: never;
@@ -1328,7 +1392,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Own collector profile, rating and verification status */
+        /**
+         * Own collector profile, rating and verification status
+         * @description 404 NOT_FOUND until the collector has signed up (the app then shows C6).
+         */
         get: {
             parameters: {
                 query?: never;
@@ -1347,6 +1414,7 @@ export interface paths {
                         "application/json": components["schemas"]["CollectorProfile"];
                     };
                 };
+                404: components["responses"]["Error"];
             };
         };
         put?: never;
@@ -1354,7 +1422,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Change work areas, vehicle or scale */
+        /**
+         * Change work areas, vehicle or scale
+         * @description Any signed-up collector. Does not change the verification status.
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -1365,7 +1436,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        workAreas?: string[];
+                        workAreas?: components["schemas"]["WorkAreas"];
                         vehicleType?: components["schemas"]["VehicleType"];
                         hasScale?: boolean;
                     };
@@ -1381,6 +1452,8 @@ export interface paths {
                         "application/json": components["schemas"]["CollectorProfile"];
                     };
                 };
+                400: components["responses"]["Error"];
+                404: components["responses"]["Error"];
             };
         };
         trace?: never;
@@ -1524,7 +1597,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Payouts and kg collected for a date range */
+        /**
+         * Payouts and kg collected for a date range (C1 today's totals, C9)
+         * @description Collector only. from and to are Dhaka calendar dates, inclusive; from must not be after to and the
+         *     range is at most 92 days (else 400 VALIDATION_ERROR).
+         */
         get: {
             parameters: {
                 query: {
@@ -1546,6 +1623,7 @@ export interface paths {
                         "application/json": components["schemas"]["Ledger"];
                     };
                 };
+                400: components["responses"]["Error"];
             };
         };
         put?: never;
@@ -1608,7 +1686,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Collectors by verification status */
+        /**
+         * Collectors by verification status
+         * @description Admin only. Oldest application first, so the queue is handled in order.
+         */
         get: {
             parameters: {
                 query?: {
@@ -1628,12 +1709,10 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            items?: components["schemas"]["CollectorProfile"][];
-                            nextCursor?: string | null;
-                        };
+                        "application/json": components["schemas"]["CollectorProfilePage"];
                     };
                 };
+                400: components["responses"]["Error"];
             };
         };
         put?: never;
@@ -1655,7 +1734,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Approve or reject a collector */
+        /**
+         * Approve or reject a collector
+         * @description Admin only, while the application is PENDING (else 409 INVALID_STATE); 404 NOT_FOUND if the user has not
+         *     signed up as a collector. note is required when rejecting and is shown to the collector. The collector
+         *     gets an SMS and the `collector.verification` event.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -1682,6 +1766,9 @@ export interface paths {
                     };
                     content?: never;
                 };
+                400: components["responses"]["Error"];
+                404: components["responses"]["Error"];
+                409: components["responses"]["Error"];
             };
         };
         delete?: never;
@@ -2221,6 +2308,15 @@ export interface components {
                 /** Format: date-time */
                 createdAt: string;
             } | null;
+            /**
+             * @description The rate copied onto each item at accept, so the collector's weigh screen (C4) can preview totals.
+             *     For the household, the assigned collector and admins from ACCEPTED on; null before accept.
+             *     A category added at weighing gets its rate when weighed. rate is null for ON_INSPECTION categories.
+             */
+            lockedRates: {
+                categoryCode: string;
+                rate: components["schemas"]["Money"] | null;
+            }[] | null;
         };
         MeSummary: {
             completedCount: number;
@@ -2305,76 +2401,125 @@ export interface components {
         CollectorSignup: {
             name: string;
             nidNumber: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description From POST /collector/selfie
+             */
             selfiePhotoId: string;
-            workAreas: string[];
+            workAreas: components["schemas"]["WorkAreas"];
             vehicleType: components["schemas"]["VehicleType"];
             hasScale: boolean;
             /** @constant */
             acceptedAgreement: true;
         };
+        /**
+         * @description Dhaka areas a collector works in. Bangla and English names are in @bw/shared (workAreas).
+         * @enum {string}
+         */
+        WorkArea: "ADABOR" | "BADDA" | "BANANI" | "BHASANTEK" | "CANTONMENT" | "CHAWKBAZAR" | "DAKSHINKHAN" | "DEMRA" | "DHANMONDI" | "GENDARIA" | "GULSHAN" | "HAZARIBAGH" | "JATRABARI" | "KADAMTALI" | "KAFRUL" | "KALABAGAN" | "KAMRANGIRCHAR" | "KHILGAON" | "KHILKHET" | "KOTWALI" | "LALBAGH" | "MIRPUR" | "MOHAMMADPUR" | "MOTIJHEEL" | "MUGDA" | "NEW_MARKET" | "PALLABI" | "PALTAN" | "RAMNA" | "RAMPURA" | "SABUJBAGH" | "SHAH_ALI" | "SHAHBAGH" | "SHER_E_BANGLA_NAGAR" | "SHYAMOLI" | "SHYAMPUR" | "SUTRAPUR" | "TEJGAON" | "TURAG" | "UTTARA" | "UTTARKHAN" | "VATARA" | "WARI";
+        WorkAreas: components["schemas"]["WorkArea"][];
         CollectorProfile: {
             /** Format: uuid */
-            userId?: string;
-            name?: string;
-            phone?: components["schemas"]["Phone"];
-            /** @example 19XX XXX 4821 */
-            nidNumberMasked?: string;
-            nidVerified?: boolean;
+            userId: string;
+            name: string | null;
+            phone: components["schemas"]["Phone"];
+            /**
+             * @description First 2 and last 4 digits
+             * @example 19XX XXX 4821
+             */
+            nidNumberMasked: string;
+            nidVerified: boolean;
+            /**
+             * Format: uri
+             * @description Short-lived link to the private selfie
+             */
+            selfieUrl: string | null;
+            workAreas: components["schemas"]["WorkArea"][];
+            vehicleType: components["schemas"]["VehicleType"];
+            hasScale: boolean;
+            verificationStatus: components["schemas"]["VerificationStatus"];
+            /** @description The admin's note with the last decision (shown on C7 when REJECTED) */
+            verificationNote: string | null;
+            /**
+             * Format: date-time
+             * @description When the application was last submitted
+             */
+            submittedAt: string;
+            /** Format: date-time */
+            decidedAt: string | null;
+            isOnline: boolean;
+            ratingAvg: number | null;
+            /** @description Pickups completed in the last 30 days */
+            pickups30d: number;
+            /** @description Requests given back in the last 30 days */
+            releases30d: number;
+        };
+        CollectorProfilePage: {
+            items: components["schemas"]["CollectorProfile"][];
+            nextCursor: string | null;
+        };
+        UploadSlot: {
+            /** Format: uuid */
+            photoId: string;
             /** Format: uri */
-            selfieUrl?: string | null;
-            workAreas?: string[];
-            vehicleType?: components["schemas"]["VehicleType"];
-            hasScale?: boolean;
-            verificationStatus?: components["schemas"]["VerificationStatus"];
-            isOnline?: boolean;
-            ratingAvg?: number | null;
-            pickups30d?: number;
-            releases30d?: number;
+            uploadUrl: string;
+            /** Format: date-time */
+            expiresAt: string;
         };
         NearbyRequest: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** @example Mirpur 10, Block C */
-            area?: string;
-            distanceM?: number;
-            categoryCodes?: string[];
-            weightBand?: components["schemas"]["WeightBand"];
+            area: string;
+            distanceM: number;
+            categoryCodes: string[];
+            weightBand: components["schemas"]["WeightBand"];
             /** Format: date */
-            slotDate?: string;
-            slot?: components["schemas"]["TimeSlot"];
-            hasPhoto?: boolean;
-            estimate?: {
+            slotDate: string;
+            slot: components["schemas"]["TimeSlot"];
+            hasPhoto: boolean;
+            estimate: {
                 min?: components["schemas"]["Money"];
                 max?: components["schemas"]["Money"];
-            };
+            } | null;
+            /** Format: date-time */
+            requestedAt: string;
+            /**
+             * Format: date-time
+             * @description End of the booked slot
+             */
+            expiresAt: string;
         };
+        /**
+         * @description COMPLETED pickups of this collector whose payment is PAID or VERIFIED and was made between the start of
+         *     `from` and the end of `to`, in Dhaka time. byCategory is sorted by kg, largest first; payments newest first.
+         */
         Ledger: {
             /** Format: date */
-            from?: string;
+            from: string;
             /** Format: date */
-            to?: string;
-            totalPaid?: components["schemas"]["Money"];
-            totalKg?: number;
-            pickupCount?: number;
-            byMethod?: {
-                CASH?: components["schemas"]["Money"];
-                BKASH?: components["schemas"]["Money"];
-                NAGAD?: components["schemas"]["Money"];
+            to: string;
+            totalPaid: components["schemas"]["Money"];
+            totalKg: number;
+            pickupCount: number;
+            byMethod: {
+                CASH: components["schemas"]["Money"];
+                BKASH: components["schemas"]["Money"];
+                NAGAD: components["schemas"]["Money"];
             };
-            byCategory?: {
-                categoryCode?: string;
-                kg?: number;
+            byCategory: {
+                categoryCode: string;
+                kg: number;
             }[];
-            payments?: {
+            payments: {
                 /** Format: uuid */
-                pickupId?: string;
-                householdName?: string | null;
-                method?: components["schemas"]["PaymentMethod"];
-                trxId?: string | null;
-                amount?: components["schemas"]["Money"];
+                pickupId: string;
+                householdName: string | null;
+                method: components["schemas"]["PaymentMethod"];
+                trxId: string | null;
+                amount: components["schemas"]["Money"];
                 /** Format: date-time */
-                paidAt?: string;
+                paidAt: string;
             }[];
         };
         /**
@@ -2383,9 +2528,19 @@ export interface components {
          *     or after a release). request.taken: collectors who were sent the request, when it is accepted, cancelled
          *     or expired. pickup.*: the household and the assigned collector. collector.location: the household while
          *     ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
+         *     collector.verification: the collector an admin approved or rejected.
          * @enum {string}
          */
-        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved";
+        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved" | "collector.verification";
+        /** @description collector.verification (the collector; also admins) */
+        EventCollectorVerification: {
+            /** Format: uuid */
+            userId: string;
+            verificationStatus: components["schemas"]["VerificationStatus"];
+            verificationNote: string | null;
+            /** Format: date-time */
+            at: string;
+        };
         /** @description request.created */
         EventRequestCreated: components["schemas"]["NearbyRequest"];
         /** @description request.taken; the request is gone from the nearby list */

@@ -5,7 +5,7 @@ import type { App } from 'supertest/types.js';
 import { DataSource } from 'typeorm';
 import type { Redis } from 'ioredis';
 import { AppModule } from '../src/app.module.js';
-import { SMS_SENDER, type SmsSender } from '../src/modules/auth/services/sms.service.js';
+import { SMS_SENDER, type SmsSender } from '../src/modules/sms/services/sms.service.js';
 import { configureApp } from '../src/configure-app.js';
 import { REDIS } from '../src/modules/redis/redis.module.js';
 import { PHOTO_STORAGE } from '../src/modules/storage/storage.module.js';
@@ -14,7 +14,9 @@ import type { PhotoStorage } from '../src/modules/storage/types/photo-storage.ty
 /** Catches outgoing SMS so tests can read the OTP. */
 export class FakeSms implements SmsSender {
   readonly codes = new Map<string, string>();
+  readonly sent: { phone: string; message: string }[] = [];
   async send(phone: string, message: string): Promise<void> {
+    this.sent.push({ phone, message });
     const code = /(\d{6})/.exec(message)?.[1];
     if (code) this.codes.set(phone, code);
   }
@@ -71,10 +73,11 @@ export async function createTestApp(): Promise<TestContext> {
 export async function resetData(ctx: TestContext): Promise<void> {
   await ctx.db.query(
     `TRUNCATE status_events, ratings, disputes, payments, pickup_photos, weigh_lines, pickup_items,
-              pickups, daily_rates, notification_reads, collector_profiles, addresses, users RESTART IDENTITY CASCADE`,
+              pickups, daily_rates, notification_reads, collector_profiles, collector_selfies, addresses, users RESTART IDENTITY CASCADE`,
   );
   await ctx.redis.flushdb();
   ctx.sms.codes.clear();
+  ctx.sms.sent.length = 0;
   ctx.storage.uploaded.clear();
 }
 

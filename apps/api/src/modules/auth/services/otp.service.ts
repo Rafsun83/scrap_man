@@ -4,7 +4,7 @@ import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 import { AppError } from '../../../common/errors.js';
 import type { Env } from '../../../config/env.js';
 import { OtpRepository } from '../repositories/otp.repository.js';
-import { SMS_SENDER, type SmsSender } from './sms.service.js';
+import { SMS_SENDER, type SmsSender } from '../../sms/services/sms.service.js';
 
 export const OTP_LIMITS = {
   perPhone: 3, // OTP requests per phone in the window

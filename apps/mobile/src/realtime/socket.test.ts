@@ -23,12 +23,30 @@ describe('live events', () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: ['pickup', 'p3'] });
   });
 
-  it('ignores collector-only events', () => {
+  it('keeps the nearby list current without refetching', () => {
     const qc = new QueryClient();
     const spy = jest.spyOn(qc, 'invalidateQueries');
-    handleEvent(qc, 'request.created', { id: 'p1' });
-    handleEvent(qc, 'request.taken', { pickupId: 'p1', reason: 'ACCEPTED' });
+    const req = (id: string, distanceM: number) => ({ id, distanceM, area: 'Mirpur', categoryCodes: ['IRON'] });
+    // Nothing happens before the list is loaded.
+    handleEvent(qc, 'request.created', req('a', 900));
+    expect(qc.getQueryData(['collector', 'nearby'])).toBeUndefined();
+
+    qc.setQueryData(['collector', 'nearby'], [req('a', 900)]);
+    handleEvent(qc, 'request.created', req('b', 300));
+    handleEvent(qc, 'request.created', req('a', 800)); // widened: sent again, replaced
+    expect((qc.getQueryData(['collector', 'nearby']) as { id: string }[]).map((r) => r.id)).toEqual(['b', 'a']);
+    handleEvent(qc, 'request.taken', { pickupId: 'b', reason: 'ACCEPTED' });
+    expect((qc.getQueryData(['collector', 'nearby']) as { id: string }[]).map((r) => r.id)).toEqual(['a']);
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("refetches the collector's profile on a decision and the ledger on payment", () => {
+    const qc = new QueryClient();
+    const spy = jest.spyOn(qc, 'invalidateQueries');
+    handleEvent(qc, 'collector.verification', { userId: 'c1', verificationStatus: 'APPROVED', verificationNote: null, at: '' });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['collector', 'profile'] });
+    handleEvent(qc, 'pickup.paid', { pickupId: 'p1' });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['collector', 'ledger'] });
   });
 
   it('stores collector.location without a refetch', () => {

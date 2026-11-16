@@ -193,4 +193,23 @@ describe('Live events over Socket.IO (e2e)', () => {
     expect(hc.named('request.expired')).toEqual([{ pickupId: p.id, displayNo: p.displayNo, status: 'EXPIRED', at: expect.any(String) }]);
     expect(near.named('request.taken')).toEqual([{ pickupId: p.id, reason: 'EXPIRED' }]);
   });
+
+  it("an admin's decision on an application reaches the collector and admins only", async () => {
+    const applicant = await makeCollector(ctx, { status: 'PENDING', online: false });
+    const bystander = await connect(await makeCollector(ctx));
+    const admin = await makeAdminSession(ctx);
+    const cc = await connect(applicant);
+    const ac = await connect(admin);
+    await ctx
+      .http()
+      .post(`/api/v1/admin/collectors/${applicant.id}/decision`)
+      .set(bearer(admin.token))
+      .send({ decision: 'APPROVED' })
+      .expect(204);
+    await settle();
+    const payload = { userId: applicant.id, verificationStatus: 'APPROVED', verificationNote: null, at: expect.any(String) };
+    expect(cc.named('collector.verification')).toEqual([payload]);
+    expect(ac.named('collector.verification')).toEqual([payload]);
+    expect(bystander.named('collector.verification')).toEqual([]);
+  });
 });

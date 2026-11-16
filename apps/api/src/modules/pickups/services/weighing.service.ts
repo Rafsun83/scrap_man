@@ -3,6 +3,7 @@ import { PICKUP_CODE_MAX_ATTEMPTS, type PaymentMethod } from '@bw/shared';
 import { CLOCK, type Clock } from '../../../common/clock.js';
 import { AppError, isUniqueViolation } from '../../../common/errors.js';
 import type { Db } from '../../../common/sql.js';
+import { dhakaToday } from '../../../common/time.js';
 import { PHOTO_STORAGE } from '../../storage/storage.module.js';
 import type { PhotoStorage } from '../../storage/types/photo-storage.type.js';
 import type { PickupDto } from '../dtos/pickup.dto.js';
@@ -12,7 +13,7 @@ import { DisputesRepository } from '../repositories/disputes.repository.js';
 import { PaymentsRepository } from '../repositories/payments.repository.js';
 import { PhotosRepository } from '../repositories/photos.repository.js';
 import { PickupsRepository } from '../repositories/pickups.repository.js';
-import { WeighingRepository } from '../repositories/weighing.repository.js';
+import { WeighingRepository, type WeighItemRow } from '../repositories/weighing.repository.js';
 import type { LockedPickup, Viewer } from '../types/pickup-record.types.js';
 import { moneyUtil } from '../utils/money.util.js';
 import { PickupCodeService } from './pickup-code.service.js';
@@ -117,16 +118,10 @@ export class WeighingService {
         await this.pickupStateService.transition(tx, p, 'WEIGHED', actor); // throws INVALID_STATE
       }
 
-      const items = await this.weighingRepository.itemsOf(tx, pickupId);
-      const byCode = new Map(items.map((i) => [i.code, i]));
+      const byCode = await this.itemsForLines(tx, pickupId, input.lines.map((l) => l.categoryCode), now);
       const seen = new Set<string>();
       const lines = input.lines.map((l) => {
-        const item = byCode.get(l.categoryCode);
-        if (!item) {
-          throw AppError.validation(`${l.categoryCode} is not part of this request. Weigh only the requested items.`, {
-            categoryCode: l.categoryCode,
-          });
-        }
+        const item = byCode.get(l.categoryCode)!;
         if (seen.has(l.categoryCode)) throw AppError.validation(`${l.categoryCode} appears twice. Add its weight once.`);
         seen.add(l.categoryCode);
         if (item.pricing_type === 'PER_KG') {
@@ -188,6 +183,29 @@ export class WeighingService {
       if (d) this.pickupEventsService.dispute('dispute.resolved', d, outcome.p);
     }
     return this.pickupViewsService.view(pickupId, actor);
+  }
+
+  /**
+   * The pickup's items for these codes. A code the household did not list is added to the pickup
+   * (found at the door) with the rate in effect now; unknown or inactive codes are refused.
+   */
+  private async itemsForLines(tx: Db, pickupId: string, codes: string[], now: Date): Promise<Map<string, WeighItemRow>> {
+    const items = await this.weighingRepository.itemsOf(tx, pickupId);
+    const byCode = new Map(items.map((i) => [i.code, i]));
+    const extraCodes = [...new Set(codes.filter((c) => !byCode.has(c)))];
+    if (extraCodes.length === 0) return byCode;
+
+    const found = await this.weighingRepository.activeCategoriesWithRate(tx, extraCodes, dhakaToday(now));
+    for (const code of extraCodes) {
+      const extra = found.find((f) => f.code === code);
+      if (!extra) throw AppError.validation(`${code} is not a category BhangariWala buys.`, { categoryCode: code });
+      if (extra.pricing_type === 'PER_KG' && extra.rate_snapshot === null) {
+        throw AppError.validation(`${code} has no rate yet, so it cannot be bought today.`, { categoryCode: code });
+      }
+      await this.weighingRepository.addItem(tx, pickupId, extra.category_id, extra.rate_snapshot);
+      byCode.set(code, extra);
+    }
+    return byCode;
   }
 
   /** The household approves the weights and picks how to be paid. */

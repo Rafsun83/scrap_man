@@ -86,7 +86,7 @@ When a milestone is complete, add `milestones/<id>-<name>.md` with a checklist o
 - [x] M1 Backend core: full schema, OTP sign-in, profile, addresses, categories, daily rates
 - [x] M2 Pickup engine: create requests, PostGIS matching with radius widening, first accept wins, pickup code, weighing, disputes, confirm, payment, expiry jobs, Socket.IO events, photo uploads (S3-compatible storage; SeaweedFS locally, as MinIO no longer publishes images). Notes: `milestones/M2-pickup-engine.md`
 - [x] M3 Household app screens, plus summary, notifications feed (`src/modules/notifications`), `Pickup.collectorLocation` and `Pickup.rating`. Maps need `GOOGLE_MAPS_API_KEY` in `apps/mobile/.env.local`. Notes: `milestones/M3-household-app.md` (phone walk-through still pending)
-- [ ] M4 Collector app screens (and collector sign-up endpoints)
+- [x] M4 Collector app screens, collector sign-up and approval endpoints (`src/modules/collectors`), ledger, offline weigh draft, items added at weighing. Support line from `EXPO_PUBLIC_SUPPORT_PHONE`. Notes: `milestones/M4-collector-app.md` (phone walk-through still pending)
 - [ ] M5 Admin panel
 - [ ] M6 Pilot readiness: tests, FCM push, monitoring, deployment
 

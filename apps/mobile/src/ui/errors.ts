@@ -1,4 +1,4 @@
-import { t, type Lang } from '@bw/shared';
+import { localDigits, t, type Lang } from '@bw/shared';
 import { ApiError } from '../api/client';
 
 /**
@@ -18,6 +18,22 @@ export function errorMessage(error: unknown, lang: Lang): string {
       return t('errValidation', lang);
     case 'FORBIDDEN':
       return t('errForbidden', lang);
+    case 'ALREADY_TAKEN':
+      return t('errAlreadyTaken', lang);
+    case 'OUT_OF_RANGE':
+      return t('errOutOfRange', lang);
+    case 'NOT_APPROVED':
+      return t('errNotApproved', lang);
+    case 'CODE_MISMATCH':
+      return t('errCodeMismatch', lang, { count: localDigits(Number(error.details.attemptsLeft ?? 0), lang) });
+    case 'CODE_LOCKED':
+      return t('errCodeLocked', lang);
+    case 'SCALE_PHOTO_REQUIRED':
+      return t('errScalePhoto', lang);
+    case 'TRX_ID_REQUIRED':
+      return t('errTrxRequired', lang);
+    case 'TRX_ID_REUSED':
+      return t('errTrxReused', lang);
     default:
       return t('errGeneric', lang);
   }

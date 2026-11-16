@@ -21,6 +21,13 @@ export type MeSummary = S['MeSummary'];
 export type Notification = S['Notification'];
 export type NotificationPage = S['NotificationPage'];
 export type NotificationType = S['NotificationType'];
+export type CollectorProfile = S['CollectorProfile'];
+export type CollectorSignup = S['CollectorSignup'];
+export type NearbyRequest = S['NearbyRequest'];
+export type Ledger = S['Ledger'];
+export type WorkArea = S['WorkArea'];
+export type VehicleType = S['VehicleType'];
+export type EventCollectorVerification = S['EventCollectorVerification'];
 
 export type TodayRates = {
   effectiveDate?: string;
@@ -30,4 +37,4 @@ export type TodayRates = {
 
 export type UploadSlot = { photoId: string; uploadUrl: string; expiresAt: string };
 
-export type PickupFilter = 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+export type PickupFilter = 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'PAST';

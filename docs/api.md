@@ -1,8 +1,8 @@
 # BhangariWala API reference
 
-Every endpoint the API serves today (milestones M0 to M3), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
+Every endpoint the API serves today (milestones M0 to M4), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
 
-> **How the samples were made:** the M3 samples (summary, notifications, `collectorLocation`, `rating`) come from a second scripted sale on 2026-11-15. Every other sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
+> **How the samples were made:** the M4 samples (collector sign-up, approval, profile, ledger, `lockedRates`, an item added at weighing, the new nearby fields) come from a scripted collector journey on 2026-11-16. The M3 samples (summary, notifications, `collectorLocation`, `rating`) come from a second scripted sale on 2026-11-15. Every other sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
 
 ## Contents
 
@@ -121,21 +121,28 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `DELETE` | [`/me/addresses/{addressId}`](#delete-meaddressesaddressid) | Household | Removes an address | M1 |
 | `POST` | [`/pickups`](#post-pickups) | Household | Requests a doorstep pickup | M2 |
 | `GET` | [`/pickups/{pickupId}`](#get-pickupspickupid) | The household, the assigned collector, or an admin | One pickup, shaped for the viewer | M2 |
-| `GET` | [`/me/pickups`](#get-mepickups) | Household or collector | Own pickups, newest first: the household's requests, or the collector's assigned pickups (history screens H11 and C8) | M2 |
+| `GET` | [`/me/pickups`](#get-mepickups) | Household or collector | Own pickups, newest first: the household's requests, or the collector's assigned pickups (history screens H11 and C8); `PAST` filter since M4 | M2 |
 | `GET` | [`/me/summary`](#get-mesummary) | Household | Totals for the history screen: completed pickups, kg sold, taka earned (H11) | M3 |
 | `POST` | [`/pickups/{pickupId}/cancel`](#post-pickupspickupidcancel) | Household (own pickup) | The household cancels before the collector arrives | M2 |
 | `POST` | [`/pickups/{pickupId}/accept`](#post-pickupspickupidaccept) | Collector (approved, online) | Claims a request | M2 |
 | `POST` | [`/pickups/{pickupId}/release`](#post-pickupspickupidrelease) | Assigned collector | Gives an accepted request back before arriving | M2 |
 | `POST` | [`/pickups/{pickupId}/arrive`](#post-pickupspickupidarrive) | Assigned collector | The collector enters the household's 4-digit code at the door (status `ARRIVED`) | M2 |
 | `POST` | [`/pickups/{pickupId}/photos`](#post-pickupspickupidphotos) | Household (ITEMS), collector or admin (SCALE) | Gets a presigned link to upload a photo straight to storage | M2 |
-| `POST` | [`/pickups/{pickupId}/weights`](#post-pickupspickupidweights) | Assigned collector, or admin after TEAM_REWEIGH | Sends a weigh round | M2 |
+| `POST` | [`/pickups/{pickupId}/weights`](#post-pickupspickupidweights) | Assigned collector, or admin after TEAM_REWEIGH | Sends a weigh round; since M4 may add items found at the door | M2 |
 | `POST` | [`/pickups/{pickupId}/confirm`](#post-pickupspickupidconfirm) | Household | The household approves the weights and chooses how to be paid (status `CONFIRMED`) | M2 |
 | `POST` | [`/pickups/{pickupId}/dispute`](#post-pickupspickupiddispute) | Household | The household rejects the weights or reports a problem | M2 |
 | `POST` | [`/pickups/{pickupId}/payment`](#post-pickupspickupidpayment) | Assigned collector | The collector records the payment (status `COMPLETED`) | M2 |
 | `POST` | [`/pickups/{pickupId}/rating`](#post-pickupspickupidrating) | Household | Rates the collector 1 to 5 stars after a completed pickup; updates the collector's average | M2 |
+| `POST` | [`/collector/selfie`](#post-collectorselfie) | Collector | Gets a presigned link to upload the sign-up selfie (C6) | M4 |
+| `POST` | [`/collector/signup`](#post-collectorsignup) | Collector | Submits the collector application (C6); applying again after a rejection | M4 |
+| `GET` | [`/collector/profile`](#get-collectorprofile) | Collector | Own profile, verification status and note, rating, 30-day activity (C7, C11) | M4 |
+| `PATCH` | [`/collector/profile`](#patch-collectorprofile) | Collector | Changes work areas, vehicle or scale | M4 |
+| `GET` | [`/collector/ledger`](#get-collectorledger) | Collector | Payouts, kg and pickups for a date range, by method and item, with each payment (C1, C9) | M4 |
 | `PUT` | [`/collector/status`](#put-collectorstatus) | Approved collector | Goes online (with a location) or offline | M2 |
 | `PUT` | [`/collector/location`](#put-collectorlocation) | Approved collector | Location ping, about every 30 seconds while online or on the way | M2 |
 | `GET` | [`/collector/requests/nearby`](#get-collectorrequestsnearby) | Approved collector | Open requests whose current radius reaches the given point, nearest first (screen C1) | M2 |
+| `GET` | [`/admin/collectors`](#get-admincollectors) | Admin | Collector applications by verification status, oldest first | M4 |
+| `POST` | [`/admin/collectors/{userId}/decision`](#post-admincollectorsuseriddecision) | Admin | Approves or rejects a pending application; SMS and live event to the collector | M4 |
 | `POST` | [`/admin/pickups/{pickupId}/cancel`](#post-adminpickupspickupidcancel) | Admin | Cancels any active pickup (REQUESTED to CONFIRMED), with a reason | M2 |
 | `GET` | [`/admin/disputes`](#get-admindisputes) | Admin | Disputes, open first (screen A4) | M2 |
 | `POST` | [`/admin/disputes/{disputeId}/resolve`](#post-admindisputesdisputeidresolve) | Admin | Closes a dispute in `ADMIN_REVIEW` with an outcome | M2 |
@@ -1286,7 +1293,7 @@ Own pickups, newest first: the household's requests, or the collector's assigned
 
 **Who:** Household or collector · **Since:** M2
 
-- Query: `status` = `ACTIVE` (REQUESTED to CONFIRMED), `COMPLETED`, or `CANCELLED` (includes EXPIRED); `limit` 1-50 (default 20); `cursor` from the previous page.
+- Query: `status` = `ACTIVE` (REQUESTED to CONFIRMED), `COMPLETED`, `CANCELLED` (includes EXPIRED), or `PAST` (COMPLETED, CANCELLED and EXPIRED; the collector's C8 past tab, since M4); `limit` 1-50 (default 20); `cursor` from the previous page.
 - `nextCursor` is `null` on the last page.
 
 **Request**
@@ -1407,6 +1414,26 @@ After payment and rating:
 ```
 
 _Shortened to the new fields._
+
+### Pickup fields added in M4
+
+- `lockedRates`: the rate copied onto each item at accept (`[{ categoryCode, rate }]`, `rate` `null` for electronics), so the collector's weigh screen (C4) can preview totals while the household's rate board may already show a correction. For the household, the assigned collector and admins from `ACCEPTED` on; `null` before accept. An item added at weighing appears with the rate it got then.
+
+```json
+{
+  "status": "ACCEPTED",
+  "lockedRates": [
+    {
+      "categoryCode": "IRON",
+      "rate": 50
+    },
+    {
+      "categoryCode": "NEWSPAPER",
+      "rate": 30
+    }
+  ]
+}
+```
 
 ### POST /pickups/{pickupId}/cancel
 
@@ -1724,7 +1751,8 @@ Sends a weigh round. The server computes every amount and the totals (status `WE
 **Who:** Assigned collector, or admin after TEAM_REWEIGH · **Since:** M2 · **Idempotency-Key:** required
 
 - First weigh while `ARRIVED`; re-weigh while `DISPUTED` with an open `REWEIGH` dispute (closes it); an admin weighs after resolving with `TEAM_REWEIGH`.
-- One line per requested category; kg to 0.1. Per-kg lines use the rate copied at accept; electronics need `quotedAmount`.
+- One line per category, at most once; kg to 0.1. Per-kg lines use the rate copied at accept; electronics need `quotedAmount`. Requested categories left out are not sold.
+- **Since M4:** a category the household did not list (found at the door) is added to the pickup; a per-kg one takes the rate in effect at that moment (`400 VALIDATION_ERROR` if it has never had a rate). See the example below.
 - `scalePhotoId` must be an uploaded `SCALE` photo of this pickup by the same user, not used by an earlier round.
 
 **Request**
@@ -1837,12 +1865,85 @@ Response:
 
 _Shortened to the fields this call changes; every pickup response has the full shape shown under [GET /pickups/{pickupId}](#get-pickupspickupid)._
 
+<details><summary>Example: Adding carton found at the door (M4)</summary>
+
+```json
+{
+  "lines": [
+    {
+      "categoryCode": "IRON",
+      "kg": 9.5
+    },
+    {
+      "categoryCode": "NEWSPAPER",
+      "kg": 5
+    },
+    {
+      "categoryCode": "CARTON",
+      "kg": 3
+    }
+  ],
+  "scalePhotoId": "\u2026"
+}
+```
+
+`200` (shortened to the changed fields)
+
+```json
+{
+  "status": "WEIGHED",
+  "categoryCodes": [
+    "IRON",
+    "NEWSPAPER",
+    "CARTON"
+  ],
+  "lines": [
+    {
+      "categoryCode": "IRON",
+      "kg": 9.5,
+      "rate": 50,
+      "amount": 475
+    },
+    {
+      "categoryCode": "NEWSPAPER",
+      "kg": 5,
+      "rate": 30,
+      "amount": 150
+    },
+    {
+      "categoryCode": "CARTON",
+      "kg": 3,
+      "rate": 18,
+      "amount": 54
+    }
+  ],
+  "totalKg": 17.5,
+  "totalAmount": 679,
+  "lockedRates": [
+    {
+      "categoryCode": "IRON",
+      "rate": 50
+    },
+    {
+      "categoryCode": "NEWSPAPER",
+      "rate": 30
+    },
+    {
+      "categoryCode": "CARTON",
+      "rate": 18
+    }
+  ]
+}
+```
+
+</details>
+
 **Errors**
 
 | Code | HTTP | When |
 | --- | --- | --- |
 | `SCALE_PHOTO_REQUIRED` | 422 | Photo missing, not uploaded, someone else's, or already used |
-| `VALIDATION_ERROR` | 400 | Category not in the request, duplicate, kg not to 0.1, quote missing or not allowed |
+| `VALIDATION_ERROR` | 400 | Unknown or inactive category, an added category with no rate, duplicate, kg not to 0.1, quote missing or not allowed |
 | `INVALID_STATE` | 409 | Not ARRIVED, or the dispute is with admins |
 
 <details><summary>Example: Without an uploaded scale photo</summary>
@@ -2158,6 +2259,267 @@ Authorization: Bearer <accessToken>
 
 ## Collector
 
+The collector app (M4): sign-up and approval (C6, C7), going online and the nearby list (C1), the profile (C11) and the ledger (C9). Accepting and working a pickup use the [Pickups](#pickups) endpoints.
+
+### POST /collector/selfie
+
+Gets a presigned link to upload the sign-up selfie (C6) to private storage.
+
+**Who:** Collector (before or after sign-up) · **Since:** M4
+
+- Body: `contentType` (`image/jpeg` default, `image/png`, `image/webp`); may be empty.
+- `PUT` the file to `uploadUrl` with the same `Content-Type` before `expiresAt`, then send `photoId` to `POST /collector/signup`.
+- Selfies are private: only the collector and admins get a short-lived link (`CollectorProfile.selfieUrl`). At most 20 per collector.
+
+**Request**
+
+```http
+POST /api/v1/collector/selfie
+Authorization: Bearer <accessToken>
+```
+
+```json
+{}
+```
+
+**Response**
+
+`201`
+
+```json
+{
+  "photoId": "33ab0f6f-658b-47f7-929f-920f82c6b0b2",
+  "uploadUrl": "http://localhost:8333/bhangariwala-photos/selfies/69985e76-2e4e-4412-b5fa-99bc7ac3fffb/33ab0f6f-658b-47f7-929f-920f82c6b0b2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&…&X-Amz-Signature=…",
+  "expiresAt": "2026-11-16T13:43:48.668Z"
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Bad content type, or 20 selfies already uploaded |
+
+### POST /collector/signup
+
+Submits the collector application (C6). The profile is saved with verification `PENDING` and the account name is set.
+
+**Who:** Collector · **Since:** M4
+
+- `nidNumber`: 10, 13 or 17 digits. `workAreas`: 1 to 10 distinct Dhaka area codes (`WorkArea` in the contract; names in `WORK_AREAS` in `@bw/shared`). `acceptedAgreement` must be `true`.
+- `selfiePhotoId` must be this collector's selfie and already uploaded.
+- A `REJECTED` collector may apply again: back to `PENDING`, the old note cleared. `PENDING` or `APPROVED` gets `409`.
+- The response never contains the full NID number (`nidNumberMasked` keeps the first 2 and last 4 digits).
+
+**Request**
+
+```http
+POST /api/v1/collector/signup
+Authorization: Bearer <accessToken>
+```
+
+```json
+{
+  "name": "Jasim Uddin",
+  "nidNumber": "1987654321",
+  "selfiePhotoId": "33ab0f6f-658b-47f7-929f-920f82c6b0b2",
+  "workAreas": [
+    "MIRPUR",
+    "PALLABI"
+  ],
+  "vehicleType": "VAN",
+  "hasScale": true,
+  "acceptedAgreement": true
+}
+```
+
+**Response**
+
+`201`
+
+```json
+{
+  "userId": "69985e76-2e4e-4412-b5fa-99bc7ac3fffb",
+  "name": "Jasim Uddin",
+  "phone": "+8801708955427",
+  "nidNumberMasked": "19XX XX 4321",
+  "nidVerified": false,
+  "selfieUrl": "http://localhost:8333/bhangariwala-photos/selfies/69985e76-2e4e-4412-b5fa-99bc7ac3fffb/33ab0f6f-658b-47f7-929f-920f82c6b0b2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&…&X-Amz-Signature=…",
+  "workAreas": [
+    "MIRPUR",
+    "PALLABI"
+  ],
+  "vehicleType": "VAN",
+  "hasScale": true,
+  "verificationStatus": "PENDING",
+  "verificationNote": null,
+  "submittedAt": "2026-11-16T13:33:48.759Z",
+  "decidedAt": null,
+  "isOnline": false,
+  "ratingAvg": null,
+  "pickups30d": 0,
+  "releases30d": 0
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | A field is missing or wrong, or the selfie is not this collector's or not uploaded yet |
+| `INVALID_STATE` | 409 | An application is already PENDING, or the collector is APPROVED |
+
+### GET /collector/profile
+
+The collector's own profile: verification status (and the admin's note when rejected), work details, rating and 30-day activity (C7, C11).
+
+**Who:** Collector · **Since:** M4
+
+- `404 NOT_FOUND` until the collector has applied; the app then opens sign-up (C6).
+- `pickups30d`: pickups completed in the last 30 days; `releases30d`: requests given back in the last 30 days.
+
+**Request**
+
+```http
+GET /api/v1/collector/profile
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`200`
+
+```json
+{
+  "userId": "69985e76-2e4e-4412-b5fa-99bc7ac3fffb",
+  "name": "Jasim Uddin",
+  "phone": "+8801708955427",
+  "nidNumberMasked": "19XX XX 4321",
+  "nidVerified": false,
+  "selfieUrl": "http://localhost:8333/bhangariwala-photos/selfies/69985e76-2e4e-4412-b5fa-99bc7ac3fffb/33ab0f6f-658b-47f7-929f-920f82c6b0b2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&…&X-Amz-Signature=…",
+  "workAreas": [
+    "MIRPUR",
+    "KAFRUL"
+  ],
+  "vehicleType": "VAN",
+  "hasScale": true,
+  "verificationStatus": "APPROVED",
+  "verificationNote": null,
+  "submittedAt": "2026-11-16T13:33:48.759Z",
+  "decidedAt": "2026-11-16T13:33:48.810Z",
+  "isOnline": true,
+  "ratingAvg": null,
+  "pickups30d": 1,
+  "releases30d": 0
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `NOT_FOUND` | 404 | Not applied yet |
+
+### PATCH /collector/profile
+
+Changes work areas, vehicle or scale (C11 "বদলান"). Does not change the verification status.
+
+**Who:** Collector (signed up) · **Since:** M4
+
+**Request**
+
+```http
+PATCH /api/v1/collector/profile
+Authorization: Bearer <accessToken>
+```
+
+```json
+{
+  "workAreas": [
+    "MIRPUR",
+    "KAFRUL"
+  ]
+}
+```
+
+**Response**
+
+`200` with the updated `CollectorProfile` (as above).
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | No field sent, or a field is not valid |
+| `NOT_FOUND` | 404 | Not applied yet |
+
+### GET /collector/ledger
+
+Payouts and kg collected for a date range (C1's today totals and C9).
+
+**Who:** Collector · **Since:** M4
+
+- Query: `from` and `to`, Dhaka calendar dates, inclusive; at most 92 days.
+- Counts `COMPLETED` pickups whose payment is `PAID` or `VERIFIED`, by payment time. A "not received" report (`REPORTED`) drops out until it is settled.
+- `byCategory` is kg from each pickup's final weigh round, largest first; `payments` newest first.
+
+**Request**
+
+```http
+GET /api/v1/collector/ledger?from=2026-11-16&to=2026-11-16
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`200`
+
+```json
+{
+  "from": "2026-11-16",
+  "to": "2026-11-16",
+  "totalPaid": 679,
+  "totalKg": 17.5,
+  "pickupCount": 1,
+  "byMethod": {
+    "CASH": 0,
+    "BKASH": 679,
+    "NAGAD": 0
+  },
+  "byCategory": [
+    {
+      "categoryCode": "IRON",
+      "kg": 9.5
+    },
+    {
+      "categoryCode": "NEWSPAPER",
+      "kg": 5
+    },
+    {
+      "categoryCode": "CARTON",
+      "kg": 3
+    }
+  ],
+  "payments": [
+    {
+      "pickupId": "476ead8e-6bae-494e-97c1-f94e09cb381a",
+      "householdName": "Rasheda Begum",
+      "method": "BKASH",
+      "trxId": "9KXMWJB13IE",
+      "amount": 679,
+      "paidAt": "2026-11-16T13:33:49.197Z"
+    }
+  ]
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | A date is missing or not real, `from` is after `to`, or the range is longer than 92 days |
+
+
 ### PUT /collector/status
 
 Goes online (with a location) or offline. Only online collectors are matched.
@@ -2252,6 +2614,7 @@ Open requests whose current radius reaches the given point, nearest first (scree
 
 - Query: `lat`, `lng` (inside Bangladesh).
 - Area and distance only; never the exact address or phone. Up to 50.
+- `requestedAt` (C1's "নতুন" badge) and `expiresAt` (end of the booked slot) were added in M4.
 
 **Request**
 
@@ -2262,27 +2625,28 @@ Authorization: Bearer <accessToken>
 
 **Response**
 
-`200`
+`200` (recorded 2026-11-16)
 
 ```json
 [
   {
-    "id": "7d5454fd-9794-4bdb-bea8-d34ac7b7e83f",
+    "id": "476ead8e-6bae-494e-97c1-f94e09cb381a",
     "area": "Mirpur 10",
-    "distanceM": 244,
+    "distanceM": 298,
     "categoryCodes": [
       "IRON",
-      "NEWSPAPER",
-      "ELECTRONICS"
+      "NEWSPAPER"
     ],
     "weightBand": "FROM_5_TO_15",
-    "slotDate": "2026-11-15",
+    "slotDate": "2026-11-17",
     "slot": "MORNING",
-    "hasPhoto": true,
+    "hasPhoto": false,
     "estimate": {
       "min": 200,
       "max": 600
-    }
+    },
+    "requestedAt": "2026-11-16T13:33:48.842Z",
+    "expiresAt": "2026-11-17T06:00:00.000Z"
   }
 ]
 ```
@@ -2294,6 +2658,109 @@ Authorization: Bearer <accessToken>
 | `NOT_APPROVED` | 403 | Collector not approved |
 
 ## Admin
+
+### GET /admin/collectors
+
+Collector applications by verification status, oldest application first (A3; the screen arrives in M5).
+
+**Who:** Admin · **Since:** M4
+
+- Query: `status` (`PENDING`, `APPROVED`, `REJECTED`; all when left out), `limit` (1-50, default 20), `cursor`.
+
+**Request**
+
+```http
+GET /api/v1/admin/collectors?status=PENDING&limit=5
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`200`
+
+```json
+{
+  "items": [
+    {
+      "userId": "69985e76-2e4e-4412-b5fa-99bc7ac3fffb",
+      "name": "Jasim Uddin",
+      "phone": "+8801708955427",
+      "nidNumberMasked": "19XX XX 4321",
+      "nidVerified": false,
+      "selfieUrl": "http://localhost:8333/bhangariwala-photos/selfies/69985e76-2e4e-4412-b5fa-99bc7ac3fffb/33ab0f6f-658b-47f7-929f-920f82c6b0b2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&…&X-Amz-Signature=…",
+      "workAreas": [
+        "MIRPUR",
+        "PALLABI"
+      ],
+      "vehicleType": "VAN",
+      "hasScale": true,
+      "verificationStatus": "PENDING",
+      "verificationNote": null,
+      "submittedAt": "2026-11-16T13:33:48.759Z",
+      "decidedAt": null,
+      "isOnline": false,
+      "ratingAvg": null,
+      "pickups30d": 0,
+      "releases30d": 0
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Bad status, limit or cursor |
+
+### POST /admin/collectors/{userId}/decision
+
+Approves or rejects a `PENDING` application. The collector gets an SMS in their language and the `collector.verification` event.
+
+**Who:** Admin · **Since:** M4
+
+- `note` (up to 500) is required when rejecting; the collector reads it on C7.
+- Approval does not mark the NID card as checked (`nidVerified` stays false; card checks come later).
+
+**Request**
+
+```http
+POST /api/v1/admin/collectors/{userId}/decision
+Authorization: Bearer <accessToken>
+```
+
+```json
+{
+  "decision": "APPROVED"
+}
+```
+
+**Response**
+
+`204` with no body.
+
+<details><summary>Example: Rejecting with a note</summary>
+
+```json
+{
+  "decision": "REJECTED",
+  "note": "The selfie is blurred. Take it again in daylight."
+}
+```
+
+`204` with no body. SMS: "ভাঙ্গারিওয়ালা: আপনার সংগ্রাহক আবেদন এবার গ্রহণ করা যায়নি। কারণ দেখতে ও আবার আবেদন করতে অ্যাপ খুলুন।"
+
+</details>
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Bad user id or decision, or rejecting without a note |
+| `NOT_FOUND` | 404 | The user has not applied as a collector |
+| `INVALID_STATE` | 409 | The application was already decided |
+
 
 ### POST /admin/pickups/{pickupId}/cancel
 
@@ -2652,6 +3119,7 @@ Each user receives only their own events; admins receive every pickup event. Del
 | `dispute.resolved` | Household, collector, admins | A dispute was closed (full `Dispute`) |
 | `request.expired` | Household and admins | Nobody accepted before the slot ended |
 | `pickup.code_locked` | Admins only | The 5th wrong pickup code |
+| `collector.verification` | The collector, and admins | An admin approved or rejected the application (since M4) |
 
 Every `pickup.*` event except `pickup.code_locked`, plus `request.expired`, has this one small shape; refetch the pickup for detail:
 
@@ -2726,6 +3194,17 @@ Every `pickup.*` event except `pickup.code_locked`, plus `request.expired`, has 
 }
 ```
 
+`collector.verification` (the collector and admins):
+
+```json
+{
+  "userId": "69985e76-2e4e-4412-b5fa-99bc7ac3fffb",
+  "verificationStatus": "APPROVED",
+  "verificationNote": null,
+  "at": "2026-11-16T13:33:48.810Z"
+}
+```
+
 `pickup.code_locked` (admins; shape from the contract, ids elided):
 
 ```json
@@ -2743,14 +3222,8 @@ These are already in [`openapi.yaml`](openapi.yaml) but not served yet; calling 
 
 | Method | Path | Milestone | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/collector/signup` | M4 | Collector application: name, NID number, selfie, work areas, vehicle, scale |
-| `GET` | `/collector/profile` | M4 | Own profile, rating and verification status |
-| `PATCH` | `/collector/profile` | M4 | Change work areas, vehicle or scale |
-| `GET` | `/collector/ledger` | M4 | Payouts and kg collected for a date range |
-| `GET` | `/admin/collectors` | M5 | Collectors by verification status |
-| `POST` | `/admin/collectors/{userId}/decision` | M5 | Approve or reject a collector |
 | `GET` | `/admin/pickups` | M5 | Filter pickups by status, area and date |
 | `GET` | `/admin/users` | M5 | Households or collectors, searchable |
 | `PUT` | `/admin/users/{userId}/status` | M5 | Activate, flag or suspend a user |
 
-Until collector sign-up arrives in M4, approved collectors for testing are created directly in the database (see `makeCollector` in `apps/api/test/pickup-helpers.ts`).
+Collectors for testing now go through the real flow: sign in with role `COLLECTOR`, `POST /collector/selfie` and `/collector/signup`, then an admin approves with `POST /admin/collectors/{userId}/decision`. The e2e helper `makeCollector` in `apps/api/test/pickup-helpers.ts` still inserts an approved profile directly, for speed.
