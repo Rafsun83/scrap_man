@@ -9,6 +9,7 @@ import type {
   LockedPickup,
   PaymentRow,
   PhotoRow,
+  PickupEventRow,
   PickupRecord,
   PickupRow,
   WeighLineRow,
@@ -65,7 +66,8 @@ const PICKUP_COLUMNS = `
   c.name AS collector_name, c.phone AS collector_phone, cp.rating_avg AS collector_rating,
   ST_Y(cp.last_location::geometry) AS collector_lat, ST_X(cp.last_location::geometry) AS collector_lng,
   cp.last_seen_at AS collector_seen_at,
-  r.stars AS rating_stars, r.comment AS rating_comment, r.created_at AS rated_at`;
+  r.stars AS rating_stars, r.comment AS rating_comment, r.created_at AS rated_at,
+  COALESCE((SELECT max(se.at) FROM status_events se WHERE se.pickup_id = p.id), p.requested_at) AS updated_at`;
 
 /**
  * Pickups, their items, status events and ratings. Reads join the people around a pickup
@@ -280,6 +282,47 @@ export class PickupsRepository {
         LIMIT $5`,
       [ownerId, statuses, after?.at ?? null, after?.id ?? null, limit],
     );
+  }
+
+  /**
+   * Admin search (A1, A5): newest request first. `statuses` null means any; `area` is a substring, `q` a BW
+   * number, or part of the household's name or phone; `userId` the household or the collector.
+   */
+  adminPageIds(
+    f: { statuses: readonly PickupStatus[] | null; area: string | null; date: string | null; q: string | null; userId: string | null },
+    after: { at: string; id: string } | null,
+    limit: number,
+  ): Promise<{ id: string; requested_at: Date }[]> {
+    const qDigits = f.q?.replace(/^BW-?/i, '') ?? null;
+    return rows<{ id: string; requested_at: Date }>(
+      this.db,
+      `SELECT p.id, p.requested_at FROM pickups p JOIN users h ON h.id = p.household_id
+        WHERE ($1::pickup_status[] IS NULL OR p.status = ANY($1::pickup_status[]))
+          AND ($2::text IS NULL OR p.area ILIKE '%' || $2 || '%')
+          AND ($3::date IS NULL OR p.slot_date = $3::date)
+          AND ($4::text IS NULL OR h.name ILIKE '%' || $4 || '%' OR h.phone LIKE '%' || $4 || '%'
+               OR ($5::text ~ '^[0-9]+$' AND p.display_no::text = $5))
+          AND ($6::uuid IS NULL OR p.household_id = $6 OR p.collector_id = $6)
+          AND ($7::timestamptz IS NULL OR (p.requested_at, p.id) < ($7::timestamptz, $8::uuid))
+        ORDER BY p.requested_at DESC, p.id DESC
+        LIMIT $9`,
+      [f.statuses, f.area, f.date, f.q, qDigits, f.userId, after?.at ?? null, after?.id ?? null, limit],
+    );
+  }
+
+  /** Every status change of a pickup, oldest first, with who made it. */
+  events(pickupId: string): Promise<PickupEventRow[]> {
+    return rows<PickupEventRow>(
+      this.db,
+      `SELECT se.id::text AS id, se.at, se.from_status, se.to_status, se.actor_role, u.name AS actor_name, se.meta
+         FROM status_events se LEFT JOIN users u ON u.id = se.actor_id
+        WHERE se.pickup_id = $1 ORDER BY se.at, se.id`,
+      [pickupId],
+    );
+  }
+
+  async exists(pickupId: string): Promise<boolean> {
+    return (await one(this.db, `SELECT 1 FROM pickups WHERE id = $1`, [pickupId])) !== null;
   }
 
   /** Completed pickups of a household with their final kg and taka, summed in the database. */

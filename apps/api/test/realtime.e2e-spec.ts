@@ -212,4 +212,24 @@ describe('Live events over Socket.IO (e2e)', () => {
     expect(ac.named('collector.verification')).toEqual([payload]);
     expect(bystander.named('collector.verification')).toEqual([]);
   });
+
+  it('a new collector application reaches admins only', async () => {
+    const admin = await makeAdminSession(ctx);
+    const ac = await connect(admin);
+    const other = await connect(await makeCollector(ctx));
+    const phone = `+88019${String(Date.now()).slice(-8)}`;
+    await ctx.http().post('/api/v1/auth/otp/request').send({ phone }).expect(204);
+    const s = (await ctx.http().post('/api/v1/auth/otp/verify').send({ phone, code: ctx.sms.codes.get(phone), role: 'COLLECTOR' }).expect(200)).body;
+    const slot = (await ctx.http().post('/api/v1/collector/selfie').set(bearer(s.accessToken)).send({}).expect(201)).body;
+    ctx.storage.complete(slot.uploadUrl);
+    await ctx
+      .http()
+      .post('/api/v1/collector/signup')
+      .set(bearer(s.accessToken))
+      .send({ name: 'Jasim Uddin', nidNumber: '1987654321', selfiePhotoId: slot.photoId, workAreas: ['MIRPUR'], vehicleType: 'VAN', hasScale: true, acceptedAgreement: true })
+      .expect(201);
+    await settle();
+    expect(ac.named('collector.applied')).toEqual([{ userId: s.user.id, name: 'Jasim Uddin', at: expect.any(String) }]);
+    expect(other.named('collector.applied')).toEqual([]);
+  });
 });

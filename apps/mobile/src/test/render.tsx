@@ -65,6 +65,7 @@ export function makePickup(overrides: Partial<Pickup> = {}): Pickup {
     collectorLocation: null,
     rating: null,
     lockedRates: null,
+    updatedAt: '2026-11-14T03:00:00Z',
     ...overrides,
   };
 }

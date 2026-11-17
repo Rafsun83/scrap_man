@@ -15,6 +15,17 @@ export interface RateRow {
   published_at: Date | null;
 }
 
+/** A2: a category's rate published for exactly one day, and the latest one before it. */
+export interface DayRateRow {
+  code: string;
+  pricing_type: PricingType;
+  rate_per_kg: string | null;
+  published_at: Date | null;
+  published_by_name: string | null;
+  prev_rate: string | null;
+  prev_date: string | null;
+}
+
 /** Categories and their daily rates. */
 @Injectable()
 export class CatalogRepository {
@@ -48,6 +59,27 @@ export class CatalogRepository {
            SELECT d.rate_per_kg
              FROM daily_rates d
             WHERE d.category_id = c.id AND d.effective_date < cur.effective_date
+            ORDER BY d.effective_date DESC LIMIT 1
+         ) prev ON true
+        WHERE c.is_active
+        ORDER BY c.sort_order`,
+      [day],
+    );
+  }
+
+  /** Active categories in display order with the rate published for exactly `day` and the latest before it. */
+  ratesForDay(day: string): Promise<DayRateRow[]> {
+    return rows<DayRateRow>(
+      this.db,
+      `SELECT c.code, c.pricing_type, cur.rate_per_kg, cur.published_at, u.name AS published_by_name,
+              prev.rate_per_kg AS prev_rate, prev.effective_date::text AS prev_date
+         FROM categories c
+         LEFT JOIN daily_rates cur ON cur.category_id = c.id AND cur.effective_date = $1
+         LEFT JOIN users u ON u.id = cur.published_by
+         LEFT JOIN LATERAL (
+           SELECT d.rate_per_kg, d.effective_date
+             FROM daily_rates d
+            WHERE d.category_id = c.id AND d.effective_date < $1
             ORDER BY d.effective_date DESC LIMIT 1
          ) prev ON true
         WHERE c.is_active

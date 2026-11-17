@@ -113,6 +113,7 @@ export const SOCKET_EVENTS = [
   'dispute.opened',
   'dispute.resolved',
   'collector.verification',
+  'collector.applied',
 ] as const;
 export type SocketEvent = (typeof SOCKET_EVENTS)[number];
 
@@ -175,3 +176,14 @@ export const MAX_WORK_AREAS = 10;
 
 /** The collector ledger covers at most this many days per request. */
 export const LEDGER_MAX_DAYS = 92;
+
+/** When the admin panel (A1, A5) asks operations to look at something. */
+export const ADMIN_ATTENTION = {
+  /** A request still waiting for a collector this long after it was made. */
+  waitingMinutes: 60,
+  /** A collector who gave back more requests than this in 30 days is flagged. */
+  maxReleases30d: 5,
+} as const;
+
+export const USER_STATUSES = ['ACTIVE', 'FLAGGED', 'SUSPENDED'] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];

@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { CollectorsModule } from './modules/collectors/collectors.module.js';
 import { ClockModule } from './common/clock.js';
@@ -40,6 +41,7 @@ import { UsersModule } from './modules/users/users.module.js';
     JobsModule,
     NotificationsModule,
     CollectorsModule,
+    AdminModule,
   ],
   providers: [{ provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor }],
 })

@@ -87,7 +87,7 @@ When a milestone is complete, add `milestones/<id>-<name>.md` with a checklist o
 - [x] M2 Pickup engine: create requests, PostGIS matching with radius widening, first accept wins, pickup code, weighing, disputes, confirm, payment, expiry jobs, Socket.IO events, photo uploads (S3-compatible storage; SeaweedFS locally, as MinIO no longer publishes images). Notes: `milestones/M2-pickup-engine.md`
 - [x] M3 Household app screens, plus summary, notifications feed (`src/modules/notifications`), `Pickup.collectorLocation` and `Pickup.rating`. Maps need `GOOGLE_MAPS_API_KEY` in `apps/mobile/.env.local`. Notes: `milestones/M3-household-app.md` (phone walk-through still pending)
 - [x] M4 Collector app screens, collector sign-up and approval endpoints (`src/modules/collectors`), ledger, offline weigh draft, items added at weighing. Support line from `EXPO_PUBLIC_SUPPORT_PHONE`. Notes: `milestones/M4-collector-app.md` (phone walk-through still pending)
-- [ ] M5 Admin panel
+- [x] M5 Admin panel (A1-A5 in `apps/admin`: React Router, TanStack Query, Socket.IO, Leaflet map), admin read models (`src/modules/admin`), `Pickup.updatedAt`, user status. Admin strings in `@bw/shared` `admin-i18n.ts`. Notes: `milestones/M5-admin-panel.md` (operations walk-through still pending)
 - [ ] M6 Pilot readiness: tests, FCM push, monitoring, deployment
 
 The product spec, technical blueprint and clickable prototype live in Rafsun's claude.ai account; `docs/product.md`, `docs/design/` and this file are copies of what they decided. If they disagree, ask Rafsun.

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import type { Role } from '@bw/shared';
 import type { Db } from '../../../common/sql.js';
+import type { UserStatus } from '../enums/user-status.enum.js';
 import { UserEntity } from '../entities/user.entity.js';
 
 @Injectable()
@@ -24,6 +25,10 @@ export class UsersRepository {
 
   save(user: UserEntity): Promise<UserEntity> {
     return this.users.save(user);
+  }
+
+  async setStatus(id: string, status: UserStatus, note: string | null, now: Date): Promise<void> {
+    await this.users.query(`UPDATE users SET status = $2, status_note = $3, updated_at = $4 WHERE id = $1`, [id, status, note, now]);
   }
 
   async suspend(db: Db, id: string, now: Date): Promise<void> {

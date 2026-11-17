@@ -795,6 +795,23 @@ paths:
         '400': { $ref: '#/components/responses/Error' }
 
   /admin/rates:
+    get:
+      tags: [Admin]
+      summary: Rates for one date next to the previous rate (A2)
+      description: |
+        Admin only. For each active category: the rate published for exactly this date (null if not published yet),
+        and the latest rate before it (A2's "Yesterday" column and "Copy yesterday's rates"). Defaults to today.
+      parameters:
+        - name: date
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Rates for the date
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminRates' }
+        '400': { $ref: '#/components/responses/Error' }
     put:
       tags: [Admin]
       summary: Publish rates for a date
@@ -866,20 +883,66 @@ paths:
         '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
 
+  /admin/overview:
+    get:
+      tags: [Admin]
+      summary: Status counts and the needs-attention list (A1)
+      description: |
+        Admin only. Counts are of pickups now in each status, except completedToday (completed since midnight,
+        Dhaka). weighing is ARRIVED plus WEIGHED. Attention items, most urgent first: WAITING_TOO_LONG (a request
+        still REQUESTED longer than ADMIN_ATTENTION.waitingMinutes after it was made), CODE_LOCKED (an ACCEPTED
+        pickup locked after 5 wrong codes), DISPUTE_REVIEW (a dispute waiting for staff), RELEASES (a collector who
+        gave back more than ADMIN_ATTENTION.maxReleases30d requests in 30 days).
+      responses:
+        '200':
+          description: Overview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminOverview' }
+
+  /admin/map:
+    get:
+      tags: [Admin]
+      summary: Open requests and online collectors for the A1 map
+      description: |
+        Admin only. Requests still REQUESTED (not expired) and approved collectors who are online and pinged in the
+        last 10 minutes. Exact points, since admins see addresses anyway.
+      responses:
+        '200':
+          description: Map points
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminMap' }
+
   /admin/pickups:
     get:
       tags: [Admin]
-      summary: Filter pickups by status, area and date
+      summary: Search pickups (A1 table, a user's pickups on A5)
+      description: |
+        Admin only. Newest request first, cursor paging. Filters combine:
+        status (one status) or group (ACTIVE = REQUESTED to CONFIRMED; WEIGHING = ARRIVED and WEIGHED;
+        PAST = COMPLETED, CANCELLED, EXPIRED); area matches anywhere in the pickup's area, ignoring case;
+        date is the booked slotDate; q matches the BW number, or the household's name or phone;
+        userId is the household or the assigned collector.
       parameters:
         - name: status
           in: query
           schema: { $ref: '#/components/schemas/PickupStatus' }
+        - name: group
+          in: query
+          schema: { type: string, enum: [ACTIVE, WEIGHING, PAST] }
         - name: area
           in: query
-          schema: { type: string }
+          schema: { type: string, maxLength: 80 }
         - name: date
           in: query
           schema: { type: string, format: date }
+        - name: q
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: userId
+          in: query
+          schema: { type: string, format: uuid }
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -888,6 +951,23 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PickupPage' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /admin/pickups/{pickupId}/events:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    get:
+      tags: [Admin]
+      summary: Every status change of a pickup, oldest first (A4 timeline, A1 detail)
+      responses:
+        '200':
+          description: Status events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PickupEvent' }
+        '404': { $ref: '#/components/responses/Error' }
 
   /admin/pickups/{pickupId}/cancel:
     parameters:
@@ -918,10 +998,14 @@ paths:
     get:
       tags: [Admin]
       summary: Disputes, open first
+      description: Admin only. Open ones first, then newest. Each carries the pickup's area, status and both names.
       parameters:
         - name: status
           in: query
           schema: { $ref: '#/components/schemas/DisputeStatus' }
+        - name: type
+          in: query
+          schema: { $ref: '#/components/schemas/DisputeType' }
       responses:
         '200':
           description: Disputes
@@ -929,7 +1013,7 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Dispute' }
+                items: { $ref: '#/components/schemas/AdminDispute' }
 
   /admin/disputes/{disputeId}/resolve:
     parameters:
@@ -974,7 +1058,11 @@ paths:
   /admin/users:
     get:
       tags: [Admin]
-      summary: Households or collectors, searchable
+      summary: Households or collectors, searchable (A5)
+      description: |
+        Admin only. Newest account first, cursor paging. q matches the name or phone (digits are enough).
+        Each row has the role's figures; collectors with more than ADMIN_ATTENTION.maxReleases30d releases in
+        30 days have releaseFlag true.
       parameters:
         - name: role
           in: query
@@ -990,13 +1078,8 @@ paths:
           description: A page of users
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: '#/components/schemas/User' }
-                  nextCursor: { type: [string, 'null'] }
+              schema: { $ref: '#/components/schemas/AdminUserPage' }
+        '400': { $ref: '#/components/responses/Error' }
 
   /admin/users/{userId}/status:
     parameters:
@@ -1007,6 +1090,11 @@ paths:
     put:
       tags: [Admin]
       summary: Activate, flag or suspend a user
+      description: |
+        Admin only, for households and collectors (403 FORBIDDEN for an admin account). FLAGGED is a marker for
+        operations; the user can still work. SUSPENDED blocks every request from the next call on, and takes a
+        collector offline; pickups already in progress are not changed (cancel them with
+        POST /admin/pickups/{pickupId}/cancel if needed). The note is kept with the status.
       requestBody:
         required: true
         content:
@@ -1019,6 +1107,9 @@ paths:
                 note: { type: string, maxLength: 500 }
       responses:
         '204': { description: Saved }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
 
 components:
   securitySchemes:
@@ -1228,7 +1319,7 @@ components:
                  household, collector, pickupCode, codeLocked, lines, weighVersion, weighRounds, photos, totalKg,
                  totalAmount, paymentMethod, walletNumber, payment, openDispute, searchRadiusM, requestedAt,
                  acceptedAt, arrivedAt, weighedAt, confirmedAt, completedAt, cancelledAt, expiresAt,
-                 collectorLocation, rating, lockedRates]
+                 collectorLocation, rating, lockedRates, updatedAt]
       properties:
         id: { type: string, format: uuid }
         displayNo: { type: string, examples: [BW-1052] }
@@ -1296,6 +1387,7 @@ components:
         completedAt: { type: [string, 'null'], format: date-time }
         cancelledAt: { type: [string, 'null'], format: date-time }
         expiresAt: { type: string, format: date-time, description: End of the booked slot }
+        updatedAt: { type: string, format: date-time, description: Time of the latest status change (A1's Updated column) }
         collectorLocation:
           type: [object, 'null']
           description: |
@@ -1559,10 +1651,20 @@ components:
         or after a release). request.taken: collectors who were sent the request, when it is accepted, cancelled
         or expired. pickup.*: the household and the assigned collector. collector.location: the household while
         ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
-        collector.verification: the collector an admin approved or rejected.
+        collector.verification: the collector an admin approved or rejected. collector.applied: admins only, when a
+        collector submits (or resubmits) an application.
       enum: [request.created, request.taken, request.expired, pickup.accepted, pickup.released, collector.location,
              pickup.arrived, pickup.code_locked, pickup.weighed, pickup.confirmed, pickup.disputed, pickup.paid,
-             pickup.cancelled, dispute.opened, dispute.resolved, collector.verification]
+             pickup.cancelled, dispute.opened, dispute.resolved, collector.verification, collector.applied]
+
+    EventCollectorApplied:
+      description: collector.applied (admins only)
+      type: object
+      required: [userId, name, at]
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: [string, 'null'] }
+        at: { type: string, format: date-time }
 
     EventCollectorVerification:
       description: collector.verification (the collector; also admins)
@@ -1623,3 +1725,153 @@ components:
       description: dispute.opened, dispute.resolved
       allOf:
         - $ref: '#/components/schemas/Dispute'
+
+    AttentionItem:
+      type: object
+      required: [kind, pickupId, displayNo, area, userId, name, since, count]
+      properties:
+        kind: { type: string, enum: [WAITING_TOO_LONG, CODE_LOCKED, DISPUTE_REVIEW, RELEASES] }
+        pickupId: { type: [string, 'null'], format: uuid }
+        displayNo: { type: [string, 'null'] }
+        area: { type: [string, 'null'] }
+        userId: { type: [string, 'null'], format: uuid, description: The collector, for CODE_LOCKED and RELEASES }
+        name: { type: [string, 'null'], description: The collector's name, for CODE_LOCKED and RELEASES }
+        since: { type: string, format: date-time, description: 'When the request was made (WAITING_TOO_LONG), accepted (CODE_LOCKED), the dispute opened (DISPUTE_REVIEW), or the latest release (RELEASES)' }
+        count: { type: [integer, 'null'], description: Releases in 30 days, for RELEASES }
+
+    AdminOverview:
+      type: object
+      required: [counts, attention]
+      properties:
+        counts:
+          type: object
+          required: [requested, accepted, weighing, disputed, confirmed, completedToday, pendingApplications, openDisputes]
+          properties:
+            requested: { type: integer }
+            accepted: { type: integer }
+            weighing: { type: integer, description: ARRIVED plus WEIGHED }
+            disputed: { type: integer }
+            confirmed: { type: integer }
+            completedToday: { type: integer }
+            pendingApplications: { type: integer }
+            openDisputes: { type: integer }
+        attention:
+          type: array
+          items: { $ref: '#/components/schemas/AttentionItem' }
+
+    AdminMap:
+      type: object
+      required: [requests, collectors]
+      properties:
+        requests:
+          type: array
+          items:
+            type: object
+            required: [pickupId, displayNo, area, lat, lng, requestedAt, overdue]
+            properties:
+              pickupId: { type: string, format: uuid }
+              displayNo: { type: string }
+              area: { type: string }
+              lat: { type: number }
+              lng: { type: number }
+              requestedAt: { type: string, format: date-time }
+              overdue: { type: boolean, description: Waiting longer than ADMIN_ATTENTION.waitingMinutes }
+        collectors:
+          type: array
+          items:
+            type: object
+            required: [userId, name, lat, lng, lastSeenAt, busy]
+            properties:
+              userId: { type: string, format: uuid }
+              name: { type: [string, 'null'] }
+              lat: { type: number }
+              lng: { type: number }
+              lastSeenAt: { type: string, format: date-time }
+              busy: { type: boolean, description: Has an active pickup }
+
+    PickupEvent:
+      type: object
+      required: [id, at, from, to, actorRole, actorName, meta]
+      properties:
+        id: { type: string }
+        at: { type: string, format: date-time }
+        from: { anyOf: [{ $ref: '#/components/schemas/PickupStatus' }, { type: 'null' }] }
+        to: { $ref: '#/components/schemas/PickupStatus' }
+        actorRole: { anyOf: [{ $ref: '#/components/schemas/Role' }, { type: 'null' }], description: Null for the system (widening, expiry) }
+        actorName: { type: [string, 'null'] }
+        meta:
+          type: [object, 'null']
+          additionalProperties: true
+          description: What the change carried, e.g. totals of a weigh round, a release or cancel reason, the payment method
+
+    AdminRates:
+      type: object
+      required: [date, publishedAt, publishedByName, rates]
+      properties:
+        date: { type: string, format: date }
+        publishedAt: { type: [string, 'null'], format: date-time, description: Latest publish for this date }
+        publishedByName: { type: [string, 'null'] }
+        rates:
+          type: array
+          items:
+            type: object
+            required: [categoryCode, pricingType, rate, previousRate, previousDate]
+            properties:
+              categoryCode: { type: string }
+              pricingType: { type: string, enum: [PER_KG, ON_INSPECTION] }
+              rate: { anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }], description: Published for exactly this date }
+              previousRate: { anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }] }
+              previousDate: { type: [string, 'null'], format: date }
+
+    AdminDispute:
+      allOf:
+        - $ref: '#/components/schemas/Dispute'
+        - type: object
+          required: [pickupStatus, area, householdName, collectorName]
+          properties:
+            pickupStatus: { $ref: '#/components/schemas/PickupStatus' }
+            area: { type: string }
+            householdName: { type: [string, 'null'] }
+            collectorName: { type: [string, 'null'] }
+
+    AdminUserRow:
+      type: object
+      required: [id, phone, role, name, language, status, statusNote, createdAt, releaseFlag, household, collector]
+      properties:
+        id: { type: string, format: uuid }
+        phone: { $ref: '#/components/schemas/Phone' }
+        role: { $ref: '#/components/schemas/Role' }
+        name: { type: [string, 'null'] }
+        language: { $ref: '#/components/schemas/Language' }
+        status: { type: string, enum: [ACTIVE, FLAGGED, SUSPENDED] }
+        statusNote: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        releaseFlag: { type: boolean }
+        household:
+          description: For households; null for collectors
+          type: [object, 'null']
+          required: [area, completedCount, totalReceived]
+          properties:
+            area: { type: [string, 'null'], description: Area of the default address }
+            completedCount: { type: integer }
+            totalReceived: { $ref: '#/components/schemas/Money' }
+        collector:
+          description: For collectors; null for households and before sign-up
+          type: [object, 'null']
+          required: [workAreas, ratingAvg, pickups30d, releases30d, verificationStatus, isOnline]
+          properties:
+            workAreas: { type: array, items: { $ref: '#/components/schemas/WorkArea' } }
+            ratingAvg: { type: [number, 'null'] }
+            pickups30d: { type: integer }
+            releases30d: { type: integer }
+            verificationStatus: { $ref: '#/components/schemas/VerificationStatus' }
+            isOnline: { type: boolean }
+
+    AdminUserPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AdminUserRow' }
+        nextCursor: { type: [string, 'null'] }

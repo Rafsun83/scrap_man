@@ -1,4 +1,4 @@
-import type { DisputeOutcome, DisputeStatus, DisputeType } from '@bw/shared';
+import type { DisputeOutcome, DisputeStatus, DisputeType, PickupStatus } from '@bw/shared';
 
 /** The contract's Dispute. */
 export interface DisputeDto {
@@ -14,4 +14,12 @@ export interface DisputeDto {
   resolutionNote: string | null;
   createdAt: string;
   resolvedAt: string | null;
+}
+
+/** The contract's AdminDispute: the dispute with the pickup's area, status and both names. */
+export interface AdminDisputeDto extends DisputeDto {
+  pickupStatus: PickupStatus;
+  area: string;
+  householdName: string | null;
+  collectorName: string | null;
 }

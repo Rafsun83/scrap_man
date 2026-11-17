@@ -6,6 +6,7 @@ import type { Db } from '../../../common/sql.js';
 import type { UpdateProfileDto } from '../dtos/update-profile.dto.js';
 import type { UserDto } from '../dtos/user.dto.js';
 import type { UserEntity } from '../entities/user.entity.js';
+import type { UserStatus } from '../enums/user-status.enum.js';
 import { CollectorProfilesRepository } from '../repositories/collector-profiles.repository.js';
 import { UsersRepository } from '../repositories/users.repository.js';
 
@@ -37,6 +38,19 @@ export class UsersService {
     if (changes.name !== undefined) user.name = changes.name.trim() || null;
     if (changes.language !== undefined) user.language = changes.language;
     return this.toDto(await this.usersRepository.save(user));
+  }
+
+  /**
+   * A5: an admin activates, flags or suspends a household or collector. Suspending also takes a collector
+   * offline; pickups in progress are left for the admin to handle.
+   */
+  async setStatus(userId: string, status: UserStatus, note: string | null): Promise<void> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw AppError.notFound('That user was not found.');
+    if (user.role === 'ADMIN') throw AppError.forbidden('Admin accounts cannot be flagged or suspended here.');
+    const now = this.clock.now();
+    await this.usersRepository.setStatus(userId, status, note, now);
+    if (status === 'SUSPENDED' && user.role === 'COLLECTOR') await this.collectorProfilesRepository.setOnline(userId, false, now);
   }
 
   /** Suspends the account and takes a collector offline, inside the caller's transaction. */

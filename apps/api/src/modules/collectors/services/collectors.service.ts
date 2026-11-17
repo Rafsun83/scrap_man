@@ -4,6 +4,7 @@ import type { VehicleType, WorkArea } from '@bw/shared';
 import { CLOCK, type Clock } from '../../../common/clock.js';
 import { AppError } from '../../../common/errors.js';
 import { CollectorLedgerService } from '../../pickups/services/collector-ledger.service.js';
+import { RealtimeService } from '../../realtime/services/realtime.service.js';
 import { DOWNLOAD_URL_TTL_SEC, PHOTO_STORAGE, UPLOAD_URL_TTL_SEC } from '../../storage/storage.module.js';
 import type { PhotoStorage } from '../../storage/types/photo-storage.type.js';
 import { CollectorProfilesService } from '../../users/services/collector-profiles.service.js';
@@ -27,6 +28,7 @@ export class CollectorsService {
     private readonly collectorProfilesService: CollectorProfilesService,
     private readonly usersService: UsersService,
     private readonly collectorLedgerService: CollectorLedgerService,
+    private readonly realtimeService: RealtimeService,
     @Inject(PHOTO_STORAGE) private readonly storage: PhotoStorage,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
@@ -63,6 +65,8 @@ export class CollectorsService {
       hasScale: input.hasScale,
     });
     await this.usersService.updateProfile(userId, { name: input.name });
+    // Admins see the pending count go up (A3 badge).
+    this.realtimeService.emit('collector.applied', { userId, name: input.name, at: this.clock.now().toISOString() }, []);
     return this.profile(userId);
   }
 

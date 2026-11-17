@@ -1641,7 +1641,34 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Rates for one date next to the previous rate (A2)
+         * @description Admin only. For each active category: the rate published for exactly this date (null if not published yet),
+         *     and the latest rate before it (A2's "Yesterday" column and "Copy yesterday's rates"). Defaults to today.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    date?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rates for the date */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminRates"];
+                    };
+                };
+                400: components["responses"]["Error"];
+            };
+        };
         /** Publish rates for a date */
         put: {
             parameters: {
@@ -1777,6 +1804,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Status counts and the needs-attention list (A1)
+         * @description Admin only. Counts are of pickups now in each status, except completedToday (completed since midnight,
+         *     Dhaka). weighing is ARRIVED plus WEIGHED. Attention items, most urgent first: WAITING_TOO_LONG (a request
+         *     still REQUESTED longer than ADMIN_ATTENTION.waitingMinutes after it was made), CODE_LOCKED (an ACCEPTED
+         *     pickup locked after 5 wrong codes), DISPUTE_REVIEW (a dispute waiting for staff), RELEASES (a collector who
+         *     gave back more than ADMIN_ATTENTION.maxReleases30d requests in 30 days).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Overview */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOverview"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open requests and online collectors for the A1 map
+         * @description Admin only. Requests still REQUESTED (not expired) and approved collectors who are online and pinged in the
+         *     last 10 minutes. Exact points, since admins see addresses anyway.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Map points */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminMap"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/pickups": {
         parameters: {
             query?: never;
@@ -1784,13 +1894,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Filter pickups by status, area and date */
+        /**
+         * Search pickups (A1 table, a user's pickups on A5)
+         * @description Admin only. Newest request first, cursor paging. Filters combine:
+         *     status (one status) or group (ACTIVE = REQUESTED to CONFIRMED; WEIGHING = ARRIVED and WEIGHED;
+         *     PAST = COMPLETED, CANCELLED, EXPIRED); area matches anywhere in the pickup's area, ignoring case;
+         *     date is the booked slotDate; q matches the BW number, or the household's name or phone;
+         *     userId is the household or the assigned collector.
+         */
         get: {
             parameters: {
                 query?: {
                     status?: components["schemas"]["PickupStatus"];
+                    group?: "ACTIVE" | "WEIGHING" | "PAST";
                     area?: string;
                     date?: string;
+                    q?: string;
+                    userId?: string;
                     limit?: components["parameters"]["Limit"];
                     cursor?: components["parameters"]["Cursor"];
                 };
@@ -1809,6 +1929,48 @@ export interface paths {
                         "application/json": components["schemas"]["PickupPage"];
                     };
                 };
+                400: components["responses"]["Error"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/pickups/{pickupId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pickupId: components["parameters"]["PickupId"];
+            };
+            cookie?: never;
+        };
+        /** Every status change of a pickup, oldest first (A4 timeline, A1 detail) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    pickupId: components["parameters"]["PickupId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Status events */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickupEvent"][];
+                    };
+                };
+                404: components["responses"]["Error"];
             };
         };
         put?: never;
@@ -1877,11 +2039,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Disputes, open first */
+        /**
+         * Disputes, open first
+         * @description Admin only. Open ones first, then newest. Each carries the pickup's area, status and both names.
+         */
         get: {
             parameters: {
                 query?: {
                     status?: components["schemas"]["DisputeStatus"];
+                    type?: components["schemas"]["DisputeType"];
                 };
                 header?: never;
                 path?: never;
@@ -1895,7 +2061,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Dispute"][];
+                        "application/json": components["schemas"]["AdminDispute"][];
                     };
                 };
             };
@@ -1976,7 +2142,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Households or collectors, searchable */
+        /**
+         * Households or collectors, searchable (A5)
+         * @description Admin only. Newest account first, cursor paging. q matches the name or phone (digits are enough).
+         *     Each row has the role's figures; collectors with more than ADMIN_ATTENTION.maxReleases30d releases in
+         *     30 days have releaseFlag true.
+         */
         get: {
             parameters: {
                 query: {
@@ -1997,12 +2168,10 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            items?: components["schemas"]["User"][];
-                            nextCursor?: string | null;
-                        };
+                        "application/json": components["schemas"]["AdminUserPage"];
                     };
                 };
+                400: components["responses"]["Error"];
             };
         };
         put?: never;
@@ -2023,7 +2192,13 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Activate, flag or suspend a user */
+        /**
+         * Activate, flag or suspend a user
+         * @description Admin only, for households and collectors (403 FORBIDDEN for an admin account). FLAGGED is a marker for
+         *     operations; the user can still work. SUSPENDED blocks every request from the next call on, and takes a
+         *     collector offline; pickups already in progress are not changed (cancel them with
+         *     POST /admin/pickups/{pickupId}/cancel if needed). The note is kept with the status.
+         */
         put: {
             parameters: {
                 query?: never;
@@ -2050,6 +2225,9 @@ export interface paths {
                     };
                     content?: never;
                 };
+                400: components["responses"]["Error"];
+                403: components["responses"]["Error"];
+                404: components["responses"]["Error"];
             };
         };
         post?: never;
@@ -2291,6 +2469,11 @@ export interface components {
              */
             expiresAt: string;
             /**
+             * Format: date-time
+             * @description Time of the latest status change (A1's Updated column)
+             */
+            updatedAt: string;
+            /**
              * @description The assigned collector's last known position, so the household's map (H6) has a point before the
              *     next `collector.location` event. Only for the household (and admins) while ACCEPTED; null otherwise
              *     or if the collector has never sent a location.
@@ -2528,10 +2711,19 @@ export interface components {
          *     or after a release). request.taken: collectors who were sent the request, when it is accepted, cancelled
          *     or expired. pickup.*: the household and the assigned collector. collector.location: the household while
          *     ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
-         *     collector.verification: the collector an admin approved or rejected.
+         *     collector.verification: the collector an admin approved or rejected. collector.applied: admins only, when a
+         *     collector submits (or resubmits) an application.
          * @enum {string}
          */
-        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved" | "collector.verification";
+        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved" | "collector.verification" | "collector.applied";
+        /** @description collector.applied (admins only) */
+        EventCollectorApplied: {
+            /** Format: uuid */
+            userId: string;
+            name: string | null;
+            /** Format: date-time */
+            at: string;
+        };
         /** @description collector.verification (the collector; also admins) */
         EventCollectorVerification: {
             /** Format: uuid */
@@ -2583,6 +2775,141 @@ export interface components {
         };
         /** @description dispute.opened, dispute.resolved */
         EventDispute: components["schemas"]["Dispute"];
+        AttentionItem: {
+            /** @enum {string} */
+            kind: "WAITING_TOO_LONG" | "CODE_LOCKED" | "DISPUTE_REVIEW" | "RELEASES";
+            /** Format: uuid */
+            pickupId: string | null;
+            displayNo: string | null;
+            area: string | null;
+            /**
+             * Format: uuid
+             * @description The collector
+             */
+            userId: string | null;
+            /** @description The collector's name */
+            name: string | null;
+            /**
+             * Format: date-time
+             * @description When the request was made (WAITING_TOO_LONG), accepted (CODE_LOCKED), the dispute opened (DISPUTE_REVIEW), or the latest release (RELEASES)
+             */
+            since: string;
+            /** @description Releases in 30 days */
+            count: number | null;
+        };
+        AdminOverview: {
+            counts: {
+                requested: number;
+                accepted: number;
+                /** @description ARRIVED plus WEIGHED */
+                weighing: number;
+                disputed: number;
+                confirmed: number;
+                completedToday: number;
+                pendingApplications: number;
+                openDisputes: number;
+            };
+            attention: components["schemas"]["AttentionItem"][];
+        };
+        AdminMap: {
+            requests: {
+                /** Format: uuid */
+                pickupId: string;
+                displayNo: string;
+                area: string;
+                lat: number;
+                lng: number;
+                /** Format: date-time */
+                requestedAt: string;
+                /** @description Waiting longer than ADMIN_ATTENTION.waitingMinutes */
+                overdue: boolean;
+            }[];
+            collectors: {
+                /** Format: uuid */
+                userId: string;
+                name: string | null;
+                lat: number;
+                lng: number;
+                /** Format: date-time */
+                lastSeenAt: string;
+                /** @description Has an active pickup */
+                busy: boolean;
+            }[];
+        };
+        PickupEvent: {
+            id: string;
+            /** Format: date-time */
+            at: string;
+            from: components["schemas"]["PickupStatus"] | null;
+            to: components["schemas"]["PickupStatus"];
+            /** @description Null for the system (widening */
+            actorRole: components["schemas"]["Role"] | null;
+            actorName: string | null;
+            /** @description What the change carried, e.g. totals of a weigh round, a release or cancel reason, the payment method */
+            meta: {
+                [key: string]: unknown;
+            } | null;
+        };
+        AdminRates: {
+            /** Format: date */
+            date: string;
+            /**
+             * Format: date-time
+             * @description Latest publish for this date
+             */
+            publishedAt: string | null;
+            publishedByName: string | null;
+            rates: {
+                categoryCode: string;
+                /** @enum {string} */
+                pricingType: "PER_KG" | "ON_INSPECTION";
+                /** @description Published for exactly this date */
+                rate: components["schemas"]["Money"] | null;
+                previousRate: components["schemas"]["Money"] | null;
+                /** Format: date */
+                previousDate: string | null;
+            }[];
+        };
+        AdminDispute: components["schemas"]["Dispute"] & {
+            pickupStatus: components["schemas"]["PickupStatus"];
+            area: string;
+            householdName: string | null;
+            collectorName: string | null;
+        };
+        AdminUserRow: {
+            /** Format: uuid */
+            id: string;
+            phone: components["schemas"]["Phone"];
+            role: components["schemas"]["Role"];
+            name: string | null;
+            language: components["schemas"]["Language"];
+            /** @enum {string} */
+            status: "ACTIVE" | "FLAGGED" | "SUSPENDED";
+            statusNote: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            releaseFlag: boolean;
+            /** @description For households; null for collectors */
+            household: {
+                /** @description Area of the default address */
+                area: string | null;
+                completedCount: number;
+                totalReceived: components["schemas"]["Money"];
+            } | null;
+            /** @description For collectors; null for households and before sign-up */
+            collector: {
+                workAreas: components["schemas"]["WorkArea"][];
+                ratingAvg: number | null;
+                pickups30d: number;
+                releases30d: number;
+                verificationStatus: components["schemas"]["VerificationStatus"];
+                isOnline: boolean;
+            } | null;
+        };
+        AdminUserPage: {
+            items: components["schemas"]["AdminUserRow"][];
+            nextCursor: string | null;
+        };
     };
     responses: {
         /** @description Error */

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '../../../common/errors.js';
 import { dhakaToday } from '../../../common/time.js';
+import type { AdminRatesDto } from '../dtos/admin-rates.dto.js';
 import type { CategoryDto } from '../dtos/category.dto.js';
 import type { PublishRatesDto } from '../dtos/publish-rates.dto.js';
 import type { TodayRatesDto } from '../dtos/today-rates.dto.js';
@@ -20,6 +21,27 @@ export class CatalogService {
   async todayRates(): Promise<TodayRatesDto> {
     const today = dhakaToday();
     return todayRatesUtil.build(await this.catalogRepository.ratesOn(today), today);
+  }
+
+  /** A2: each category's rate for exactly this day (null until published) and the latest one before it. */
+  async ratesForDay(day: string = dhakaToday()): Promise<AdminRatesDto> {
+    const found = await this.catalogRepository.ratesForDay(day);
+    const latest = found
+      .filter((r) => r.published_at !== null)
+      .sort((a, b) => b.published_at!.getTime() - a.published_at!.getTime())[0];
+    const num = (v: string | null) => (v === null ? null : Number(v));
+    return {
+      date: day,
+      publishedAt: latest?.published_at?.toISOString() ?? null,
+      publishedByName: latest?.published_by_name ?? null,
+      rates: found.map((r) => ({
+        categoryCode: r.code,
+        pricingType: r.pricing_type,
+        rate: num(r.rate_per_kg),
+        previousRate: num(r.prev_rate),
+        previousDate: r.prev_date,
+      })),
+    };
   }
 
   /** Publishes (or corrects) the rates for today or a future date. */
