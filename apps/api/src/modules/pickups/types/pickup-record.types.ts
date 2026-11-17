@@ -42,6 +42,8 @@ export interface PickupRow {
   rating_stars: number | null;
   rating_comment: string | null;
   rated_at: Date | null;
+  /** The latest status change (requested_at before any). */
+  updated_at: Date;
 }
 
 export interface ItemRow {
@@ -147,4 +149,23 @@ export interface PickupRef {
   display_no: string;
   household_id: string;
   collector_id: string | null;
+}
+
+/** One status_events row with the actor's name, for the admin timeline. */
+export interface PickupEventRow {
+  id: string;
+  at: Date;
+  from_status: PickupStatus | null;
+  to_status: PickupStatus;
+  actor_role: Role | null;
+  actor_name: string | null;
+  meta: Record<string, unknown> | null;
+}
+
+/** A dispute with the pickup's area, status and both names (admin list). */
+export interface AdminDisputeRow extends DisputeRow {
+  pickup_status: PickupStatus;
+  area: string;
+  household_name: string | null;
+  collector_name: string | null;
 }

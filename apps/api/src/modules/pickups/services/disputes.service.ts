@@ -4,11 +4,12 @@ import {
   OUTCOMES_BY_DISPUTE_TYPE,
   type DisputeOutcome,
   type DisputeStatus,
+  type DisputeType,
 } from '@bw/shared';
 import { CLOCK, type Clock } from '../../../common/clock.js';
 import { AppError, isUniqueViolation } from '../../../common/errors.js';
 import { UsersService } from '../../users/services/users.service.js';
-import type { DisputeDto } from '../dtos/dispute.dto.js';
+import type { AdminDisputeDto, DisputeDto } from '../dtos/dispute.dto.js';
 import type { OpenDisputeDto } from '../dtos/open-dispute.dto.js';
 import { DisputesRepository } from '../repositories/disputes.repository.js';
 import { PaymentsRepository } from '../repositories/payments.repository.js';
@@ -102,9 +103,16 @@ export class DisputesService {
     return this.pickupViewsService.toDisputeDto(d);
   }
 
-  async list(status?: DisputeStatus): Promise<DisputeDto[]> {
-    const found = await this.disputesRepository.list(status ?? null);
-    return found.map((d) => this.pickupViewsService.toDisputeDto(d));
+  /** A4 list: open first, with the pickup's area, status and both names. */
+  async list(status?: DisputeStatus, type?: DisputeType): Promise<AdminDisputeDto[]> {
+    const found = await this.disputesRepository.list(status ?? null, type ?? null);
+    return found.map((d) => ({
+      ...this.pickupViewsService.toDisputeDto(d),
+      pickupStatus: d.pickup_status,
+      area: d.area,
+      householdName: d.household_name,
+      collectorName: d.collector_name,
+    }));
   }
 
   /** An admin closes a dispute in ADMIN_REVIEW with one of the outcomes allowed for its type. */

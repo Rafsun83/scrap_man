@@ -1,8 +1,8 @@
 # BhangariWala API reference
 
-Every endpoint the API serves today (milestones M0 to M4), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
+Every endpoint the API serves today (milestones M0 to M5), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
 
-> **How the samples were made:** the M4 samples (collector sign-up, approval, profile, ledger, `lockedRates`, an item added at weighing, the new nearby fields) come from a scripted collector journey on 2026-11-16. The M3 samples (summary, notifications, `collectorLocation`, `rating`) come from a second scripted sale on 2026-11-15. Every other sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
+> **How the samples were made:** the M5 admin samples come from a scripted run on 2026-11-17 (two weight disputes, a payment report, open requests, a pending applicant), called through the admin panel's dev proxy. The M4 samples (collector sign-up, approval, profile, ledger, `lockedRates`, an item added at weighing, the new nearby fields) come from a scripted collector journey on 2026-11-16. The M3 samples (summary, notifications, `collectorLocation`, `rating`) come from a second scripted sale on 2026-11-15. Every other sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
 
 ## Contents
 
@@ -112,6 +112,7 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `POST` | [`/auth/logout`](#post-authlogout) | Public (refresh token) | Ends a session by revoking its refresh token | M1 |
 | `GET` | [`/categories`](#get-categories) | Public | The active scrap categories in display order, with Bangla and English names | M1 |
 | `GET` | [`/rates/today`](#get-ratestoday) | Public | Today's per-kg rate for every category and the change from the previous published rate (home screen rate board) | M1 |
+| `GET` | [`/admin/rates`](#get-adminrates) | Admin | One date's rates next to the previous rate (A2) | M5 |
 | `PUT` | [`/admin/rates`](#put-adminrates) | Admin | Publishes, or corrects, the per-kg rates for today or a later date | M1 |
 | `GET` | [`/me`](#get-me) | Any signed-in user | The signed-in user | M1 |
 | `PATCH` | [`/me`](#patch-me) | Any signed-in user | Changes the name or the app language (`BN` or `EN`) | M1 |
@@ -143,9 +144,15 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `GET` | [`/collector/requests/nearby`](#get-collectorrequestsnearby) | Approved collector | Open requests whose current radius reaches the given point, nearest first (screen C1) | M2 |
 | `GET` | [`/admin/collectors`](#get-admincollectors) | Admin | Collector applications by verification status, oldest first | M4 |
 | `POST` | [`/admin/collectors/{userId}/decision`](#post-admincollectorsuseriddecision) | Admin | Approves or rejects a pending application; SMS and live event to the collector | M4 |
+| `GET` | [`/admin/overview`](#get-adminoverview) | Admin | Status counts, badges and the needs-attention list (A1) | M5 |
+| `GET` | [`/admin/map`](#get-adminmap) | Admin | Open requests and online collectors for the map (A1) | M5 |
+| `GET` | [`/admin/pickups`](#get-adminpickups) | Admin | Search every pickup by status, group, area, date, BW number, name, phone or user | M5 |
+| `GET` | [`/admin/pickups/{pickupId}/events`](#get-adminpickupspickupidevents) | Admin | A pickup's status changes, oldest first (A4 timeline) | M5 |
 | `POST` | [`/admin/pickups/{pickupId}/cancel`](#post-adminpickupspickupidcancel) | Admin | Cancels any active pickup (REQUESTED to CONFIRMED), with a reason | M2 |
 | `GET` | [`/admin/disputes`](#get-admindisputes) | Admin | Disputes, open first (screen A4) | M2 |
 | `POST` | [`/admin/disputes/{disputeId}/resolve`](#post-admindisputesdisputeidresolve) | Admin | Closes a dispute in `ADMIN_REVIEW` with an outcome | M2 |
+| `GET` | [`/admin/users`](#get-adminusers) | Admin | Households or collectors with their figures and the release flag (A5) | M5 |
+| `PUT` | [`/admin/users/{userId}/status`](#put-adminusersuseridstatus) | Admin | Activates, flags or suspends a household or collector | M5 |
 | `GET` | [`/me/notifications`](#get-menotifications) | Household | The household's notifications, newest first, with the unread count (H13) | M3 |
 | `POST` | [`/me/notifications/read`](#post-menotificationsread) | Household | Marks every notification up to now as read | M3 |
 
@@ -488,6 +495,63 @@ GET /api/v1/rates/today
   ]
 }
 ```
+
+### GET /admin/rates
+
+Rates for one date next to the previous rate (A2).
+
+**Who:** Admin · **Since:** M5
+
+- Query: `date` (defaults to today, Dhaka). `rate` is what was published for exactly that date (null until published); `previousRate` and `previousDate` are the latest before it (A2's "Previous" column and "Copy previous rates").
+
+**Request**
+
+```http
+GET /api/v1/admin/rates?date=2026-11-18
+Authorization: Bearer <accessToken>
+```
+
+**Response** (two per-kg categories and electronics shown)
+
+`200`
+
+```json
+{
+  "date": "2026-11-18",
+  "publishedAt": null,
+  "publishedByName": null,
+  "rates": [
+    {
+      "categoryCode": "IRON",
+      "pricingType": "PER_KG",
+      "rate": null,
+      "previousRate": 50,
+      "previousDate": "2026-11-17"
+    },
+    {
+      "categoryCode": "NEWSPAPER",
+      "pricingType": "PER_KG",
+      "rate": null,
+      "previousRate": 30,
+      "previousDate": "2026-11-17"
+    },
+    {
+      "categoryCode": "ELECTRONICS",
+      "pricingType": "ON_INSPECTION",
+      "rate": null,
+      "previousRate": null,
+      "previousDate": null
+    }
+  ]
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Not a date |
+
 
 ### PUT /admin/rates
 
@@ -1434,6 +1498,10 @@ _Shortened to the new fields._
   ]
 }
 ```
+
+### Pickup fields added in M5
+
+- `updatedAt`: the time of the latest status change (A1's "Updated" column); `requestedAt` before any change.
 
 ### POST /pickups/{pickupId}/cancel
 
@@ -2762,6 +2830,303 @@ Authorization: Bearer <accessToken>
 | `INVALID_STATE` | 409 | The application was already decided |
 
 
+### GET /admin/overview
+
+Status counts and the needs-attention list (A1).
+
+**Who:** Admin · **Since:** M5
+
+- Counts are pickups now in each status; `weighing` is ARRIVED plus WEIGHED; `completedToday` counts since midnight in Dhaka. `pendingApplications` and `openDisputes` drive the sidebar badges.
+- Attention items, most urgent kind first: `CODE_LOCKED` (5 wrong codes), `DISPUTE_REVIEW` (waiting for staff), `WAITING_TOO_LONG` (still REQUESTED more than 60 minutes after it was made), `RELEASES` (a collector who gave back more than 5 requests in 30 days). Thresholds: `ADMIN_ATTENTION` in `@bw/shared`.
+
+**Request**
+
+```http
+GET /api/v1/admin/overview
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`200`
+
+```json
+{
+  "counts": {
+    "requested": 4,
+    "accepted": 3,
+    "weighing": 1,
+    "disputed": 2,
+    "confirmed": 0,
+    "completedToday": 2,
+    "pendingApplications": 2,
+    "openDisputes": 4
+  },
+  "attention": [
+    {
+      "kind": "DISPUTE_REVIEW",
+      "pickupId": "dc91f457-c2aa-41a6-93b4-8cfc4228031c",
+      "displayNo": "BW-1012",
+      "area": "Mirpur 10",
+      "userId": null,
+      "name": null,
+      "since": "2026-11-16T19:06:20.230Z",
+      "count": null
+    },
+    {
+      "kind": "DISPUTE_REVIEW",
+      "pickupId": "f7a1820b-676a-4b18-a1e8-e17d3a18fb6f",
+      "displayNo": "BW-1013",
+      "area": "Mirpur 10",
+      "userId": null,
+      "name": null,
+      "since": "2026-11-16T19:06:20.605Z",
+      "count": null
+    },
+    {
+      "kind": "DISPUTE_REVIEW",
+      "pickupId": "34c702ed-2ccc-44cc-bd38-16b96c1fd5ee",
+      "displayNo": "BW-1017",
+      "area": "Mirpur 10",
+      "userId": null,
+      "name": null,
+      "since": "2026-11-16T19:09:36.419Z",
+      "count": null
+    },
+    {
+      "kind": "DISPUTE_REVIEW",
+      "pickupId": "d284790a-9827-4cbb-adcb-6b6812d6fd9d",
+      "displayNo": "BW-1018",
+      "area": "Mirpur 10",
+      "userId": null,
+      "name": null,
+      "since": "2026-11-16T19:09:36.753Z",
+      "count": null
+    }
+  ]
+}
+```
+
+### GET /admin/map
+
+Open requests and online collectors for the A1 map.
+
+**Who:** Admin · **Since:** M5
+
+- Requests still REQUESTED and not expired; `overdue` after 60 minutes. Approved collectors online and seen in the last 10 minutes; `busy` when they have an active pickup.
+- Collector pings are not pushed to admins; the panel polls this every 30 seconds.
+
+**Request**
+
+```http
+GET /api/v1/admin/map
+Authorization: Bearer <accessToken>
+```
+
+**Response** (two of each shown)
+
+`200`
+
+```json
+{
+  "requests": [
+    {
+      "pickupId": "18e9bad9-4b08-4c75-93ec-7d3dd9d42c4e",
+      "displayNo": "BW-1015",
+      "area": "Mirpur 10",
+      "lat": 23.81498480057492,
+      "lng": 90.3687,
+      "requestedAt": "2026-11-16T19:06:20.846Z",
+      "overdue": false
+    },
+    {
+      "pickupId": "e18a24da-1876-41fb-82e8-865eaaa168f2",
+      "displayNo": "BW-1016",
+      "area": "Mirpur 10",
+      "lat": 23.793425332375133,
+      "lng": 90.3687,
+      "requestedAt": "2026-11-16T19:06:20.971Z",
+      "overdue": false
+    }
+  ],
+  "collectors": [
+    {
+      "userId": "d921bfc1-75ab-49e6-8c8f-0d7173040fa4",
+      "name": "Sohel Rana",
+      "lat": 23.809594933524973,
+      "lng": 90.3687,
+      "lastSeenAt": "2026-11-16T19:06:19.716Z",
+      "busy": true
+    },
+    {
+      "userId": "0a16708b-7f4d-444f-a0a5-9a65d97080ce",
+      "name": "Sohel Rana",
+      "lat": 23.809594933524973,
+      "lng": 90.3687,
+      "lastSeenAt": "2026-11-16T19:09:17.502Z",
+      "busy": false
+    }
+  ]
+}
+```
+
+### GET /admin/pickups
+
+Search every pickup (A1 table, a user's pickups on A5). Newest request first, cursor paging.
+
+**Who:** Admin · **Since:** M5
+
+- Query: `status` (one status) or `group` (`ACTIVE`, `WEIGHING` = ARRIVED and WEIGHED, `PAST`); `area` (anywhere in the area, any case); `date` (booked slot date); `q` (BW number, or the household's name or phone); `userId` (household or collector); `limit`, `cursor`.
+- Items are full `Pickup`s as an admin sees them (address and both phones).
+
+**Request**
+
+```http
+GET /api/v1/admin/pickups?group=ACTIVE&limit=2
+Authorization: Bearer <accessToken>
+```
+
+**Response** (shortened to the table's fields)
+
+`200`
+
+```json
+{
+  "items": [
+    {
+      "id": "83517bfb-cef2-44e2-86be-cbe742f7ed01",
+      "displayNo": "BW-1021",
+      "status": "REQUESTED",
+      "area": "Mirpur 10",
+      "household": {
+        "id": "6d19a833-bd9e-4666-833e-640d28942031",
+        "name": "Abdul Karim",
+        "phone": "+8801744864055"
+      },
+      "collector": null,
+      "categoryCodes": [
+        "ALUMINIUM"
+      ],
+      "requestedAt": "2026-11-16T19:09:37.113Z",
+      "updatedAt": "2026-11-16T19:09:37.122Z"
+    }
+  ],
+  "nextCursor": "MjAyNi0xMS0xNlQxOTowOTozNi45ODBafDQ2NGIxZjdkLWYwNzUtNGRlZS1iYjg4LTVkOGI5YzVjNjE1MQ"
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Bad filter value or cursor |
+
+### GET /admin/pickups/{pickupId}/events
+
+Every status change of a pickup, oldest first (A4 timeline, A1 detail). `actorRole` and `actorName` are null for the system (widening, expiry); `meta` is what the change carried.
+
+**Who:** Admin · **Since:** M5
+
+**Request**
+
+```http
+GET /api/v1/admin/pickups/{pickupId}/events
+Authorization: Bearer <accessToken>
+```
+
+**Response** (a weight dispute that went to staff)
+
+`200`
+
+```json
+[
+  {
+    "id": "67",
+    "at": "2026-11-16T19:09:36.007Z",
+    "from": null,
+    "to": "REQUESTED",
+    "actorRole": "HOUSEHOLD",
+    "actorName": "Morium Khatun",
+    "meta": null
+  },
+  {
+    "id": "68",
+    "at": "2026-11-16T19:09:36.142Z",
+    "from": "REQUESTED",
+    "to": "ACCEPTED",
+    "actorRole": "COLLECTOR",
+    "actorName": "Sohel Rana",
+    "meta": null
+  },
+  {
+    "id": "69",
+    "at": "2026-11-16T19:09:36.196Z",
+    "from": "ACCEPTED",
+    "to": "ARRIVED",
+    "actorRole": "COLLECTOR",
+    "actorName": "Sohel Rana",
+    "meta": null
+  },
+  {
+    "id": "70",
+    "at": "2026-11-16T19:09:36.292Z",
+    "from": "ARRIVED",
+    "to": "WEIGHED",
+    "actorRole": "COLLECTOR",
+    "actorName": "Sohel Rana",
+    "meta": {
+      "totalKg": "14.0",
+      "version": 1,
+      "totalAmount": "600.00"
+    }
+  },
+  {
+    "id": "71",
+    "at": "2026-11-16T19:09:36.323Z",
+    "from": "WEIGHED",
+    "to": "DISPUTED",
+    "actorRole": "HOUSEHOLD",
+    "actorName": "Morium Khatun",
+    "meta": {
+      "disputeType": "WEIGHT",
+      "disputeStatus": "REWEIGH"
+    }
+  },
+  {
+    "id": "72",
+    "at": "2026-11-16T19:09:36.390Z",
+    "from": "DISPUTED",
+    "to": "WEIGHED",
+    "actorRole": "COLLECTOR",
+    "actorName": "Sohel Rana",
+    "meta": {
+      "totalKg": "14.5",
+      "version": 2,
+      "totalAmount": "625.00"
+    }
+  },
+  {
+    "id": "73",
+    "at": "2026-11-16T19:09:36.427Z",
+    "from": "WEIGHED",
+    "to": "DISPUTED",
+    "actorRole": "HOUSEHOLD",
+    "actorName": "Morium Khatun",
+    "meta": {
+      "disputeType": "WEIGHT",
+      "disputeStatus": "ADMIN_REVIEW"
+    }
+  }
+]
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `NOT_FOUND` | 404 | No such pickup |
+
+
 ### POST /admin/pickups/{pickupId}/cancel
 
 Cancels any active pickup (REQUESTED to CONFIRMED), with a reason. Closes an open dispute with outcome `CANCEL`.
@@ -2805,9 +3170,11 @@ _Shortened to the fields this call changes; every pickup response has the full s
 
 ### GET /admin/disputes
 
-Disputes, open first (screen A4). Optional `status` = `REWEIGH`, `ADMIN_REVIEW` or `RESOLVED`.
+Disputes, open first (A4). Each carries the pickup's area, status and both names (`AdminDispute`, since M5).
 
-**Who:** Admin · **Since:** M2
+**Who:** Admin · **Since:** M2 (filters and names in M5)
+
+- Query: `status` (`REWEIGH`, `ADMIN_REVIEW`, `RESOLVED`), `type` (`WEIGHT`, `PAYMENT`, `BEHAVIOUR`, `OTHER`).
 
 **Request**
 
@@ -2823,18 +3190,22 @@ Authorization: Bearer <accessToken>
 ```json
 [
   {
-    "id": "a5c93535-1bba-4ed6-9c62-7fbeaabd6270",
-    "pickupId": "7d5454fd-9794-4bdb-bea8-d34ac7b7e83f",
-    "displayNo": "BW-1004",
-    "type": "WEIGHT",
+    "id": "a3b512e7-cc27-4503-a3c1-4450778e833d",
+    "pickupId": "d284790a-9827-4cbb-adcb-6b6812d6fd9d",
+    "displayNo": "BW-1018",
+    "type": "PAYMENT",
     "status": "ADMIN_REVIEW",
-    "raisedBy": "68aca7b0-6e76-400a-989a-92376f21cc50",
-    "reason": "Still too low",
+    "raisedBy": "c3a4fc50-b8b8-4430-bb0a-30fa1d3c1363",
+    "reason": null,
     "photoIds": [],
     "outcome": null,
     "resolutionNote": null,
-    "createdAt": "2026-11-14T11:40:10.824Z",
-    "resolvedAt": null
+    "createdAt": "2026-11-16T19:09:36.753Z",
+    "resolvedAt": null,
+    "pickupStatus": "COMPLETED",
+    "area": "Mirpur 10",
+    "householdName": "Rubina Yasmin",
+    "collectorName": "Sohel Rana"
   }
 ]
 ```
@@ -2924,6 +3295,168 @@ Response:
 | `VALIDATION_ERROR` | 400 | Outcome not allowed for the type, or no note |
 | `INVALID_STATE` | 409 | Already resolved, or the collector is re-weighing |
 | `NOT_FOUND` | 404 | Unknown dispute |
+
+### GET /admin/users
+
+Households or collectors with their figures (A5). Newest account first, cursor paging.
+
+**Who:** Admin · **Since:** M5
+
+- Query: `role` (`HOUSEHOLD` or `COLLECTOR`, required), `q` (name, or phone by its digits), `limit`, `cursor`.
+- `household`: default address area, completed pickups, total received. `collector`: work areas, rating, pickups and releases in 30 days, verification, online (null before sign-up). `releaseFlag`: more than 5 releases in 30 days.
+
+**Request**
+
+```http
+GET /api/v1/admin/users?role=HOUSEHOLD&q=morium
+Authorization: Bearer <accessToken>
+```
+
+**Response**
+
+`200`
+
+```json
+{
+  "items": [
+    {
+      "id": "55883486-720d-471d-aa0a-eea0db9fcc5d",
+      "phone": "+8801726609750",
+      "role": "HOUSEHOLD",
+      "name": "Morium Khatun",
+      "language": "BN",
+      "status": "ACTIVE",
+      "statusNote": null,
+      "createdAt": "2026-11-16T19:09:35.933Z",
+      "releaseFlag": false,
+      "household": {
+        "area": "Mirpur 10",
+        "completedCount": 0,
+        "totalReceived": 0
+      },
+      "collector": null
+    },
+    {
+      "id": "e511d7df-a6c1-4f10-aa0f-51a641588f40",
+      "phone": "+8801721043731",
+      "role": "HOUSEHOLD",
+      "name": "Morium Khatun",
+      "language": "BN",
+      "status": "ACTIVE",
+      "statusNote": null,
+      "createdAt": "2026-11-16T19:06:19.759Z",
+      "releaseFlag": false,
+      "household": {
+        "area": "Mirpur 10",
+        "completedCount": 0,
+        "totalReceived": 0
+      },
+      "collector": null
+    },
+    {
+      "id": "68aca7b0-6e76-400a-989a-92376f21cc50",
+      "phone": "+8801916408620",
+      "role": "HOUSEHOLD",
+      "name": "Morium Khatun",
+      "language": "BN",
+      "status": "ACTIVE",
+      "statusNote": null,
+      "createdAt": "2026-11-14T11:40:08.718Z",
+      "releaseFlag": false,
+      "household": {
+        "area": "Mirpur 10",
+        "completedCount": 1,
+        "totalReceived": 925
+      },
+      "collector": null
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+<details><summary>Example: Collectors</summary>
+
+```http
+GET /api/v1/admin/users?role=COLLECTOR&limit=2
+Authorization: Bearer <accessToken>
+```
+
+`200`
+
+```json
+{
+  "items": [
+    {
+      "id": "bd3bcc6c-82c5-4fd7-8142-6d4ee3485b05",
+      "phone": "+8801729535864",
+      "role": "COLLECTOR",
+      "name": "Mizan Rahman",
+      "language": "BN",
+      "status": "ACTIVE",
+      "statusNote": null,
+      "createdAt": "2026-11-16T19:09:37.182Z",
+      "releaseFlag": false,
+      "household": null,
+      "collector": {
+        "workAreas": [
+          "MIRPUR",
+          "PALLABI"
+        ],
+        "ratingAvg": null,
+        "pickups30d": 0,
+        "releases30d": 0,
+        "verificationStatus": "PENDING",
+        "isOnline": false
+      }
+    }
+  ],
+  "nextCursor": "MjAyNi0xMS0xNlQxOTowOTozNS43OTZafDM0YzI3YjU4LWI4MzAtNDZmZi1iNzhiLTkyY2MxMmMyMDFmNQ"
+}
+```
+
+</details>
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Missing or bad role, or bad cursor |
+
+### PUT /admin/users/{userId}/status
+
+Activates, flags or suspends a household or collector (A5).
+
+**Who:** Admin · **Since:** M5
+
+- `FLAGGED` is a marker for operations; the user can still work. `SUSPENDED` blocks every request from the next call on and takes a collector offline; pickups in progress are not changed (cancel them with `POST /admin/pickups/{pickupId}/cancel`). `note` is kept as `statusNote`.
+
+**Request**
+
+```http
+PUT /api/v1/admin/users/{userId}/status
+Authorization: Bearer <accessToken>
+```
+
+```json
+{
+  "status": "SUSPENDED",
+  "note": "Two payment reports this week; call before re-activating."
+}
+```
+
+**Response**
+
+`204` with no body.
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Bad status or user id |
+| `FORBIDDEN` | 403 | The target is an admin account |
+| `NOT_FOUND` | 404 | No such user |
+
 
 ## Notifications
 
@@ -3120,6 +3653,7 @@ Each user receives only their own events; admins receive every pickup event. Del
 | `request.expired` | Household and admins | Nobody accepted before the slot ended |
 | `pickup.code_locked` | Admins only | The 5th wrong pickup code |
 | `collector.verification` | The collector, and admins | An admin approved or rejected the application (since M4) |
+| `collector.applied` | Admins only | A collector submitted or resubmitted an application (since M5; A3 badge) |
 
 Every `pickup.*` event except `pickup.code_locked`, plus `request.expired`, has this one small shape; refetch the pickup for detail:
 
@@ -3218,12 +3752,6 @@ Every `pickup.*` event except `pickup.code_locked`, plus `request.expired`, has 
 
 ## Planned endpoints
 
-These are already in [`openapi.yaml`](openapi.yaml) but not served yet; calling them returns `404`.
+None: every path in [`openapi.yaml`](openapi.yaml) is served as of M5.
 
-| Method | Path | Milestone | Purpose |
-| --- | --- | --- | --- |
-| `GET` | `/admin/pickups` | M5 | Filter pickups by status, area and date |
-| `GET` | `/admin/users` | M5 | Households or collectors, searchable |
-| `PUT` | `/admin/users/{userId}/status` | M5 | Activate, flag or suspend a user |
-
-Collectors for testing now go through the real flow: sign in with role `COLLECTOR`, `POST /collector/selfie` and `/collector/signup`, then an admin approves with `POST /admin/collectors/{userId}/decision`. The e2e helper `makeCollector` in `apps/api/test/pickup-helpers.ts` still inserts an approved profile directly, for speed.
+Collectors for testing go through the real flow: sign in with role `COLLECTOR`, `POST /collector/selfie` and `/collector/signup`, then an admin approves (A3 in the admin panel, or `POST /admin/collectors/{userId}/decision`). The e2e helper `makeCollector` in `apps/api/test/pickup-helpers.ts` still inserts an approved profile directly, for speed.

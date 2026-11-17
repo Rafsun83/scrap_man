@@ -3,7 +3,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import type { DataSource } from 'typeorm';
 import type { DisputeOutcome, DisputeStatus, DisputeType } from '@bw/shared';
 import { one, rows, type Db } from '../../../common/sql.js';
-import type { DisputeRow } from '../types/pickup-record.types.js';
+import type { AdminDisputeRow, DisputeRow } from '../types/pickup-record.types.js';
 
 export interface NewDisputeInput {
   pickupId: string;
@@ -37,13 +37,20 @@ export class DisputesRepository {
     return one<DisputeRow>(db, `${DISPUTE_SELECT} WHERE d.id = $1`, [id]);
   }
 
-  /** Open ones first, then newest; at most 200. */
-  list(status: DisputeStatus | null): Promise<DisputeRow[]> {
-    return rows<DisputeRow>(
+  /** Open ones first, then newest; at most 200. With the pickup's area, status and both names. */
+  list(status: DisputeStatus | null, type: DisputeType | null): Promise<AdminDisputeRow[]> {
+    return rows<AdminDisputeRow>(
       this.db,
-      `${DISPUTE_SELECT} WHERE ($1::dispute_status IS NULL OR d.status = $1)
+      `SELECT d.id, d.pickup_id, p.display_no::text AS display_no, d.raised_by, d.type, d.status, d.reason,
+              d.photo_ids, d.resolution, d.resolution_note, d.created_at, d.resolved_at,
+              p.status AS pickup_status, p.area, h.name AS household_name, c.name AS collector_name
+         FROM disputes d
+         JOIN pickups p ON p.id = d.pickup_id
+         JOIN users h ON h.id = p.household_id
+         LEFT JOIN users c ON c.id = p.collector_id
+        WHERE ($1::dispute_status IS NULL OR d.status = $1) AND ($2::dispute_type IS NULL OR d.type = $2)
         ORDER BY (d.status = 'RESOLVED'), d.created_at DESC LIMIT 200`,
-      [status],
+      [status, type],
     );
   }
 

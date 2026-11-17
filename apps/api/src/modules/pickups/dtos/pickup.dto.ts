@@ -82,6 +82,7 @@ export interface PickupDto {
   collectorLocation: { lat: number; lng: number; at: string } | null;
   rating: { stars: number; comment: string | null; createdAt: string } | null;
   lockedRates: LockedRateDto[] | null;
+  updatedAt: string;
 }
 
 /** A rate copied onto one item of the pickup (null for ON_INSPECTION categories). */

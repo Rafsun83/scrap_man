@@ -9,6 +9,7 @@ One note per finished milestone: what was built, how it was checked, and what is
 | M2 Pickup engine | [M2-pickup-engine.md](M2-pickup-engine.md) | 2026-11-14 |
 | M3 Household app screens | [M3-household-app.md](M3-household-app.md) | 2026-11-15 (phone walk-through pending) |
 | M4 Collector app screens | [M4-collector-app.md](M4-collector-app.md) | 2026-11-16 (phone walk-through pending) |
+| M5 Admin panel | [M5-admin-panel.md](M5-admin-panel.md) | 2026-11-17 (operations walk-through pending) |
 
 The endpoints from all milestones so far are documented in [`docs/api.md`](../docs/api.md).
 

@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Put, Query } from '@nestjs/common';
 import { CurrentUser, Public, Roles } from '../../../common/auth.decorators.js';
 import { ZodPipe } from '../../../common/zod.pipe.js';
 import type { UserEntity } from '../../users/entities/user.entity.js';
+import { adminRatesQueryDto, type AdminRatesDto, type AdminRatesQueryDto } from '../dtos/admin-rates.dto.js';
 import type { CategoryDto } from '../dtos/category.dto.js';
 import { publishRatesDto, type PublishRatesDto } from '../dtos/publish-rates.dto.js';
 import type { TodayRatesDto } from '../dtos/today-rates.dto.js';
@@ -21,6 +22,12 @@ export class CatalogController {
   @Get('rates/today')
   todayRates(): Promise<TodayRatesDto> {
     return this.catalogService.todayRates();
+  }
+
+  @Roles('ADMIN')
+  @Get('admin/rates')
+  ratesForDay(@Query(new ZodPipe(adminRatesQueryDto)) query: AdminRatesQueryDto): Promise<AdminRatesDto> {
+    return this.catalogService.ratesForDay(query.date);
   }
 
   @Roles('ADMIN')

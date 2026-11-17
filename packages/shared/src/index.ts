@@ -1,6 +1,7 @@
 export * from './theme.js';
 export * from './enums.js';
 export * from './i18n.js';
+export * from './admin-i18n.js';
 export type { paths, components } from './generated/api.js';
 
 import type { components } from './generated/api.js';
@@ -22,3 +23,12 @@ export type CollectorSignup = components['schemas']['CollectorSignup'];
 export type Ledger = components['schemas']['Ledger'];
 export type UploadSlot = components['schemas']['UploadSlot'];
 export type EventCollectorVerification = components['schemas']['EventCollectorVerification'];
+export type AdminOverview = components['schemas']['AdminOverview'];
+export type AttentionItem = components['schemas']['AttentionItem'];
+export type AdminMap = components['schemas']['AdminMap'];
+export type PickupEvent = components['schemas']['PickupEvent'];
+export type AdminRates = components['schemas']['AdminRates'];
+export type AdminDispute = components['schemas']['AdminDispute'];
+export type AdminUserRow = components['schemas']['AdminUserRow'];
+export type AdminUserPage = components['schemas']['AdminUserPage'];
+export type EventCollectorApplied = components['schemas']['EventCollectorApplied'];

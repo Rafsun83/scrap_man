@@ -23,6 +23,10 @@ export class UserEntity {
   @Column({ name: 'status', type: 'enum', enumName: 'user_status', enum: USER_STATUSES, nullable: false, default: 'ACTIVE' })
   status: UserStatus;
 
+  /** Why an admin last changed the status (A5). */
+  @Column({ name: 'status_note', type: 'varchar', length: 500, nullable: true })
+  statusNote: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

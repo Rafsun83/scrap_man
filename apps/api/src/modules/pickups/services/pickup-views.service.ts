@@ -249,6 +249,7 @@ export class PickupViewsService {
           ? { stars: Number(row.rating_stars), comment: row.rating_comment, createdAt: row.rated_at!.toISOString() }
           : null,
       lockedRates: ratesLocked ? sortedItems.map((i) => ({ categoryCode: i.code, rate: num(i.rate_snapshot) })) : null,
+      updatedAt: row.updated_at.toISOString(),
     };
   }
 }

@@ -8,6 +8,7 @@ import { PHOTO_STORAGE, UPLOAD_URL_TTL_SEC } from '../../storage/storage.module.
 import type { PhotoStorage } from '../../storage/types/photo-storage.type.js';
 import { CollectorProfilesService } from '../../users/services/collector-profiles.service.js';
 import type { CreatePickupDto } from '../dtos/create-pickup.dto.js';
+import type { ListAdminPickupsDto, PickupEventDto } from '../dtos/admin-pickups.dto.js';
 import type { ListMyPickupsDto } from '../dtos/list-my-pickups.dto.js';
 import type { PhotoContentType, PhotoUploadSlotDto } from '../dtos/photo-upload.dto.js';
 import type { PickupDto, PickupPageDto, PickupSummaryDto } from '../dtos/pickup.dto.js';
@@ -29,6 +30,12 @@ const LIST_FILTERS: Record<NonNullable<ListMyPickupsDto['status']>, readonly Pic
   ACTIVE: ACTIVE_PICKUP_STATUSES,
   COMPLETED: ['COMPLETED'],
   CANCELLED: ['CANCELLED', 'EXPIRED'],
+  PAST: ['COMPLETED', 'CANCELLED', 'EXPIRED'],
+};
+
+const ADMIN_GROUPS: Record<NonNullable<ListAdminPickupsDto['group']>, readonly PickupStatus[]> = {
+  ACTIVE: ACTIVE_PICKUP_STATUSES,
+  WEIGHING: ['ARRIVED', 'WEIGHED'],
   PAST: ['COMPLETED', 'CANCELLED', 'EXPIRED'],
 };
 
@@ -115,6 +122,46 @@ export class PickupsService {
           ? Buffer.from(`${last.requested_at.toISOString()}|${last.id}`).toString('base64url')
           : null,
     };
+  }
+
+  /** A1 table and A5 user detail: admin search over every pickup, newest request first. */
+  async adminSearch(admin: Viewer, query: ListAdminPickupsDto): Promise<PickupPageDto> {
+    const statuses = query.status ? [query.status] : query.group ? ADMIN_GROUPS[query.group] : null;
+    const after = this.decodeCursor(query.cursor);
+    const found = await this.pickupsRepository.adminPageIds(
+      { statuses, area: query.area ?? null, date: query.date ?? null, q: query.q ?? null, userId: query.userId ?? null },
+      after,
+      query.limit + 1,
+    );
+    const page = found.slice(0, query.limit);
+    const last = page.at(-1);
+    return {
+      items: await this.pickupViewsService.viewMany(page.map((p) => p.id), admin),
+      nextCursor:
+        found.length > query.limit && last ? Buffer.from(`${last.requested_at.toISOString()}|${last.id}`).toString('base64url') : null,
+    };
+  }
+
+  /** Every status change of the pickup, oldest first (A4 timeline). */
+  async events(pickupId: string): Promise<PickupEventDto[]> {
+    if (!(await this.pickupsRepository.exists(pickupId))) throw AppError.notFound('That pickup was not found.');
+    const found = await this.pickupsRepository.events(pickupId);
+    return found.map((e) => ({
+      id: e.id,
+      at: e.at.toISOString(),
+      from: e.from_status,
+      to: e.to_status,
+      actorRole: e.actor_role,
+      actorName: e.actor_name,
+      meta: e.meta,
+    }));
+  }
+
+  private decodeCursor(cursor: string | undefined): { at: string; id: string } | null {
+    if (!cursor) return null;
+    const [at, id] = Buffer.from(cursor, 'base64url').toString().split('|');
+    if (!at || !id || Number.isNaN(Date.parse(at))) throw AppError.validation('The cursor is not valid. Start from the first page.');
+    return { at, id };
   }
 
   /** H11 totals: completed pickups, their final kg and the taka paid. */
