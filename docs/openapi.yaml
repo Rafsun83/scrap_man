@@ -11,6 +11,9 @@ info:
     with a different body is VALIDATION_ERROR, and a repeat while the first call is still running is
     INVALID_STATE (retry shortly).
 
+    Request ids: every response carries an X-Request-Id header. A client may send its own (up to 64 letters,
+    digits, dashes or underscores) and it is echoed back; otherwise the server makes one. Logs carry the same id.
+
     Live updates: connect with Socket.IO to the API origin, path /socket.io, passing the access token as
     `auth.token`. The server answers `ready` once the user's rooms are joined, or `unauthorized` and then
     disconnects. Each user receives only events meant for them; admins receive every pickup event.
@@ -264,13 +267,17 @@ paths:
   /me/notifications:
     get:
       tags: [Me]
-      summary: The household's notifications, newest first (H13)
+      summary: The user's notifications, newest first (H13, collector bell on C1)
       description: |
-        Household only in v1 (collectors get theirs in M4). Built from what already happened, so it always
-        matches the pickup history: a collector accepted, released, weighed, was paid, a request expired or was
-        cancelled by someone else, a dispute was resolved, and the day's rates were published (from the day
-        the account was created). The household's own actions are not listed. `read` is true for items at or
-        before the last POST /me/notifications/read. The apps write the text from `type` and `data`.
+        Households and collectors (admins get 403). Built from what already happened, so it always matches the
+        pickup history; the user's own actions are not listed. `read` is true for items at or before the last
+        POST /me/notifications/read. The apps write the text from `type` and `data`.
+        Households: a collector accepted, released, weighed, was paid, reported the household not home
+        (PICKUP_NO_SHOW), a request expired or was cancelled by an admin, a dispute was resolved, and the day's
+        rates (from the day the account was created).
+        Collectors: the application was approved or rejected, a household confirmed the weights (pay now),
+        rejected them (PICKUP_DISPUTED), cancelled after accept (or an admin did), reported a payment not
+        received, rated the pickup, a dispute was resolved, and the day's rates once approved.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -286,10 +293,43 @@ paths:
     post:
       tags: [Me]
       summary: Mark every notification up to now as read
-      description: Household only. Sets the user's "seen up to" time to now; unreadCount becomes 0.
+      description: Households and collectors. Sets the user's "seen up to" time to now; unreadCount becomes 0.
       responses:
         '204': { description: Marked read }
         '403': { $ref: '#/components/responses/Error' }
+
+  /me/devices:
+    put:
+      tags: [Me]
+      summary: Register this phone for push notifications
+      description: |
+        Households and collectors. Saves (or refreshes) the device token from the push provider (FCM). A token
+        belongs to one user: registering it again moves it to the signed-in user. Pushes carry the same events
+        as the live socket, with the text written on the server in the user's language; tokens the provider
+        rejects are removed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeviceInput' }
+      responses:
+        '204': { description: Saved }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /me/devices/{token}:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        description: The device token, URL-encoded
+        schema: { type: string, maxLength: 4096 }
+    delete:
+      tags: [Me]
+      summary: Stop push notifications to this phone (on sign-out)
+      description: Removes the token if it belongs to the signed-in user; succeeds either way.
+      responses:
+        '204': { description: Removed }
 
   /pickups:
     post:
@@ -403,6 +443,34 @@ paths:
         '204': { description: Released; request is open again at 1 km }
         '404': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
+
+  /pickups/{pickupId}/no-show:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    post:
+      tags: [Pickups]
+      summary: Collector reports the household not home; the pickup ends
+      description: |
+        Assigned collector only, while ACCEPTED (409 INVALID_STATE otherwise), once the booked slot has started
+        (409 INVALID_STATE before), and with the collector's last location within 200 m of the address
+        (422 OUT_OF_RANGE otherwise; send a location ping first). ACCEPTED -> CANCELLED with reason NO_SHOW.
+        The household gets `pickup.cancelled` and a PICKUP_NO_SHOW notification; admins get an ops alert.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 200, description: What the collector tried, e.g. called twice }
+      responses:
+        '200':
+          description: Cancelled as a no-show
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pickup' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
 
   /pickups/{pickupId}/arrive:
     parameters:
@@ -889,7 +957,8 @@ paths:
       summary: Status counts and the needs-attention list (A1)
       description: |
         Admin only. Counts are of pickups now in each status, except completedToday (completed since midnight,
-        Dhaka). weighing is ARRIVED plus WEIGHED. Attention items, most urgent first: WAITING_TOO_LONG (a request
+        Dhaka). weighing is ARRIVED plus WEIGHED. Attention items, most urgent first (NO_SHOW: a collector
+        reported a household not home in the last 24 hours; pickupId, area and the collector's name): WAITING_TOO_LONG (a request
         still REQUESTED longer than ADMIN_ATTENTION.waitingMinutes after it was made), CODE_LOCKED (an ACCEPTED
         pickup locked after 5 wrong codes), DISPUTE_REVIEW (a dispute waiting for staff), RELEASES (a collector who
         gave back more than ADMIN_ATTENTION.maxReleases30d requests in 30 days).
@@ -899,6 +968,27 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AdminOverview' }
+
+  /admin/alerts:
+    get:
+      tags: [Admin]
+      summary: Operational alerts right now (A1 banner)
+      description: |
+        Admin only. Checked every minute (and on this call), most severe first:
+        ACCEPTED_PAST_SLOT (ACCEPTED more than OPS_ALERTS.acceptedPastSlotMinutes after the slot ended),
+        CONFIRMED_UNPAID (CONFIRMED longer than OPS_ALERTS.confirmedUnpaidMinutes),
+        REVIEW_OVERDUE (a dispute with staff longer than OPS_ALERTS.reviewOverdueHours),
+        OTP_FAILURES (more than OPS_ALERTS.otpFailures wrong codes in the last 10 minutes, all phones),
+        PAYMENT_REPORTED and NO_SHOW (each in the last 24 hours). A new alert is also sent as `ops.alert` and
+        written to the log as an `alert` line.
+      responses:
+        '200':
+          description: Alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OpsAlert' }
 
   /admin/map:
     get:
@@ -1432,9 +1522,15 @@ components:
       description: |
         PICKUP_ACCEPTED, PICKUP_RELEASED (the collector gave the request back; it is searching again),
         PICKUP_WEIGHED (weights ready to check; data.weighVersion > 1 for a re-weigh), PICKUP_PAID,
-        PICKUP_EXPIRED, PICKUP_CANCELLED (by an admin), DISPUTE_RESOLVED, RATES_PUBLISHED.
+        PICKUP_EXPIRED, PICKUP_CANCELLED (households: by an admin; collectors: by the household or an admin
+        after accept), PICKUP_NO_SHOW (households: the collector found nobody home), DISPUTE_RESOLVED,
+        RATES_PUBLISHED. Collectors only: APPLICATION_APPROVED, APPLICATION_REJECTED (data.note),
+        PICKUP_CONFIRMED (the household approved the weights; pay data.amount by data.method),
+        PICKUP_DISPUTED (the household rejected the weights; data.disputeStatus REWEIGH or ADMIN_REVIEW),
+        PAYMENT_REPORTED (the household says the money did not arrive), RATED (data.stars).
       enum: [PICKUP_ACCEPTED, PICKUP_RELEASED, PICKUP_WEIGHED, PICKUP_PAID, PICKUP_EXPIRED, PICKUP_CANCELLED,
-             DISPUTE_RESOLVED, RATES_PUBLISHED]
+             PICKUP_NO_SHOW, DISPUTE_RESOLVED, RATES_PUBLISHED, APPLICATION_APPROVED, APPLICATION_REJECTED,
+             PICKUP_CONFIRMED, PICKUP_DISPUTED, PAYMENT_REPORTED, RATED]
     Notification:
       type: object
       required: [id, type, at, read, pickupId, displayNo, data]
@@ -1451,13 +1547,17 @@ components:
           properties:
             categoryCodes: { type: array, items: { type: string } }
             collectorName: { type: [string, 'null'] }
+            householdName: { type: [string, 'null'], description: Collector feed }
             amount: { $ref: '#/components/schemas/Money' }
             totalKg: { $ref: '#/components/schemas/Kg' }
             method: { $ref: '#/components/schemas/PaymentMethod' }
             weighVersion: { type: integer }
             disputeType: { $ref: '#/components/schemas/DisputeType' }
+            disputeStatus: { $ref: '#/components/schemas/DisputeStatus' }
             outcome: { $ref: '#/components/schemas/DisputeOutcome' }
             effectiveDate: { type: string, format: date }
+            note: { type: [string, 'null'], description: The admin's note (APPLICATION_REJECTED) }
+            stars: { type: integer, minimum: 1, maximum: 5 }
     NotificationPage:
       type: object
       required: [items, nextCursor, unreadCount]
@@ -1652,10 +1752,10 @@ components:
         or expired. pickup.*: the household and the assigned collector. collector.location: the household while
         ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
         collector.verification: the collector an admin approved or rejected. collector.applied: admins only, when a
-        collector submits (or resubmits) an application.
+        collector submits (or resubmits) an application. ops.alert: admins only, when a new ops alert appears.
       enum: [request.created, request.taken, request.expired, pickup.accepted, pickup.released, collector.location,
              pickup.arrived, pickup.code_locked, pickup.weighed, pickup.confirmed, pickup.disputed, pickup.paid,
-             pickup.cancelled, dispute.opened, dispute.resolved, collector.verification, collector.applied]
+             pickup.cancelled, dispute.opened, dispute.resolved, collector.verification, collector.applied, ops.alert]
 
     EventCollectorApplied:
       description: collector.applied (admins only)
@@ -1730,7 +1830,7 @@ components:
       type: object
       required: [kind, pickupId, displayNo, area, userId, name, since, count]
       properties:
-        kind: { type: string, enum: [WAITING_TOO_LONG, CODE_LOCKED, DISPUTE_REVIEW, RELEASES] }
+        kind: { type: string, enum: [WAITING_TOO_LONG, CODE_LOCKED, DISPUTE_REVIEW, RELEASES, NO_SHOW] }
         pickupId: { type: [string, 'null'], format: uuid }
         displayNo: { type: [string, 'null'] }
         area: { type: [string, 'null'] }
@@ -1850,10 +1950,11 @@ components:
         household:
           description: For households; null for collectors
           type: [object, 'null']
-          required: [area, completedCount, totalReceived]
+          required: [area, completedCount, totalReceived, noShows30d]
           properties:
             area: { type: [string, 'null'], description: Area of the default address }
             completedCount: { type: integer }
+            noShows30d: { type: integer, description: Pickups collectors reported as not home in the last 30 days }
             totalReceived: { $ref: '#/components/schemas/Money' }
         collector:
           description: For collectors; null for households and before sign-up
@@ -1875,3 +1976,29 @@ components:
           type: array
           items: { $ref: '#/components/schemas/AdminUserRow' }
         nextCursor: { type: [string, 'null'] }
+
+    DeviceInput:
+      type: object
+      required: [token, platform]
+      properties:
+        token: { type: string, minLength: 1, maxLength: 4096, description: The push provider's device token }
+        platform: { type: string, enum: [ANDROID, IOS] }
+
+    OpsAlert:
+      type: object
+      required: [id, kind, severity, pickupId, displayNo, userId, name, since, count]
+      properties:
+        id: { type: string, description: 'Stable while the alert lasts, e.g. "CONFIRMED_UNPAID:<pickupId>"' }
+        kind: { type: string, enum: [ACCEPTED_PAST_SLOT, CONFIRMED_UNPAID, REVIEW_OVERDUE, OTP_FAILURES, PAYMENT_REPORTED, NO_SHOW] }
+        severity: { type: string, enum: [CRITICAL, WARNING] }
+        pickupId: { type: [string, 'null'], format: uuid }
+        displayNo: { type: [string, 'null'] }
+        userId: { type: [string, 'null'], format: uuid, description: The collector, where one is involved }
+        name: { type: [string, 'null'], description: The collector's name }
+        since: { type: string, format: date-time }
+        count: { type: [integer, 'null'], description: Wrong codes in the window, for OTP_FAILURES }
+
+    EventOpsAlert:
+      description: ops.alert (admins only)
+      allOf:
+        - $ref: '#/components/schemas/OpsAlert'

@@ -7,6 +7,10 @@ export function handleAdminEvent(qc: QueryClient, event: string, payload: unknow
   const pickupId = (payload as { pickupId?: string } | null)?.pickupId
   const invalidate = (key: readonly unknown[]) => void qc.invalidateQueries({ queryKey: key })
   if (event === 'collector.location') return // the map polls instead
+  if (event === 'ops.alert') {
+    invalidate(keys.alerts)
+    return
+  }
   if (event === 'collector.applied' || event === 'collector.verification') {
     invalidate(keys.allCollectors)
     invalidate(keys.overview)
@@ -18,6 +22,7 @@ export function handleAdminEvent(qc: QueryClient, event: string, payload: unknow
   }
   if (event.startsWith('request.') || event.startsWith('pickup.') || event.startsWith('dispute.')) {
     invalidate(keys.overview)
+    invalidate(keys.alerts)
     invalidate(keys.map)
     invalidate(keys.allPickups)
     if (pickupId) {

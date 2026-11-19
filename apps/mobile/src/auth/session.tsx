@@ -4,6 +4,7 @@ import { createApiClient, type ApiClient, type Tokens } from '../api/client';
 import type { Session, User } from '../api/types';
 import { API_URL } from '../config';
 import { fromApiLanguage, useLang } from '../i18n/lang';
+import { forgetPushToken } from '../push/registration';
 
 const SESSION_KEY = 'bw.session';
 
@@ -46,8 +47,9 @@ export function SessionProvider({ children, baseUrl = API_URL }: { children: Rea
     () =>
       createApiClient({
         baseUrl,
-        getTokens: () => stored.current,
-        onTokens: (s) => save({ accessToken: s.accessToken!, refreshToken: s.refreshToken!, user: s.user! }),
+        getAccessToken: () => stored.current?.accessToken ?? null,
+        getRefreshToken: () => stored.current?.refreshToken ?? null,
+        onSession: (s) => save({ accessToken: s.accessToken!, refreshToken: s.refreshToken!, user: s.user! }),
         onSignedOut: () => save(null),
       }),
     [baseUrl, save],
@@ -74,6 +76,7 @@ export function SessionProvider({ children, baseUrl = API_URL }: { children: Rea
 
   const signOut = useCallback(async () => {
     const refreshToken = stored.current?.refreshToken;
+    await forgetPushToken(api);
     save(null);
     if (refreshToken) {
       await api.request('POST', '/auth/logout', { body: { refreshToken }, auth: false }).catch(() => {});

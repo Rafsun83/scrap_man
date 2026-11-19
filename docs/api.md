@@ -1,8 +1,8 @@
 # BhangariWala API reference
 
-Every endpoint the API serves today (milestones M0 to M5), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
+Every endpoint the API serves today (milestones M0 to M6), what it is for, who may call it, and a real request and response for each. The machine-readable contract is [`openapi.yaml`](openapi.yaml); when this page and the contract disagree, the contract wins.
 
-> **How the samples were made:** the M5 admin samples come from a scripted run on 2026-11-17 (two weight disputes, a payment report, open requests, a pending applicant), called through the admin panel's dev proxy. The M4 samples (collector sign-up, approval, profile, ledger, `lockedRates`, an item added at weighing, the new nearby fields) come from a scripted collector journey on 2026-11-16. The M3 samples (summary, notifications, `collectorLocation`, `rating`) come from a second scripted sale on 2026-11-15. Every other sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
+> **How the samples were made:** the M6 samples (no-show, devices, collector feed, alerts, pushes) come from a scripted run on 2026-11-17 against a local API. The M5 admin samples come from a scripted run on 2026-11-17 (two weight disputes, a payment report, open requests, a pending applicant), called through the admin panel's dev proxy. The M4 samples (collector sign-up, approval, profile, ledger, `lockedRates`, an item added at weighing, the new nearby fields) come from a scripted collector journey on 2026-11-16. The M3 samples (summary, notifications, `collectorLocation`, `rating`) come from a second scripted sale on 2026-11-15. Every other sample below was recorded from the real API (PostgreSQL, Redis and S3 storage) on 2026-11-14 by one scripted run: a household in Mirpur 10, two approved collectors 200-300 m away, and the seeded admin. Tokens and presigned link signatures are shortened; everything else is exactly what the server returned. Phone numbers are test numbers.
 
 ## Contents
 
@@ -35,6 +35,10 @@ Every endpoint the API serves today (milestones M0 to M5), what it is for, who m
 | Time | Timestamps in UTC ISO 8601; dates (`slotDate`, `effectiveDate`) are Dhaka-time days `YYYY-MM-DD` |
 | Digits and words | ASCII digits and English enum values only. Bangla digits and words are for display (`toBanglaDigits`, `formatTaka` in `@bw/shared`) |
 | Location | `{ "lat": 23.8069, "lng": 90.3687 }`, inside Bangladesh |
+
+### Request ids (since M6)
+
+Every response carries `X-Request-Id`. Send your own (up to 64 letters, digits, `-` or `_`) and it is echoed; otherwise the server makes one. In production the logs are JSON lines, and every line written while handling a request carries the same `requestId` (and `userId` once signed in), so a support report with the id finds the request's whole trail.
 
 ### Errors
 
@@ -127,6 +131,7 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `POST` | [`/pickups/{pickupId}/cancel`](#post-pickupspickupidcancel) | Household (own pickup) | The household cancels before the collector arrives | M2 |
 | `POST` | [`/pickups/{pickupId}/accept`](#post-pickupspickupidaccept) | Collector (approved, online) | Claims a request | M2 |
 | `POST` | [`/pickups/{pickupId}/release`](#post-pickupspickupidrelease) | Assigned collector | Gives an accepted request back before arriving | M2 |
+| `POST` | [`/pickups/{pickupId}/no-show`](#post-pickupspickupidno-show) | Assigned collector | Nobody home: ends the pickup once the slot started, within 200 m | M6 |
 | `POST` | [`/pickups/{pickupId}/arrive`](#post-pickupspickupidarrive) | Assigned collector | The collector enters the household's 4-digit code at the door (status `ARRIVED`) | M2 |
 | `POST` | [`/pickups/{pickupId}/photos`](#post-pickupspickupidphotos) | Household (ITEMS), collector or admin (SCALE) | Gets a presigned link to upload a photo straight to storage | M2 |
 | `POST` | [`/pickups/{pickupId}/weights`](#post-pickupspickupidweights) | Assigned collector, or admin after TEAM_REWEIGH | Sends a weigh round; since M4 may add items found at the door | M2 |
@@ -145,6 +150,7 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `GET` | [`/admin/collectors`](#get-admincollectors) | Admin | Collector applications by verification status, oldest first | M4 |
 | `POST` | [`/admin/collectors/{userId}/decision`](#post-admincollectorsuseriddecision) | Admin | Approves or rejects a pending application; SMS and live event to the collector | M4 |
 | `GET` | [`/admin/overview`](#get-adminoverview) | Admin | Status counts, badges and the needs-attention list (A1) | M5 |
+| `GET` | [`/admin/alerts`](#get-adminalerts) | Admin | Stuck pickups, OTP failure spikes, payment reports, no-shows (A1 banner) | M6 |
 | `GET` | [`/admin/map`](#get-adminmap) | Admin | Open requests and online collectors for the map (A1) | M5 |
 | `GET` | [`/admin/pickups`](#get-adminpickups) | Admin | Search every pickup by status, group, area, date, BW number, name, phone or user | M5 |
 | `GET` | [`/admin/pickups/{pickupId}/events`](#get-adminpickupspickupidevents) | Admin | A pickup's status changes, oldest first (A4 timeline) | M5 |
@@ -153,8 +159,10 @@ Other paths: the collector can [release](#post-pickupspickupidrelease) before ar
 | `POST` | [`/admin/disputes/{disputeId}/resolve`](#post-admindisputesdisputeidresolve) | Admin | Closes a dispute in `ADMIN_REVIEW` with an outcome | M2 |
 | `GET` | [`/admin/users`](#get-adminusers) | Admin | Households or collectors with their figures and the release flag (A5) | M5 |
 | `PUT` | [`/admin/users/{userId}/status`](#put-adminusersuseridstatus) | Admin | Activates, flags or suspends a household or collector | M5 |
-| `GET` | [`/me/notifications`](#get-menotifications) | Household | The household's notifications, newest first, with the unread count (H13) | M3 |
-| `POST` | [`/me/notifications/read`](#post-menotificationsread) | Household | Marks every notification up to now as read | M3 |
+| `PUT` | [`/me/devices`](#put-medevices) | Household or collector | Registers the phone for push notifications | M6 |
+| `DELETE` | [`/me/devices/{token}`](#delete-medevicestoken) | Household or collector | Stops pushes to this phone (sign-out) | M6 |
+| `GET` | [`/me/notifications`](#get-menotifications) | Household or collector | The user's notifications, newest first, with the unread count (H13, collector bell since M6) | M3 |
+| `POST` | [`/me/notifications/read`](#post-menotificationsread) | Household or collector | Marks every notification up to now as read | M3 |
 
 ## Health
 
@@ -1686,6 +1694,69 @@ Authorization: Bearer <accessToken>
 | `CODE_LOCKED` | 423 | Code locked after 5 wrong tries |
 | `NOT_FOUND` | 404 | Not the collector's pickup |
 
+### POST /pickups/{pickupId}/no-show
+
+The collector found nobody home: the pickup ends (ACCEPTED -> CANCELLED, reason `NO_SHOW`).
+
+**Who:** Assigned collector · **Since:** M6
+
+- Only while ACCEPTED, only once the booked slot has started, and only with the collector's last location within 200 m of the address (send a location ping first; the app does).
+- The household gets `pickup.cancelled`, a push, and a `PICKUP_NO_SHOW` notification; admins get a `NO_SHOW` ops alert and attention item; the household's no-show count shows on A5.
+- Optional `note` (up to 200): what the collector tried.
+
+**Request**
+
+```http
+POST /api/v1/pickups/{pickupId}/no-show
+Authorization: Bearer <accessToken>
+X-Request-Id: sample-noshow-1
+```
+
+```json
+{
+  "note": "Called twice, no answer"
+}
+```
+
+**Response** (shortened)
+
+`200`
+
+```json
+{
+  "id": "10e6f259-177c-4ed7-8946-5c0234f02394",
+  "displayNo": "BW-1095",
+  "status": "CANCELLED",
+  "cancelledAt": "2026-11-17T17:30:47.863Z",
+  "updatedAt": "2026-11-17T17:30:47.867Z"
+}
+```
+
+<details><summary>Example: Before the slot starts</summary>
+
+`409`
+
+```json
+{
+  "code": "INVALID_STATE",
+  "message": "The booked time has not started yet. Wait for the slot before reporting nobody home.",
+  "details": {
+    "slotStartsAt": "2026-11-18T03:00:00.000Z"
+  }
+}
+```
+
+</details>
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `INVALID_STATE` | 409 | Not ACCEPTED, or the booked slot has not started (`details.slotStartsAt`) |
+| `OUT_OF_RANGE` | 422 | The last location is more than 200 m away or older than 10 minutes (`details.distanceM`, `maxDistanceM`) |
+| `NOT_FOUND` | 404 | Not this collector's pickup |
+
+
 ### POST /pickups/{pickupId}/arrive
 
 The collector enters the household's 4-digit code at the door (status `ARRIVED`).
@@ -2837,7 +2908,7 @@ Status counts and the needs-attention list (A1).
 **Who:** Admin · **Since:** M5
 
 - Counts are pickups now in each status; `weighing` is ARRIVED plus WEIGHED; `completedToday` counts since midnight in Dhaka. `pendingApplications` and `openDisputes` drive the sidebar badges.
-- Attention items, most urgent kind first: `CODE_LOCKED` (5 wrong codes), `DISPUTE_REVIEW` (waiting for staff), `WAITING_TOO_LONG` (still REQUESTED more than 60 minutes after it was made), `RELEASES` (a collector who gave back more than 5 requests in 30 days). Thresholds: `ADMIN_ATTENTION` in `@bw/shared`.
+- Attention items, most urgent kind first: `CODE_LOCKED` (5 wrong codes), `DISPUTE_REVIEW` (waiting for staff), `WAITING_TOO_LONG` (still REQUESTED more than 60 minutes after it was made), `RELEASES` (a collector who gave back more than 5 requests in 30 days). Since M6 also `NO_SHOW` (a collector found nobody home in the last 24 hours). Thresholds: `ADMIN_ATTENTION` in `@bw/shared`.
 
 **Request**
 
@@ -2906,6 +2977,54 @@ Authorization: Bearer <accessToken>
   ]
 }
 ```
+
+### GET /admin/alerts
+
+Operational alerts right now (A1 banner), most severe first.
+
+**Who:** Admin · **Since:** M6
+
+- `ACCEPTED_PAST_SLOT` (ACCEPTED an hour after the slot ended), `CONFIRMED_UNPAID` (2 hours, critical), `REVIEW_OVERDUE` (a dispute with staff over 24 hours), `OTP_FAILURES` (more than 20 wrong codes in 10 minutes, critical), `PAYMENT_REPORTED` (critical) and `NO_SHOW` (each in the last 24 hours). Thresholds: `OPS_ALERTS` in `@bw/shared`.
+- Checked every minute: each new alert is written to the log as an `alert` line (an alert destination plugs in during M7) and sent to admins as `ops.alert`, once.
+
+**Request**
+
+```http
+GET /api/v1/admin/alerts
+Authorization: Bearer <accessToken>
+```
+
+**Response** (two shown)
+
+`200`
+
+```json
+[
+  {
+    "id": "PAYMENT_REPORTED:f7a1820b-676a-4b18-a1e8-e17d3a18fb6f",
+    "kind": "PAYMENT_REPORTED",
+    "severity": "CRITICAL",
+    "pickupId": "f7a1820b-676a-4b18-a1e8-e17d3a18fb6f",
+    "displayNo": "BW-1013",
+    "userId": "d921bfc1-75ab-49e6-8c8f-0d7173040fa4",
+    "name": "Sohel Rana",
+    "since": "2026-11-16T19:06:20.605Z",
+    "count": null
+  },
+  {
+    "id": "PAYMENT_REPORTED:d284790a-9827-4cbb-adcb-6b6812d6fd9d",
+    "kind": "PAYMENT_REPORTED",
+    "severity": "CRITICAL",
+    "pickupId": "d284790a-9827-4cbb-adcb-6b6812d6fd9d",
+    "displayNo": "BW-1018",
+    "userId": "34c27b58-b830-46ff-b78b-92cc12c201f5",
+    "name": "Sohel Rana",
+    "since": "2026-11-16T19:09:36.753Z",
+    "count": null
+  }
+]
+```
+
 
 ### GET /admin/map
 
@@ -3303,7 +3422,7 @@ Households or collectors with their figures (A5). Newest account first, cursor p
 **Who:** Admin · **Since:** M5
 
 - Query: `role` (`HOUSEHOLD` or `COLLECTOR`, required), `q` (name, or phone by its digits), `limit`, `cursor`.
-- `household`: default address area, completed pickups, total received. `collector`: work areas, rating, pickups and releases in 30 days, verification, online (null before sign-up). `releaseFlag`: more than 5 releases in 30 days.
+- `household`: default address area, completed pickups, total received, and since M6 `noShows30d` (pickups collectors reported as nobody home). `collector`: work areas, rating, pickups and releases in 30 days, verification, online (null before sign-up). `releaseFlag`: more than 5 releases in 30 days.
 
 **Request**
 
@@ -3462,9 +3581,12 @@ Authorization: Bearer <accessToken>
 
 ### GET /me/notifications
 
-The household's notifications (H13), newest first. The feed is built from what already happened (status changes, resolved disputes, published rates), so it always matches the pickup history; there is nothing separate to keep in sync.
+The user's notifications (H13 for households, the bell on C1 for collectors), newest first. The feed is built from what already happened (status changes, disputes, ratings, decisions, published rates), so it always matches the pickup history; there is nothing separate to keep in sync.
 
-**Who:** Household (collectors get a feed in M4) · **Since:** M3
+**Who:** Household or collector (admins get 403) · **Since:** M3 (collectors and `PICKUP_NO_SHOW` since M6)
+
+- **Collectors** (M6): the application decision (`APPLICATION_APPROVED`, `APPLICATION_REJECTED` with `data.note`), the household approved the weights (`PICKUP_CONFIRMED`: pay `data.amount` by `data.method`), rejected them (`PICKUP_DISPUTED`, `data.disputeStatus` REWEIGH or ADMIN_REVIEW), cancelled after accept or an admin did (`PICKUP_CANCELLED`), reported the money not received (`PAYMENT_REPORTED`), rated the pickup (`RATED`, `data.stars`), a dispute was resolved, and rates published after approval. Collector items carry `data.householdName`.
+- **Households** also get `PICKUP_NO_SHOW` when the collector found nobody home.
 
 - Listed: a collector accepted (`PICKUP_ACCEPTED`), gave the request back (`PICKUP_RELEASED`), sent weights (`PICKUP_WEIGHED`, `data.weighVersion` > 1 for a re-weigh), was paid (`PICKUP_PAID`); a request expired (`PICKUP_EXPIRED`) or was cancelled by an admin (`PICKUP_CANCELLED`); a dispute was resolved (`DISPUTE_RESOLVED`, except re-weighs and cancels, which already appear); the day's rates were published (`RATES_PUBLISHED`, from the day the account was created).
 - The household's own actions (request, confirm, dispute, cancel) are not listed.
@@ -3562,6 +3684,75 @@ Authorization: Bearer <accessToken>
 | `VALIDATION_ERROR` | 400 | Bad cursor or limit |
 | `FORBIDDEN` | 403 | Called by a collector or admin |
 
+<details><summary>Example: A household after a no-show (M6)</summary>
+
+`200`
+
+```json
+{
+  "items": [
+    {
+      "id": "se:518",
+      "type": "PICKUP_NO_SHOW",
+      "at": "2026-11-17T17:30:47.867Z",
+      "read": false,
+      "pickupId": "10e6f259-177c-4ed7-8946-5c0234f02394",
+      "displayNo": "BW-1095",
+      "data": {
+        "categoryCodes": [
+          "IRON"
+        ],
+        "collectorName": "Sohel Rana"
+      }
+    },
+    {
+      "id": "se:517",
+      "type": "PICKUP_ACCEPTED",
+      "at": "2026-11-17T17:30:47.804Z",
+      "read": false,
+      "pickupId": "10e6f259-177c-4ed7-8946-5c0234f02394",
+      "displayNo": "BW-1095",
+      "data": {
+        "categoryCodes": [
+          "IRON"
+        ],
+        "collectorName": "Sohel Rana"
+      }
+    }
+  ],
+  "nextCursor": null,
+  "unreadCount": 2
+}
+```
+
+</details>
+
+<details><summary>Example: A collector just approved (M6)</summary>
+
+`200`
+
+```json
+{
+  "items": [
+    {
+      "id": "cv:9fda1f65-1eaf-4f69-a6c3-d2e8b4b64374:1794936648",
+      "type": "APPLICATION_APPROVED",
+      "at": "2026-11-17T17:30:47.605Z",
+      "read": false,
+      "pickupId": null,
+      "displayNo": null,
+      "data": {
+        "note": null
+      }
+    }
+  ],
+  "nextCursor": null,
+  "unreadCount": 1
+}
+```
+
+</details>
+
 ### POST /me/notifications/read
 
 Marks every notification up to now as read (the H13 "সব পড়া হয়েছে" action).
@@ -3611,6 +3802,63 @@ Authorization: Bearer <accessToken>
 | --- | --- | --- |
 | `FORBIDDEN` | 403 | Called by a collector or admin |
 
+### PUT /me/devices
+
+Registers this phone for push notifications (or refreshes it).
+
+**Who:** Household or collector · **Since:** M6
+
+- `token` is the push provider's device token (FCM); `platform` is `ANDROID` or `IOS`. A token belongs to one user: registering it again moves it to whoever is signed in.
+- Pushes mirror the live events for whoever they are news for (never the person who acted), with the text written on the server in the user's language and `data` = `{ kind, event, pickupId }` so the app opens the right screen. Until FCM is set up (M7) the server's console sender writes each push to the log. Tokens the provider rejects are removed.
+
+**Request**
+
+```http
+PUT /api/v1/me/devices
+Authorization: Bearer <accessToken>
+```
+
+```json
+{
+  "token": "fcm-sample-token-household",
+  "platform": "ANDROID"
+}
+```
+
+**Response**
+
+`204` with no body.
+
+What the household's phone got when the collector accepted (from the log):
+
+```json
+{
+  "title": "ভাঙ্গারিওয়ালা",
+  "body": "Sohel Rana আপনার অনুরোধ গ্রহণ করেছেন (BW-১০৯৫)। এলে পিকআপ কোডটি বলবেন।",
+  "data": { "kind": "ACCEPTED", "event": "pickup.accepted", "pickupId": "10e6f259-177c-4ed7-8946-5c0234f02394" }
+}
+```
+
+**Errors**
+
+| Code | HTTP | When |
+| --- | --- | --- |
+| `VALIDATION_ERROR` | 400 | Empty token or unknown platform |
+| `FORBIDDEN` | 403 | Admin account |
+
+### DELETE /me/devices/{token}
+
+Stops pushes to this phone (the app calls it on sign-out). Removes the token only if it belongs to the signed-in user; succeeds either way.
+
+**Who:** Household or collector · **Since:** M6
+
+```http
+DELETE /api/v1/me/devices/fcm-sample-token-household
+Authorization: Bearer <accessToken>
+```
+
+`204` with no body.
+
 ## Live events (Socket.IO)
 
 Apps get pushed updates while open. Connect with Socket.IO to the API origin (not `/api/v1`), path `/socket.io`, and send the access token:
@@ -3654,6 +3902,7 @@ Each user receives only their own events; admins receive every pickup event. Del
 | `pickup.code_locked` | Admins only | The 5th wrong pickup code |
 | `collector.verification` | The collector, and admins | An admin approved or rejected the application (since M4) |
 | `collector.applied` | Admins only | A collector submitted or resubmitted an application (since M5; A3 badge) |
+| `ops.alert` | Admins only | A new ops alert (an `OpsAlert`; since M6) |
 
 Every `pickup.*` event except `pickup.code_locked`, plus `request.expired`, has this one small shape; refetch the pickup for detail:
 

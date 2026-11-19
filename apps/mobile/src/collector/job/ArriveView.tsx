@@ -4,7 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Category, Pickup } from '../../api/types';
 import { SUPPORT_PHONE } from '../../config';
 import { useT } from '../../i18n/lang';
+import { formatTime } from '../../lib/dhaka';
 import { categoryName } from '../../lib/format';
+import { slotStart } from '../slot';
 import { Button, Field, Icon, Note, Screen } from '../../ui/components';
 import { body, colors, display, radius } from '../../ui/theme';
 import { NavyHeader, Tag } from '../ui';
@@ -29,6 +31,10 @@ export function ArriveView({
   onRelease,
   releasing,
   releaseError,
+  onNoShow,
+  noShowing,
+  noShowError,
+  now = new Date(),
 }: {
   pickup: Pickup;
   categories: Category[] | undefined;
@@ -38,11 +44,19 @@ export function ArriveView({
   onRelease: (reason?: string) => void;
   releasing: boolean;
   releaseError: string | null;
+  onNoShow: (note?: string) => void;
+  noShowing: boolean;
+  noShowError: string | null;
+  /** For tests; the slot-start check uses it. */
+  now?: Date;
 }) {
   const { t, lang } = useT();
   const [code, setCode] = useState('');
-  const [sheet, setSheet] = useState<'closed' | 'help' | 'release'>('closed');
+  const [sheet, setSheet] = useState<'closed' | 'help' | 'release' | 'noShow'>('closed');
   const [reason, setReason] = useState('');
+  const [note, setNote] = useState('');
+  const starts = slotStart(pickup.slotDate, pickup.slot);
+  const slotStarted = now.getTime() >= starts.getTime();
   const digits = toAscii(code);
   const phone = pickup.household.phone;
   const address = pickup.address;
@@ -133,7 +147,29 @@ export function ArriveView({
               {SUPPORT_PHONE ? (
                 <Button label={t('callSupport')} icon="headphones" variant="outline" onPress={() => Linking.openURL(`tel:${SUPPORT_PHONE}`)} />
               ) : null}
+              <Button testID="noshow-open" label={t('noShowButton')} icon="home" variant="outline" onPress={() => setSheet('noShow')} />
               <Button testID="release-open" label={t('releaseRequest')} icon="corner-up-left" variant="danger" onPress={() => setSheet('release')} />
+            </>
+          ) : sheet === 'noShow' ? (
+            <>
+              <Text style={display(21)}>{t('noShowButton')}</Text>
+              {slotStarted ? (
+                <>
+                  <Text style={[body(15), { color: colors.muted, lineHeight: 22 }]}>{t('noShowHint')}</Text>
+                  <Field label={t('noShowNote')} value={note} onChangeText={setNote} maxLength={200} />
+                  {noShowError ? <Text style={[body(15, 600), { color: colors.alert }]}>{noShowError}</Text> : null}
+                  <Button
+                    testID="noshow-confirm"
+                    label={t('noShowConfirm')}
+                    icon="home"
+                    variant="danger"
+                    loading={noShowing}
+                    onPress={() => onNoShow(note.trim() || undefined)}
+                  />
+                </>
+              ) : (
+                <Note icon="clock" text={t('noShowNotYet', { time: formatTime(starts, lang) })} />
+              )}
             </>
           ) : (
             <>

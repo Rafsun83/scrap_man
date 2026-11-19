@@ -1,18 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { DisputeOutcome, DisputeType, PaymentMethod } from '@bw/shared';
+import type { DisputeOutcome, DisputeStatus, DisputeType, PaymentMethod } from '@bw/shared';
 import { CLOCK, type Clock } from '../../../common/clock.js';
 import { AppError } from '../../../common/errors.js';
 import { dhakaToday } from '../../../common/time.js';
 import type { NotificationDto, NotificationPageDto } from '../dtos/notification.dto.js';
 import { NotificationTypeEnum } from '../enums/notification-type.enum.js';
-import { NotificationsRepository, type FeedRow } from '../repositories/notifications.repository.js';
+import { NotificationsRepository, type FeedOwner, type FeedRow, type PickupFacts } from '../repositories/notifications.repository.js';
 
 interface Reader {
   id: string;
+  role: string;
   createdAt: Date;
 }
 
-/** H13: the household's feed with read state, and "mark all read". */
+/** Collectors hear about rates only once approved; until then, never. */
+const NEVER = new Date(8.64e15);
+
+/** H13 and the collector bell: the user's feed with read state, and "mark all read". */
 @Injectable()
 export class NotificationsService {
   constructor(
@@ -23,8 +27,10 @@ export class NotificationsService {
   async list(user: Reader, limit: number, cursor?: string): Promise<NotificationPageDto> {
     const after = cursor ? this.decodeCursor(cursor) : null;
     const today = dhakaToday(this.clock.now());
+    const owner: FeedOwner = user.role === 'COLLECTOR' ? 'COLLECTOR' : 'HOUSEHOLD';
+    const since = owner === 'COLLECTOR' ? ((await this.notificationsRepository.approvedAt(user.id)) ?? NEVER) : user.createdAt;
     const [found, seenAt] = await Promise.all([
-      this.notificationsRepository.page(user.id, user.createdAt, today, limit + 1, after),
+      this.notificationsRepository.page(owner, user.id, since, today, limit + 1, after),
       this.notificationsRepository.seenAt(user.id),
     ]);
     const page = found.slice(0, limit);
@@ -32,7 +38,7 @@ export class NotificationsService {
     const [facts, totals, unreadCount] = await Promise.all([
       this.notificationsRepository.pickupFacts(pickupIds),
       this.notificationsRepository.weighTotals(pickupIds),
-      this.notificationsRepository.countAfter(user.id, user.createdAt, today, seenAt),
+      this.notificationsRepository.countAfter(owner, user.id, since, today, seenAt),
     ]);
     const factsById = new Map(facts.map((f) => [f.pickup_id, f]));
     const totalsByRound = new Map(totals.map((t) => [`${t.pickup_id}:${t.version}`, t]));
@@ -52,7 +58,7 @@ export class NotificationsService {
   private toDto(
     r: FeedRow,
     seenAt: Date | null,
-    facts: Map<string, { category_codes: string[]; payment_method: string | null; payment_amount: string | null }>,
+    facts: Map<string, PickupFacts>,
     totals: Map<string, { total_kg: string; total_amount: string }>,
   ): NotificationDto {
     const type = r.type as NotificationTypeEnum;
@@ -84,6 +90,32 @@ export class NotificationsService {
       case NotificationTypeEnum.DISPUTE_RESOLVED:
         data.disputeType = r.dispute_type as DisputeType;
         data.outcome = r.outcome as DisputeOutcome;
+        break;
+      case NotificationTypeEnum.PICKUP_NO_SHOW:
+        data.collectorName = r.actor_name;
+        break;
+      case NotificationTypeEnum.APPLICATION_APPROVED:
+      case NotificationTypeEnum.APPLICATION_REJECTED:
+        data.note = r.note;
+        break;
+      case NotificationTypeEnum.PICKUP_CONFIRMED:
+        data.householdName = r.actor_name;
+        if (f?.confirmed_method) data.method = f.confirmed_method as PaymentMethod;
+        if (f?.total_amount) data.amount = Number(f.total_amount);
+        break;
+      case NotificationTypeEnum.PICKUP_DISPUTED:
+        data.householdName = r.actor_name;
+        data.disputeType = r.dispute_type as DisputeType;
+        data.disputeStatus = r.dispute_status as DisputeStatus;
+        break;
+      case NotificationTypeEnum.PAYMENT_REPORTED:
+        data.householdName = r.actor_name;
+        if (f?.payment_method) data.method = f.payment_method as PaymentMethod;
+        if (f?.payment_amount) data.amount = Number(f.payment_amount);
+        break;
+      case NotificationTypeEnum.RATED:
+        data.householdName = r.actor_name;
+        if (r.stars !== null) data.stars = Number(r.stars);
         break;
       case NotificationTypeEnum.RATES_PUBLISHED:
         data.effectiveDate = r.effective_date ?? undefined;

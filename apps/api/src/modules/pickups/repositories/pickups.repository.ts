@@ -9,6 +9,7 @@ import type {
   LockedPickup,
   PaymentRow,
   PhotoRow,
+  NoShowFactsRow,
   PickupEventRow,
   PickupRecord,
   PickupRow,
@@ -318,6 +319,18 @@ export class PickupsRepository {
          FROM status_events se LEFT JOIN users u ON u.id = se.actor_id
         WHERE se.pickup_id = $1 ORDER BY se.at, se.id`,
       [pickupId],
+    );
+  }
+
+  /** For a no-show report: the booked slot and how far the collector's last ping is from the address. */
+  noShowFacts(tx: Db, pickupId: string, collectorId: string): Promise<NoShowFactsRow | null> {
+    return one<NoShowFactsRow>(
+      tx,
+      `SELECT p.slot_date::text AS slot_date, p.slot, cp.last_seen_at,
+              ST_Distance(cp.last_location, p.location)::int AS distance_m
+         FROM pickups p LEFT JOIN collector_profiles cp ON cp.user_id = $2
+        WHERE p.id = $1`,
+      [pickupId, collectorId],
     );
   }
 

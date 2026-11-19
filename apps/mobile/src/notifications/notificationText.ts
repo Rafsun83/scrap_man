@@ -1,4 +1,4 @@
-import { formatKg, formatTaka, t, type Lang } from '@bw/shared';
+import { formatKg, formatTaka, localDigits, t, type Lang } from '@bw/shared';
 import type { Category, Notification } from '../api/types';
 import { dhakaToday, formatDate } from '../lib/dhaka';
 import { categoryNames } from '../lib/format';
@@ -13,18 +13,25 @@ export type NotificationView = {
   href: string;
 };
 
-/** The API sends a type and facts; the app writes the sentence in the reader's language (H13). */
+/**
+ * The API sends a type and facts; the app writes the sentence in the reader's language (H13 for households,
+ * the bell on C1 for collectors). Taps open the household pickup screen or the collector job screen.
+ */
 export function notificationView(
   n: Notification,
   lang: Lang,
   categories: Category[] | undefined,
   now: Date = new Date(),
+  role: 'HOUSEHOLD' | 'COLLECTOR' = 'HOUSEHOLD',
 ): NotificationView {
   const d = n.data;
   const items = d.categoryCodes?.length ? categoryNames(categories, d.categoryCodes, lang) : '';
   const name = d.collectorName?.trim() || t('collectorFallbackName', lang);
+  const household = d.householdName?.trim() || t('customerFallback', lang);
   const amount = d.amount != null ? formatTaka(d.amount, lang) : '';
-  const pickupHref = n.pickupId ? `/pickup/${n.pickupId}` : '/home';
+  const method = d.method ? t(`pay_${d.method}`, lang) : '';
+  const collector = role === 'COLLECTOR';
+  const pickupHref = n.pickupId ? (collector ? `/job/${n.pickupId}` : `/pickup/${n.pickupId}`) : collector ? '/requests' : '/home';
 
   switch (n.type) {
     case 'PICKUP_ACCEPTED':
@@ -53,7 +60,51 @@ export function notificationView(
     case 'PICKUP_EXPIRED':
       return { title: t('n_PICKUP_EXPIRED', lang), body: t('n_PICKUP_EXPIRED_body', lang), icon: 'clock', tone: 'alert', href: '/sell/items' };
     case 'PICKUP_CANCELLED':
-      return { title: t('n_PICKUP_CANCELLED', lang), body: t('n_PICKUP_CANCELLED_body', lang), icon: 'x-circle', tone: 'alert', href: pickupHref };
+      return {
+        title: t('n_PICKUP_CANCELLED', lang),
+        body: t(collector ? 'n_PICKUP_CANCELLED_collector' : 'n_PICKUP_CANCELLED_body', lang),
+        icon: 'x-circle',
+        tone: 'alert',
+        href: pickupHref,
+      };
+    case 'PICKUP_NO_SHOW':
+      return { title: t('n_PICKUP_NO_SHOW', lang, { name }), body: t('n_PICKUP_NO_SHOW_body', lang), icon: 'home', tone: 'alert', href: '/sell/items' };
+    case 'APPLICATION_APPROVED':
+      return { title: t('n_APPLICATION_APPROVED', lang), body: t('n_APPLICATION_APPROVED_body', lang), icon: 'check-circle', tone: 'money', href: '/requests' };
+    case 'APPLICATION_REJECTED':
+      return { title: t('n_APPLICATION_REJECTED', lang), body: d.note ?? '', icon: 'x-circle', tone: 'alert', href: '/pending' };
+    case 'PICKUP_CONFIRMED':
+      return {
+        title: t('n_PICKUP_CONFIRMED', lang, { name: household, amount }),
+        body: t('n_PICKUP_CONFIRMED_body', lang, { method }),
+        icon: 'dollar-sign',
+        tone: 'money',
+        href: pickupHref,
+      };
+    case 'PICKUP_DISPUTED':
+      return {
+        title: t('n_PICKUP_DISPUTED', lang, { name: household }),
+        body: t(d.disputeStatus === 'ADMIN_REVIEW' ? 'n_PICKUP_DISPUTED_ADMIN_REVIEW' : 'n_PICKUP_DISPUTED_REWEIGH', lang),
+        icon: 'alert-circle',
+        tone: 'alert',
+        href: pickupHref,
+      };
+    case 'PAYMENT_REPORTED':
+      return {
+        title: t('n_PAYMENT_REPORTED', lang, { name: household }),
+        body: t('n_PAYMENT_REPORTED_body', lang, { amount, method }),
+        icon: 'alert-triangle',
+        tone: 'alert',
+        href: pickupHref,
+      };
+    case 'RATED':
+      return {
+        title: t('n_RATED', lang, { name: household, count: localDigits(d.stars ?? 0, lang) }),
+        body: t('n_RATED_body', lang),
+        icon: 'star',
+        tone: 'money',
+        href: pickupHref,
+      };
     case 'DISPUTE_RESOLVED':
       return {
         title: t('n_DISPUTE_RESOLVED', lang),
@@ -71,7 +122,7 @@ export function notificationView(
         body: t('n_RATES_PUBLISHED_body', lang),
         icon: 'trending-up',
         tone: 'money',
-        href: '/rates',
+        href: collector ? '/requests' : '/rates',
       };
   }
 }

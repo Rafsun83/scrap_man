@@ -2,7 +2,7 @@
   "info": {
     "name": "BhangariWala API",
     "_postman_id": "b6f1d0a2-6c3e-4a51-9d5e-2f8a1c7e4b90",
-    "description": "Every route implemented in `apps/api` up to M5 (all 50 routes, 67 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.\n\n## Before you start\n1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).\n2. Run the folders in order (or the whole collection with the Runner). Requests save ids, tokens and the pickup code into collection variables for the next steps.\n3. Every OTP in development is `123456`. The admin phone is `+8801700000000`.\n\n## Collector sign-up and approval\nFolder **4. Collector setup** runs the real flow (M4): ask for a selfie upload slot, PUT a JPEG to it, sign up, then the admin approves. Re-running with the same `collectorPhone` is fine: sign-up and approval then answer 409, which the tests accept.\n\n## Notes\n- Requests marked with an `Idempotency-Key` header use `{{$guid}}`, so every send is a new action. To test a safe retry, replace it with a fixed value.\n- Photo uploads are two steps: ask for an upload slot, then PUT the file to `{{uploadUrl}}` / `{{scaleUploadUrl}}` (choose a JPEG under Body → binary).\n- The collector must be within the search radius of the address (1 km, 3 km after 5 minutes). The collection uses the same Mirpur 10 point for both.\n- Live events (Socket.IO at the API origin, path `/socket.io`, `auth.token` = access token) are not part of this collection; see `SocketEvents` in the contract.\n- To run it again from the start, change `householdPhone` and `collectorPhone` or reuse them (existing numbers keep their role).",
+    "description": "Every route implemented in `apps/api` up to M6 (all 54 routes, 72 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.\n\n## Before you start\n1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).\n2. Run the folders in order (or the whole collection with the Runner). Requests save ids, tokens and the pickup code into collection variables for the next steps.\n3. Every OTP in development is `123456`. The admin phone is `+8801700000000`.\n\n## Collector sign-up and approval\nFolder **4. Collector setup** runs the real flow (M4): ask for a selfie upload slot, PUT a JPEG to it, sign up, then the admin approves. Re-running with the same `collectorPhone` is fine: sign-up and approval then answer 409, which the tests accept.\n\n## Notes\n- Requests marked with an `Idempotency-Key` header use `{{$guid}}`, so every send is a new action. To test a safe retry, replace it with a fixed value.\n- Photo uploads are two steps: ask for an upload slot, then PUT the file to `{{uploadUrl}}` / `{{scaleUploadUrl}}` (choose a JPEG under Body → binary).\n- The collector must be within the search radius of the address (1 km, 3 km after 5 minutes). The collection uses the same Mirpur 10 point for both.\n- Live events (Socket.IO at the API origin, path `/socket.io`, `auth.token` = access token) are not part of this collection; see `SocketEvents` in the contract.\n- To run it again from the start, change `householdPhone` and `collectorPhone` or reuse them (existing numbers keep their role).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -3732,6 +3732,250 @@
                   "language": "json"
                 }
               }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Pilot readiness (M6)",
+      "description": "Push devices, the collector feed, the no-show report and ops alerts. The no-show needs an ACCEPTED pickup whose slot has started, with the collector within 200 m.",
+      "item": [
+        {
+          "name": "Register this phone for push (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/devices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "devices"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"postman-device-token\",\n  \"platform\": \"ANDROID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Collector notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/notifications?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Household not home (collector)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{collectorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pickups/:pickupId/no-show",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pickups",
+                ":pickupId",
+                "no-show"
+              ],
+              "variable": [
+                {
+                  "key": "pickupId",
+                  "value": "{{pickupId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Called twice, no answer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "409 before the booked slot starts; 422 if the last location is over 200 m away. Accept a new request first (folder 7) and send a location ping at the address."
+          },
+          "response": []
+        },
+        {
+          "name": "Ops alerts (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "alerts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Stop push to this phone (household)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{householdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/devices/postman-device-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "devices",
+                "postman-device-token"
+              ]
             }
           },
           "response": []

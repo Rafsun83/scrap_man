@@ -3,7 +3,7 @@ import { ApiError } from '../api/client';
 import { keys, uploadPhoto, usePickupMutation, type LocalPhoto } from '../api/hooks';
 import type { CollectorProfile, CollectorSignup, Ledger, NearbyRequest, PaymentMethod, Pickup, VehicleType, WorkArea } from '../api/types';
 import { useSession } from '../auth/session';
-import type { LatLng } from './location';
+import { currentPosition, type LatLng } from './location';
 
 /**
  * The collector's own profile, or null before sign-up (the API answers 404 then).
@@ -120,6 +120,19 @@ export function useRelease(id: string) {
       qc.invalidateQueries({ queryKey: keys.allMyPickups });
       qc.invalidateQueries({ queryKey: keys.collectorProfile });
     },
+  });
+}
+
+/**
+ * "Household not home": a fresh location ping first (the server checks the distance from the last one), then
+ * POST /pickups/{id}/no-show. The pickup comes back CANCELLED.
+ */
+export function useNoShow(id: string) {
+  const { api } = useSession();
+  return usePickupMutation(async (note?: string) => {
+    const pos = await currentPosition();
+    if (pos.ok) await api.request('PUT', '/collector/location', { body: pos.position }).catch(() => {});
+    return api.request<Pickup>('POST', `/pickups/${id}/no-show`, { body: note ? { note } : {} });
   });
 }
 

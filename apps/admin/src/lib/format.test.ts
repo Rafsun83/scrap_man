@@ -6,10 +6,10 @@ describe('admin formatting (Dhaka time, both languages)', () => {
   const at = '2026-11-16T19:09:00Z'
 
   it('formats times in Dhaka, with Bangla words and digits', () => {
-    expect(formatTime(at, 'en')).toBe('1:09 AM')
+    expect(formatTime(at, 'en')).toBe('1:09 am')
     expect(formatTime(at, 'bn')).toBe('রাত ১:০৯')
     expect(formatTime('2026-11-17T04:05:00Z', 'bn')).toBe('সকাল ১০:০৫')
-    expect(formatTime('2026-11-17T10:30:00Z', 'en')).toBe('4:30 PM')
+    expect(formatTime('2026-11-17T10:30:00Z', 'en')).toBe('4:30 pm')
   })
 
   it('formats dates on the Dhaka calendar', () => {
@@ -22,8 +22,8 @@ describe('admin formatting (Dhaka time, both languages)', () => {
 
   it('shows only the time for today', () => {
     const now = new Date('2026-11-17T02:00:00Z')
-    expect(formatWhen(at, 'en', now)).toBe('1:09 AM')
-    expect(formatWhen('2026-11-15T10:00:00Z', 'en', now)).toBe('15 Nov 2026, 4:00 PM')
+    expect(formatWhen(at, 'en', now)).toBe('1:09 am')
+    expect(formatWhen('2026-11-15T10:00:00Z', 'en', now)).toBe('15 Nov 2026, 4:00 pm')
   })
 
   it('handles phones, rates and durations', () => {

@@ -31,7 +31,7 @@ describe('C3 arrive and verify', () => {
   it('shows the address after accept and sends the 4-digit code (Bangla digits too)', async () => {
     const onArrive = jest.fn();
     await renderScreen(
-      <ArriveView pickup={accepted} categories={categories} onArrive={onArrive} arriving={false} arriveError={null} onRelease={jest.fn()} releasing={false} releaseError={null} />,
+      <ArriveView pickup={accepted} categories={categories} onArrive={onArrive} arriving={false} arriveError={null} onRelease={jest.fn()} releasing={false} releaseError={null} onNoShow={jest.fn()} noShowing={false} noShowError={null} />,
     );
     expect(screen.getByText('বাড়ি ১২, রোড ৪, মিরপুর ১০')).toBeTruthy();
     expect(screen.getByText('নোট: কেয়ারটেকারকে বলবেন')).toBeTruthy();
@@ -45,7 +45,7 @@ describe('C3 arrive and verify', () => {
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     const onRelease = jest.fn();
     await renderScreen(
-      <ArriveView pickup={accepted} categories={categories} onArrive={jest.fn()} arriving={false} arriveError={null} onRelease={onRelease} releasing={false} releaseError={null} />,
+      <ArriveView pickup={accepted} categories={categories} onArrive={jest.fn()} arriving={false} arriveError={null} onRelease={onRelease} releasing={false} releaseError={null} onNoShow={jest.fn()} noShowing={false} noShowError={null} />,
     );
     await fireEvent.press(screen.getByText('পথ দেখুন'));
     expect(open).toHaveBeenCalledWith(expect.stringContaining('destination=23.8,90.36'));
@@ -55,9 +55,41 @@ describe('C3 arrive and verify', () => {
     expect(onRelease).toHaveBeenCalledWith(undefined);
   });
 
+  const noShowProps = () => ({
+    categories,
+    onArrive: jest.fn(),
+    arriving: false,
+    arriveError: null,
+    onRelease: jest.fn(),
+    releasing: false,
+    releaseError: null,
+    onNoShow: jest.fn(),
+    noShowing: false,
+    noShowError: null,
+  });
+
+  it('does not offer the nobody-home report before the booked slot starts', async () => {
+    // The fixture's MORNING slot on 2026-11-14 starts at 09:00 Dhaka (03:00Z).
+    await renderScreen(<ArriveView pickup={accepted} {...noShowProps()} now={new Date('2026-11-14T02:30:00Z')} />);
+    await fireEvent.press(screen.getByText('গ্রাহককে পাওয়া যাচ্ছে না'));
+    await fireEvent.press(screen.getByTestId('noshow-open'));
+    expect(screen.getByText('বুক করা সময় সকাল ৯:০০-এ শুরু হবে। তার পরে জানাতে পারবেন।')).toBeTruthy();
+    expect(screen.queryByTestId('noshow-confirm')).toBeNull();
+  });
+
+  it('reports nobody home with a note once the slot has started', async () => {
+    const props = noShowProps();
+    await renderScreen(<ArriveView pickup={accepted} {...props} now={new Date('2026-11-14T03:30:00Z')} />);
+    await fireEvent.press(screen.getByText('গ্রাহককে পাওয়া যাচ্ছে না'));
+    await fireEvent.press(screen.getByTestId('noshow-open'));
+    await fireEvent.changeText(screen.getByLabelText('কী করেছেন (ঐচ্ছিক), যেমন দুবার কল করেছি'), 'দুবার কল করেছি');
+    await fireEvent.press(screen.getByTestId('noshow-confirm'));
+    expect(props.onNoShow).toHaveBeenCalledWith('দুবার কল করেছি');
+  });
+
   it('shows the lock instead of the code entry after 5 wrong codes', async () => {
     await renderScreen(
-      <ArriveView pickup={{ ...accepted, codeLocked: true }} categories={categories} onArrive={jest.fn()} arriving={false} arriveError={null} onRelease={jest.fn()} releasing={false} releaseError={null} />,
+      <ArriveView pickup={{ ...accepted, codeLocked: true }} categories={categories} onArrive={jest.fn()} arriving={false} arriveError={null} onRelease={jest.fn()} releasing={false} releaseError={null} onNoShow={jest.fn()} noShowing={false} noShowError={null} />,
     );
     expect(screen.queryByTestId('code-input')).toBeNull();
     expect(screen.getByText(/পিকআপটি আটকে গেছে/)).toBeTruthy();

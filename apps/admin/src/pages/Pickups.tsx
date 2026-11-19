@@ -1,7 +1,7 @@
-import { localDigits, WORK_AREAS, type AttentionItem, type Pickup } from '@bw/shared'
+import { localDigits, WORK_AREAS, type AttentionItem, type OpsAlert, type Pickup } from '@bw/shared'
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { useCategories, useOverview, usePickups } from '../api/hooks'
+import { useAlerts, useCategories, useOverview, usePickups } from '../api/hooks'
 import { filtersFor, type CardKey } from '../lib/pickupFilters'
 import { PickupDrawer } from '../components/PickupDrawer'
 import { categoryName } from '../lib/format'
@@ -42,18 +42,21 @@ export function PickupsPage() {
   const open = (id: string | null) => setParams(id ? { pickup: id } : {})
 
   const overview = useOverview()
+  const alerts = useAlerts()
   const categories = useCategories()
   const searchArea = useDebounced(area)
   const searchQ = useDebounced(q)
   const pickups = usePickups(filtersFor(card, searchArea, searchQ))
   const rows = pickups.data?.pages.flatMap((p) => p.items ?? []) ?? []
 
-  const attentionText = (a: AttentionItem) => {
-    const { minutes, h, m } = sinceParts(a.since)
-    const duration = h > 0 ? t('durationHours', { h: localDigits(h, lang), m: localDigits(m, lang) }) : t('durationMin', { n: localDigits(minutes, lang) })
-    const vars = { no: a.displayNo ?? '', area: a.area ?? '', name: a.name ?? t('unnamed'), count: localDigits(a.count ?? 0, lang), duration }
-    return t(`att_${a.kind}`, vars)
+  const duration = (since: string) => {
+    const { minutes, h, m } = sinceParts(since)
+    return h > 0 ? t('durationHours', { h: localDigits(h, lang), m: localDigits(m, lang) }) : t('durationMin', { n: localDigits(minutes, lang) })
   }
+  const alertText = (a: OpsAlert) =>
+    t(`alert_${a.kind}`, { no: a.displayNo ?? '', name: a.name ?? t('unnamed'), count: localDigits(a.count ?? 0, lang), duration: duration(a.since) })
+  const attentionText = (a: AttentionItem) =>
+    t(`att_${a.kind}`, { no: a.displayNo ?? '', area: a.area ?? '', name: a.name ?? t('unnamed'), count: localDigits(a.count ?? 0, lang), duration: duration(a.since) })
 
   return (
     <>
@@ -80,6 +83,25 @@ export function PickupsPage() {
           </button>
         ))}
       </div>
+
+      {alerts.data && alerts.data.length > 0 ? (
+        <section className="panel alerts" aria-labelledby="alerts-title" data-testid="alerts">
+          <h2 id="alerts-title">{t('alertsTitle')}</h2>
+          <ul className="attention">
+            {alerts.data.map((a) => (
+              <li key={a.id}>
+                <span className={`badge ${a.severity === 'CRITICAL' ? 'alert' : 'active'}`}>{t(`severity_${a.severity}`)}</span>
+                <span style={{ flex: 1 }}>{alertText(a)}</span>
+                {a.pickupId ? (
+                  <Button small onClick={() => open(a.pickupId)}>
+                    → {t('view')}
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="panel" aria-labelledby="attention-title">
         <h2 id="attention-title">{t('needsAttention')}</h2>

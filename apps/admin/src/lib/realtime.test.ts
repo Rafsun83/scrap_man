@@ -28,6 +28,15 @@ describe('admin live events', () => {
     expect(keysOf(spy)).toEqual(expect.arrayContaining(['["admin","collectors"]', '["admin","overview"]']))
   })
 
+  it('a new ops alert refreshes the alerts; pickup events refresh them too', () => {
+    const qc = new QueryClient()
+    const spy = vi.spyOn(qc, 'invalidateQueries')
+    handleAdminEvent(qc, 'ops.alert', { id: 'CONFIRMED_UNPAID:p1', kind: 'CONFIRMED_UNPAID' })
+    expect(keysOf(spy)).toEqual(['["admin","alerts"]'])
+    handleAdminEvent(qc, 'pickup.paid', { pickupId: 'p1' })
+    expect(keysOf(spy)).toContain('["admin","alerts"]')
+  })
+
   it('ignores collector pings (the map polls)', () => {
     const qc = new QueryClient()
     const spy = vi.spyOn(qc, 'invalidateQueries')

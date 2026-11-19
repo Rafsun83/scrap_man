@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PushModule } from '../push/push.module.js';
 import { UsersModule } from '../users/users.module.js';
 import { AdminPickupsController } from './controllers/admin-pickups.controller.js';
 import { CollectorController } from './controllers/collector.controller.js';
@@ -24,7 +25,7 @@ import { PickupsService } from './services/pickups.service.js';
 import { WeighingService } from './services/weighing.service.js';
 
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, PushModule],
   controllers: [PickupsController, MyPickupsController, CollectorController, AdminPickupsController],
   providers: [
     PickupsRepository,

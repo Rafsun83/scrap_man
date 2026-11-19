@@ -18,6 +18,17 @@ export interface Env {
   S3_ACCESS_KEY: string;
   S3_SECRET_KEY: string;
   S3_FORCE_PATH_STYLE: boolean;
+  /** Create the photo bucket on start if missing: on in development, opt-in elsewhere (a self-hosted stack). */
+  S3_CREATE_BUCKET: boolean;
+  /**
+   * Where SMS go: `console` (the API log; development) or `http` (a gateway that takes a JSON POST). Production
+   * defaults to `http`; choosing console there must be explicit.
+   */
+  SMS_PROVIDER: 'console' | 'http';
+  SMS_HTTP_URL?: string;
+  SMS_HTTP_API_KEY?: string;
+  SMS_SENDER_ID?: string;
+  SMS_TIMEOUT_MS: number;
 }
 
 function bool(raw: unknown, name: string, fallback: boolean): boolean {
@@ -64,6 +75,14 @@ export function validateEnv(raw: Record<string, unknown>): Env {
   if (nodeEnv === 'production' && s3Missing.length > 0) {
     throw new Error(`Missing photo storage settings: ${s3Missing.join(', ')}.`);
   }
+  const smsProvider = raw.SMS_PROVIDER ? asText(raw.SMS_PROVIDER) : nodeEnv === 'production' ? 'http' : 'console';
+  if (smsProvider !== 'console' && smsProvider !== 'http') {
+    throw new Error(`SMS_PROVIDER must be console or http, got "${smsProvider}".`);
+  }
+  const smsMissing = ['SMS_HTTP_URL', 'SMS_HTTP_API_KEY'].filter((key) => !raw[key]);
+  if (smsProvider === 'http' && smsMissing.length > 0) {
+    throw new Error(`SMS_PROVIDER=http needs ${smsMissing.join(' and ')}. Set them, or SMS_PROVIDER=console for local runs.`);
+  }
   return {
     NODE_ENV: nodeEnv as Env['NODE_ENV'],
     PORT: positiveInt(raw.PORT, 'PORT', 3000),
@@ -82,5 +101,11 @@ export function validateEnv(raw: Record<string, unknown>): Env {
     S3_ACCESS_KEY: raw.S3_ACCESS_KEY ? asText(raw.S3_ACCESS_KEY) : 'bw_s3',
     S3_SECRET_KEY: raw.S3_SECRET_KEY ? asText(raw.S3_SECRET_KEY) : 'bw_s3_dev_password',
     S3_FORCE_PATH_STYLE: bool(raw.S3_FORCE_PATH_STYLE, 'S3_FORCE_PATH_STYLE', true),
+    S3_CREATE_BUCKET: bool(raw.S3_CREATE_BUCKET, 'S3_CREATE_BUCKET', nodeEnv === 'development'),
+    SMS_PROVIDER: smsProvider,
+    SMS_HTTP_URL: raw.SMS_HTTP_URL ? asText(raw.SMS_HTTP_URL) : undefined,
+    SMS_HTTP_API_KEY: raw.SMS_HTTP_API_KEY ? asText(raw.SMS_HTTP_API_KEY) : undefined,
+    SMS_SENDER_ID: raw.SMS_SENDER_ID ? asText(raw.SMS_SENDER_ID) : undefined,
+    SMS_TIMEOUT_MS: positiveInt(raw.SMS_TIMEOUT_MS, 'SMS_TIMEOUT_MS', 5000),
   };
 }

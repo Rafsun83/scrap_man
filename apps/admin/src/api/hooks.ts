@@ -9,6 +9,7 @@ import type {
   components,
   Pickup,
   PickupEvent,
+  OpsAlert,
   PickupPage,
 } from '@bw/shared'
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -25,6 +26,7 @@ export type PickupFilters = { status?: string; group?: string; area?: string; q?
 export const keys = {
   all: ['admin'] as const,
   overview: ['admin', 'overview'] as const,
+  alerts: ['admin', 'alerts'] as const,
   map: ['admin', 'map'] as const,
   pickups: (f: PickupFilters) => ['admin', 'pickups', f] as const,
   allPickups: ['admin', 'pickups'] as const,
@@ -48,6 +50,12 @@ export function useCategories() {
 export function useOverview() {
   const { api } = useSession()
   return useQuery({ queryKey: keys.overview, queryFn: () => api.request<AdminOverview>('GET', '/admin/overview'), refetchInterval: 60_000 })
+}
+
+/** Ops alerts; `ops.alert` events refresh them, and a minute's poll catches ones that clear. */
+export function useAlerts() {
+  const { api } = useSession()
+  return useQuery({ queryKey: keys.alerts, queryFn: () => api.request<OpsAlert[]>('GET', '/admin/alerts'), refetchInterval: 60_000 })
 }
 
 export function useMap() {

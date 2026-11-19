@@ -4,7 +4,7 @@ import { Idempotent } from '../../../common/idempotency.js';
 import { ZodPipe } from '../../../common/zod.pipe.js';
 import type { UserEntity } from '../../users/entities/user.entity.js';
 import { arriveDto, type ArriveDto } from '../dtos/arrive.dto.js';
-import { reasonDto, type ReasonDto } from '../dtos/cancel-pickup.dto.js';
+import { reasonDto, type ReasonDto, noShowDto, type NoShowDto } from '../dtos/cancel-pickup.dto.js';
 import { confirmPickupDto, type ConfirmPickupDto } from '../dtos/confirm-pickup.dto.js';
 import { createPickupDto, type CreatePickupDto } from '../dtos/create-pickup.dto.js';
 import type { DisputeDto } from '../dtos/dispute.dto.js';
@@ -71,6 +71,17 @@ export class PickupsController {
     @Body(new ZodPipe(reasonDto)) body: ReasonDto,
   ): Promise<void> {
     await this.matchingService.release(user, pickupId, body.reason);
+  }
+
+  @Post(':pickupId/no-show')
+  @Roles('COLLECTOR')
+  @HttpCode(200)
+  noShow(
+    @CurrentUser() user: UserEntity,
+    @Param('pickupId', id) pickupId: string,
+    @Body(new ZodPipe(noShowDto)) body: NoShowDto,
+  ): Promise<PickupDto> {
+    return this.pickupsService.noShow(user, pickupId, body.note);
   }
 
   @Post(':pickupId/arrive')

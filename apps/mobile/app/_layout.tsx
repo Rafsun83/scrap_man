@@ -15,6 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApiError } from '../src/api/client';
 import { SessionProvider, useSession } from '../src/auth/session';
 import { LangProvider } from '../src/i18n/lang';
+import { usePushRegistration } from '../src/push/registration';
 import { RealtimeProvider } from '../src/realtime/socket';
 import { colors } from '../src/ui/theme';
 
@@ -34,7 +35,8 @@ function makeQueryClient() {
 }
 
 function Gate() {
-  const { status } = useSession();
+  const { status, user, api } = useSession();
+  usePushRegistration(status === 'signedIn', user?.role, api);
   const [fontsLoaded] = useFonts({
     AnekBangla_700Bold,
     AnekBangla_800ExtraBold,

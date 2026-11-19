@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ApiError } from '../../../src/api/client';
 import { useCategories, useIdempotencyKey, usePickup, useTodayRates } from '../../../src/api/hooks';
-import { useArrive, useRecordPayment, useRelease } from '../../../src/collector/api';
+import { useArrive, useNoShow, useRecordPayment, useRelease } from '../../../src/collector/api';
 import { jobScreenFor } from '../../../src/collector/collectorView';
 import { ArriveView } from '../../../src/collector/job/ArriveView';
 import { PayView, type PayBody } from '../../../src/collector/job/PayView';
@@ -21,6 +21,7 @@ export default function JobScreen() {
   const rates = useTodayRates();
   const arrive = useArrive(id);
   const release = useRelease(id);
+  const noShow = useNoShow(id);
   const pay = useRecordPayment(id);
   const idem = useIdempotencyKey();
 
@@ -45,6 +46,9 @@ export default function JobScreen() {
           onRelease={(reason) => release.mutate(reason, { onSuccess: () => router.dismissTo('/requests') })}
           releasing={release.isPending}
           releaseError={release.error ? errorMessage(release.error, lang) : null}
+          onNoShow={(note) => noShow.mutate(note)}
+          noShowing={noShow.isPending}
+          noShowError={noShow.error ? errorMessage(noShow.error, lang) : null}
         />
       );
     case 'WEIGH':

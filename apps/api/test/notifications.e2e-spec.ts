@@ -111,12 +111,14 @@ describe('Notifications (e2e)', () => {
     expect(bad.body.code).toBe('VALIDATION_ERROR');
   });
 
-  it('shows each household only its own feed and refuses collectors', async () => {
+  it('shows each user only their own feed and refuses admins', async () => {
     await pickupAt(ctx, 'COMPLETED');
     const stranger = await makeHousehold(ctx);
     expect((await feed(stranger.token).expect(200)).body).toEqual({ items: [], nextCursor: null, unreadCount: 0 });
     const collector = await makeCollector(ctx);
-    expect((await feed(collector.token).expect(403)).body.code).toBe('FORBIDDEN');
-    await ctx.http().post('/api/v1/me/notifications/read').set(bearer(collector.token)).expect(403);
+    expect((await feed(collector.token).expect(200)).body).toEqual({ items: [], nextCursor: null, unreadCount: 0 });
+    const admin = await makeAdminSession(ctx);
+    expect((await feed(admin.token).expect(403)).body.code).toBe('FORBIDDEN');
+    await ctx.http().post('/api/v1/me/notifications/read').set(bearer(admin.token)).expect(403);
   });
 });

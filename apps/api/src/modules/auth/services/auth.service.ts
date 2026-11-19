@@ -16,6 +16,11 @@ export class AuthService {
     private readonly usersService: UsersService,
   ) {}
 
+  /** Wrong OTP codes in the last `minutes` (OTP_FAILURES ops alert). */
+  recentOtpFailures(minutes: number, now?: Date): Promise<number> {
+    return this.otpService.failuresInLast(minutes, now);
+  }
+
   requestOtp(phone: string, ip: string): Promise<void> {
     return this.otpService.request(phone, ip);
   }

@@ -36,7 +36,7 @@ export interface AdminUserRowDto {
   statusNote: string | null;
   createdAt: string;
   releaseFlag: boolean;
-  household: { area: string | null; completedCount: number; totalReceived: number } | null;
+  household: { area: string | null; completedCount: number; totalReceived: number; noShows30d: number } | null;
   collector: {
     workAreas: WorkArea[];
     ratingAvg: number | null;

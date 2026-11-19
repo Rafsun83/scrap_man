@@ -21,6 +21,21 @@ export class OtpRepository {
     return count;
   }
 
+  /** Counts one wrong code in this minute's bucket (kept 15 minutes) for the OTP_FAILURES alert. */
+  async recordFailure(now: Date): Promise<void> {
+    const key = `bw:otp:fail:${Math.floor(now.getTime() / 60_000)}`;
+    await this.redis.incr(key);
+    await this.redis.expire(key, 900);
+  }
+
+  /** Wrong codes in the last `minutes` one-minute buckets, across all phones. */
+  async failuresSince(now: Date, minutes: number): Promise<number> {
+    const current = Math.floor(now.getTime() / 60_000);
+    const keys = Array.from({ length: minutes }, (_, i) => `bw:otp:fail:${current - i}`);
+    const values = await this.redis.mget(keys);
+    return values.reduce((sum, v) => sum + Number(v ?? 0), 0);
+  }
+
   /** Seconds left in a counter's window. */
   secondsLeft(key: string): Promise<number> {
     return this.redis.ttl(key);

@@ -1,4 +1,15 @@
-import { formatKg, formatTaka, localDigits, WORK_AREAS, type Category, type Lang } from '@bw/shared'
+import {
+  dhakaToday,
+  formatDhakaDate,
+  formatDhakaLongDate,
+  formatDhakaTime,
+  formatKg,
+  formatTaka,
+  localDigits,
+  WORK_AREAS,
+  type Category,
+  type Lang,
+} from '@bw/shared'
 
 export { formatKg, formatTaka, localDigits }
 
@@ -20,53 +31,19 @@ export function formatPhone(phone: string | null | undefined, lang: Lang): strin
   return localDigits(m ? `0${m[1]}-${m[2]}` : phone, lang)
 }
 
-/** Dhaka is UTC+6 all year, so its calendar parts are UTC parts shifted by 6 hours (no browser locale data needed). */
-function dhakaParts(at: Date) {
-  const d = new Date(at.getTime() + 6 * 3_600_000)
-  return { year: d.getUTCFullYear(), month: d.getUTCMonth(), day: d.getUTCDate(), hour: d.getUTCHours(), minute: d.getUTCMinutes(), weekday: d.getUTCDay() }
-}
-
-const MONTHS = {
-  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-  bn: ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'],
-}
-const WEEKDAYS = {
-  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-  bn: ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'],
-}
-
-/** A YYYY-MM-DD date as noon in Dhaka, so it never slips a day; anything else as an instant. */
-const toDate = (value: string | Date) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T06:00:00Z`) : new Date(value))
-
-/** "11 Nov 2026" / "১১ নভেম্বর ২০২৬" in Dhaka time. */
+/** "11 Nov 2026" / "১১ নভেম্বর ২০২৬" in Dhaka time (calendar from @bw/shared). */
 export function formatDate(value: string | Date, lang: Lang): string {
-  const p = dhakaParts(toDate(value))
-  const month = lang === 'en' ? MONTHS.en[p.month].slice(0, 3) : MONTHS.bn[p.month]
-  return localDigits(`${p.day} `, lang) + month + localDigits(` ${p.year}`, lang)
+  return formatDhakaDate(value, lang, { year: true, shortMonth: lang === 'en' })
 }
 
-/** "Wednesday, 11 November 2026" / "বুধবার, ১১ নভেম্বর ২০২৬" in Dhaka time. */
+/** "Wednesday, 11 November 2026" / "বুধবার, ১১ নভেম্বর ২০২৬". */
 export function formatLongDate(value: string | Date, lang: Lang): string {
-  const p = dhakaParts(toDate(value))
-  return `${WEEKDAYS[lang][p.weekday]}, ${localDigits(p.day, lang)} ${MONTHS[lang][p.month]} ${localDigits(p.year, lang)}`
+  return formatDhakaLongDate(value, lang, { year: true })
 }
 
-/** Bangla time of day as people say it: সকাল ১০:২০, বিকেল ৪:০৫ (same words as the apps). */
-function bnPeriod(hour: number): string {
-  if (hour < 4) return 'রাত'
-  if (hour < 6) return 'ভোর'
-  if (hour < 12) return 'সকাল'
-  if (hour < 15) return 'দুপুর'
-  if (hour < 18) return 'বিকেল'
-  if (hour < 20) return 'সন্ধ্যা'
-  return 'রাত'
-}
-
-/** "10:05 AM" / "সকাল ১০:০৫" in Dhaka time. */
+/** "10:05 am" / "সকাল ১০:০৫" in Dhaka time. */
 export function formatTime(value: string | Date, lang: Lang): string {
-  const p = dhakaParts(new Date(value))
-  const hm = `${p.hour % 12 === 0 ? 12 : p.hour % 12}:${String(p.minute).padStart(2, '0')}`
-  return lang === 'bn' ? `${bnPeriod(p.hour)} ${localDigits(hm, lang)}` : `${hm} ${p.hour < 12 ? 'AM' : 'PM'}`
+  return formatDhakaTime(value, lang)
 }
 
 /** Time today, or date and time for other days. */
@@ -76,8 +53,7 @@ export function formatWhen(value: string, lang: Lang, now: Date = new Date()): s
 
 /** YYYY-MM-DD in Dhaka. */
 export function dhakaDate(at: Date = new Date()): string {
-  const p = dhakaParts(at)
-  return `${p.year}-${String(p.month + 1).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`
+  return dhakaToday(at)
 }
 
 /** Minutes and hours since `since`, as numbers for the duration strings. */

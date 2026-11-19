@@ -1,6 +1,6 @@
 /** The contract's AttentionItem. */
 export interface AttentionItemDto {
-  kind: 'WAITING_TOO_LONG' | 'CODE_LOCKED' | 'DISPUTE_REVIEW' | 'RELEASES';
+  kind: 'WAITING_TOO_LONG' | 'CODE_LOCKED' | 'DISPUTE_REVIEW' | 'RELEASES' | 'NO_SHOW';
   pickupId: string | null;
   displayNo: string | null;
   area: string | null;

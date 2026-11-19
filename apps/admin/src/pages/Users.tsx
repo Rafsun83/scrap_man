@@ -60,6 +60,7 @@ export function UsersPage() {
                     <th>{t('colArea')}</th>
                     <th className="num">{t('colPickups')}</th>
                     <th className="num">{t('colTotalReceived')}</th>
+                    <th className="num">{t('colNoShows30')}</th>
                     <th>{t('colJoined')}</th>
                     <th>{t('colStatus')}</th>
                     <th>{t('colActions')}</th>
@@ -87,6 +88,7 @@ export function UsersPage() {
                         <td>{u.household?.area ?? '—'}</td>
                         <td className="num">{localDigits(u.household?.completedCount ?? 0, lang)}</td>
                         <td className="num">{money(u.household?.totalReceived ?? 0, lang)}</td>
+                        <td className="num">{localDigits(u.household?.noShows30d ?? 0, lang)}</td>
                         <td>{formatDate(u.createdAt, lang)}</td>
                       </>
                     ) : u.collector ? (

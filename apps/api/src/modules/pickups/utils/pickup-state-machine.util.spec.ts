@@ -15,6 +15,7 @@ const ALLOWED: [PickupStatus, PickupStatus, Actor][] = [
   ['REQUESTED', 'CANCELLED', 'ADMIN'],
   ['ACCEPTED', 'CANCELLED', 'HOUSEHOLD'],
   ['ACCEPTED', 'CANCELLED', 'ADMIN'],
+  ['ACCEPTED', 'CANCELLED', 'COLLECTOR'], // household not home (no-show), M6
   ['ARRIVED', 'CANCELLED', 'ADMIN'],
   ['WEIGHED', 'CANCELLED', 'ADMIN'],
   ['DISPUTED', 'CANCELLED', 'ADMIN'],

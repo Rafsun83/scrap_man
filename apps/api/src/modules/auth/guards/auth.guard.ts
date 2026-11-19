@@ -5,6 +5,7 @@ import type { Role } from '@bw/shared';
 import { IS_PUBLIC, ROLES } from '../../../common/auth.decorators.js';
 import { AppError } from '../../../common/errors.js';
 import { AuthService } from '../services/auth.service.js';
+import { requestContext } from '../../../common/request-context.js';
 
 /**
  * Runs on every route: checks the Bearer token, loads the user, blocks suspended accounts,
@@ -27,6 +28,7 @@ export class AuthGuard implements CanActivate {
 
     const user = await this.authService.authenticate(token);
     req.user = user;
+    requestContext.setUser(user.id);
 
     const roles = this.reflector.getAllAndOverride<Role[] | undefined>(ROLES, targets);
     if (roles && !roles.includes(user.role)) {

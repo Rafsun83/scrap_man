@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ACTIVE_PICKUP_STATUSES, MATCHING, type PickupStatus } from '@bw/shared';
+import { ACTIVE_PICKUP_STATUSES, MATCHING, NO_SHOW_MAX_DISTANCE_M, type PickupStatus } from '@bw/shared';
 import { randomUUID } from 'node:crypto';
 import { CLOCK, type Clock } from '../../../common/clock.js';
 import { AppError } from '../../../common/errors.js';
@@ -192,7 +192,7 @@ export class PickupsService {
     });
 
     await this.pickupCodeService.forget(pickupId);
-    this.pickupEventsService.changed('pickup.cancelled', p, 'CANCELLED', now);
+    this.pickupEventsService.changed('pickup.cancelled', p, 'CANCELLED', now, [], { actorId: actor.id });
     if (p.status === 'REQUESTED') {
       const reached = await this.matchingService.collectorsAround(pickupId);
       this.pickupEventsService.requestTaken(pickupId, 'CANCELLED', reached.map((c) => c.userId));
@@ -202,6 +202,41 @@ export class PickupsService {
       for (const d of disputes) this.pickupEventsService.dispute('dispute.resolved', d, p);
     }
     return this.pickupViewsService.view(pickupId, actor);
+  }
+
+  /**
+   * The collector found nobody home: ACCEPTED -> CANCELLED with reason NO_SHOW. Only once the booked slot
+   * has started and with the collector's last ping within NO_SHOW_MAX_DISTANCE_M of the address.
+   */
+  async noShow(collector: Viewer, pickupId: string, note?: string): Promise<PickupDto> {
+    const now = this.clock.now();
+    const p = await this.pickupsRepository.transaction(async (tx) => {
+      const locked = await this.pickupStateService.lockFor(tx, pickupId, collector, false);
+      if (locked.status !== 'ACCEPTED') {
+        throw AppError.invalidState('Only a pickup you accepted and have not arrived at can be reported as not home.', {
+          status: locked.status,
+        });
+      }
+      const facts = await this.pickupsRepository.noShowFacts(tx, pickupId, collector.id);
+      const { start } = slotUtil.slotWindow(facts!.slot_date, facts!.slot);
+      if (now < start) {
+        throw AppError.invalidState('The booked time has not started yet. Wait for the slot before reporting nobody home.', {
+          slotStartsAt: start.toISOString(),
+        });
+      }
+      const fresh = facts!.last_seen_at && now.getTime() - facts!.last_seen_at.getTime() <= MATCHING.onlineStaleAfterMs;
+      if (!fresh || facts!.distance_m === null || facts!.distance_m > NO_SHOW_MAX_DISTANCE_M) {
+        throw AppError.outOfRange(
+          `You must be at the address (within ${NO_SHOW_MAX_DISTANCE_M} m) to report nobody home. Send your location and try again.`,
+          { distanceM: fresh ? facts!.distance_m : null, maxDistanceM: NO_SHOW_MAX_DISTANCE_M },
+        );
+      }
+      await this.pickupStateService.transition(tx, locked, 'CANCELLED', collector, { cancelled_at: now }, { reason: 'NO_SHOW', note: note ?? null });
+      return locked;
+    });
+    await this.pickupCodeService.forget(pickupId);
+    this.pickupEventsService.changed('pickup.cancelled', p, 'CANCELLED', now, [], { actorId: collector.id, noShow: true });
+    return this.pickupViewsService.view(pickupId, collector);
   }
 
   /** A presigned upload slot for an item photo (household) or a scale photo (collector, or admin). */

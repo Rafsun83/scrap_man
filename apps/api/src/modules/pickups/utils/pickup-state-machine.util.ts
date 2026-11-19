@@ -15,6 +15,7 @@ const TRANSITIONS: readonly Rule[] = [
   { from: ['REQUESTED'], to: 'EXPIRED', by: ['SYSTEM'] },
   { from: ['REQUESTED', 'ACCEPTED'], to: 'CANCELLED', by: ['HOUSEHOLD', 'ADMIN'] },
   { from: ['ARRIVED', 'WEIGHED', 'DISPUTED', 'CONFIRMED'], to: 'CANCELLED', by: ['ADMIN'] },
+  { from: ['ACCEPTED'], to: 'CANCELLED', by: ['COLLECTOR'] }, // household not home (no-show)
   { from: ['ACCEPTED'], to: 'REQUESTED', by: ['COLLECTOR'] }, // release
   { from: ['ACCEPTED'], to: 'ARRIVED', by: ['COLLECTOR'] },
   { from: ['ARRIVED'], to: 'WEIGHED', by: ['COLLECTOR'] },

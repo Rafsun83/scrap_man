@@ -51,6 +51,11 @@ export class OtpService {
     await this.sms.send(phone, `ভাঙ্গারিওয়ালা কোড: ${code}। কাউকে বলবেন না। BhangariWala code: ${code}`);
   }
 
+  /** Wrong codes entered in the last `minutes`, across all phones (ops alert). */
+  failuresInLast(minutes: number, now: Date = new Date()): Promise<number> {
+    return this.otpRepository.failuresSince(now, minutes);
+  }
+
   /** Checks a code; a correct code can be used once, and 5 wrong tries discard it. */
   async verify(phone: string, code: string): Promise<void> {
     const stored = await this.otpRepository.find(phone);
@@ -65,6 +70,7 @@ export class OtpService {
       await this.otpRepository.delete(phone);
       return;
     }
+    await this.otpRepository.recordFailure(new Date());
     const attempts = stored.attempts + 1;
     const attemptsLeft = OTP_LIMITS.maxAttempts - attempts;
     if (attemptsLeft <= 0) {

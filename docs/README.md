@@ -14,8 +14,8 @@ Made in this repo (no claude.ai original):
 
 | Document | What it is |
 | --- | --- |
-| [`docs/api.md`](api.md) | API reference: every endpoint served today, who may call it, rules, errors, and a real request and response for each, plus the Socket.IO events. Samples were recorded from the running API (2026-11-14 to 2026-11-17); update this page whenever an endpoint changes |
-| [`docs/postman/bhangariwala.postman_collection.json`](postman/bhangariwala.postman_collection.json) | Postman collection (v2.1) for all 50 routes served today, ordered as a full sale: sign in, publish rates, collector sign-up and approval, request, accept, arrive with the code, weigh, confirm, pay, rate, dispute, then the admin panel views. Requests save tokens and ids for the next step. Setup notes are in its description |
+| [`docs/api.md`](api.md) | API reference: every endpoint served today, who may call it, rules, errors, and a real request and response for each, plus the Socket.IO events. Samples were recorded from the running API (2026-11-14 to 2026-11-17, M6 included); update this page whenever an endpoint changes |
+| [`docs/postman/bhangariwala.postman_collection.json`](postman/bhangariwala.postman_collection.json) | Postman collection (v2.1) for all 54 routes served today, ordered as a full sale: sign in, publish rates, collector sign-up and approval, request, accept, arrive with the code, weigh, confirm, pay, rate, dispute, then the admin panel views. Requests save tokens and ids for the next step. Setup notes are in its description |
 | [`milestones/`](../milestones/README.md) | One note per finished milestone with its checklist |
 
 ## Which copy wins

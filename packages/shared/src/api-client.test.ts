@@ -1,4 +1,7 @@
-import { ApiError, createApiClient, type Tokens } from './client';
+import { describe, expect, it, vi } from 'vitest';
+import { ApiError, createApiClient } from './api-client.js';
+
+type Tokens = { accessToken: string; refreshToken: string };
 
 function json(status: number, body?: unknown) {
   return { ok: status >= 200 && status < 300, status, text: async () => (body === undefined ? '' : JSON.stringify(body)), json: async () => body } as Response;
@@ -7,19 +10,20 @@ function json(status: number, body?: unknown) {
 function setup(responses: ((url: string, init: RequestInit) => Response)[]) {
   let tokens: Tokens | null = { accessToken: 'old', refreshToken: 'r1' };
   const calls: { url: string; init: RequestInit }[] = [];
-  const fetchImpl = jest.fn(async (url: string, init: RequestInit) => {
+  const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
     calls.push({ url, init });
     const next = responses.shift();
     if (!next) throw new Error('unexpected call');
     return next(url, init);
   });
-  const onSignedOut = jest.fn(() => {
+  const onSignedOut = vi.fn(() => {
     tokens = null;
   });
   const client = createApiClient({
     baseUrl: 'http://api/api/v1',
-    getTokens: () => tokens,
-    onTokens: (s) => {
+    getAccessToken: () => tokens?.accessToken ?? null,
+    getRefreshToken: () => tokens?.refreshToken ?? null,
+    onSession: (s) => {
       tokens = { accessToken: s.accessToken!, refreshToken: s.refreshToken! };
     },
     onSignedOut,

@@ -18,7 +18,9 @@
     "db:migrate": "pnpm --filter @bw/shared build && pnpm --filter @bw/api migration:run",
     "db:seed": "pnpm --filter @bw/shared build && pnpm --filter @bw/api db:seed",
     "test:e2e": "pnpm --filter @bw/shared build && pnpm --filter @bw/api test:e2e",
-    "postinstall": "pnpm --filter @bw/shared build"
+    "postinstall": "pnpm --filter @bw/shared build",
+    "smoke": "docker compose -p bw-smoke -f docker-compose.prod.yml --env-file docker/smoke.env up -d --build && node scripts/smoke.mjs",
+    "smoke:down": "docker compose -p bw-smoke -f docker-compose.prod.yml --env-file docker/smoke.env down -v"
   },
   "devDependencies": {
     "turbo": "2.11.10"

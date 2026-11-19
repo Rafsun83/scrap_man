@@ -65,6 +65,7 @@ export function handleEvent(qc: QueryClient, event: string, payload: unknown) {
   }
   if (event === 'collector.verification') {
     qc.invalidateQueries({ queryKey: keys.collectorProfile });
+    qc.invalidateQueries({ queryKey: keys.notifications });
     return;
   }
   if (event === 'collector.location') {

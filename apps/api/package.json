@@ -20,7 +20,8 @@
     "dev": "nest start --watch",
     "migration:run": "nest build && typeorm migration:run -d dist/database/data-source.js",
     "migration:revert": "nest build && typeorm migration:revert -d dist/database/data-source.js",
-    "db:seed": "nest build && node dist/database/seed.js"
+    "db:seed": "nest build && node dist/database/seed.js",
+    "load": "node --env-file=.env scripts/load.mjs --local --cleanup"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1161.0",

@@ -1,4 +1,4 @@
-import type { DisputeOutcome, DisputeType, PaymentMethod } from '@bw/shared';
+import type { DisputeOutcome, DisputeStatus, DisputeType, PaymentMethod } from '@bw/shared';
 import type { NotificationTypeEnum } from '../enums/notification-type.enum.js';
 
 /** The contract's Notification. */
@@ -12,13 +12,17 @@ export interface NotificationDto {
   data: {
     categoryCodes?: string[];
     collectorName?: string | null;
+    householdName?: string | null;
     amount?: number;
     totalKg?: number;
     method?: PaymentMethod;
     weighVersion?: number;
     disputeType?: DisputeType;
+    disputeStatus?: DisputeStatus;
     outcome?: DisputeOutcome;
     effectiveDate?: string;
+    note?: string | null;
+    stars?: number;
   };
 }
 

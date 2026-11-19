@@ -6,9 +6,9 @@ import { listNotificationsDto, type ListNotificationsDto } from '../dtos/list-no
 import type { NotificationPageDto } from '../dtos/notification.dto.js';
 import { NotificationsService } from '../services/notifications.service.js';
 
-/** H13. Households only in v1; collectors get a feed in M4. */
+/** H13 (households) and the collector bell on C1. */
 @Controller('me/notifications')
-@Roles('HOUSEHOLD')
+@Roles('HOUSEHOLD', 'COLLECTOR')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 

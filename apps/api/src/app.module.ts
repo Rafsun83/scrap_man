@@ -14,6 +14,8 @@ import { HealthModule } from './modules/health/health.module.js';
 import { JobsModule } from './modules/jobs/jobs.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { PickupsModule } from './modules/pickups/pickups.module.js';
+import { OpsModule } from './modules/ops/ops.module.js';
+import { PushModule } from './modules/push/push.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { RedisModule } from './modules/redis/redis.module.js';
 import { StorageModule } from './modules/storage/storage.module.js';
@@ -42,6 +44,8 @@ import { UsersModule } from './modules/users/users.module.js';
     NotificationsModule,
     CollectorsModule,
     AdminModule,
+    PushModule,
+    OpsModule,
   ],
   providers: [{ provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor }],
 })

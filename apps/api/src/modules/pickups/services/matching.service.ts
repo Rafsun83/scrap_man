@@ -89,7 +89,10 @@ export class MatchingService {
 
     await this.pickupCodeService.remember(pickupId, code);
     const rec = (await this.pickupViewsService.loadOne(pickupId))!;
-    this.pickupEventsService.changed('pickup.accepted', rec.row, 'ACCEPTED', now);
+    this.pickupEventsService.changed('pickup.accepted', rec.row, 'ACCEPTED', now, [], {
+      actorId: collector.id,
+      collectorName: rec.row.collector_name,
+    });
     const others = await this.collectorsAround(pickupId, { exclude: [collector.id] });
     this.pickupEventsService.requestTaken(pickupId, 'ACCEPTED', others.map((c) => c.userId));
     return this.pickupViewsService.toDto(rec, collector);

@@ -55,3 +55,22 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @bw/shared build
       - run: pnpm test:e2e
+
+  docker-smoke:
+    name: Production images smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build and start docker-compose.prod.yml
+        run: docker compose -p bw-smoke -f docker-compose.prod.yml --env-file docker/smoke.env up -d --build
+      - name: Smoke test through nginx
+        run: node scripts/smoke.mjs
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -p bw-smoke -f docker-compose.prod.yml --env-file docker/smoke.env logs
+      - name: Stop
+        if: always()
+        run: docker compose -p bw-smoke -f docker-compose.prod.yml --env-file docker/smoke.env down -v

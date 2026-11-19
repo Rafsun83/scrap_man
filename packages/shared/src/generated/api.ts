@@ -536,12 +536,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * The household's notifications, newest first (H13)
-         * @description Household only in v1 (collectors get theirs in M4). Built from what already happened, so it always
-         *     matches the pickup history: a collector accepted, released, weighed, was paid, a request expired or was
-         *     cancelled by someone else, a dispute was resolved, and the day's rates were published (from the day
-         *     the account was created). The household's own actions are not listed. `read` is true for items at or
-         *     before the last POST /me/notifications/read. The apps write the text from `type` and `data`.
+         * The user's notifications, newest first (H13, collector bell on C1)
+         * @description Households and collectors (admins get 403). Built from what already happened, so it always matches the
+         *     pickup history; the user's own actions are not listed. `read` is true for items at or before the last
+         *     POST /me/notifications/read. The apps write the text from `type` and `data`.
+         *     Households: a collector accepted, released, weighed, was paid, reported the household not home
+         *     (PICKUP_NO_SHOW), a request expired or was cancelled by an admin, a dispute was resolved, and the day's
+         *     rates (from the day the account was created).
+         *     Collectors: the application was approved or rejected, a household confirmed the weights (pay now),
+         *     rejected them (PICKUP_DISPUTED), cancelled after accept (or an admin did), reported a payment not
+         *     received, rated the pickup, a dispute was resolved, and the day's rates once approved.
          */
         get: {
             parameters: {
@@ -586,7 +590,7 @@ export interface paths {
         put?: never;
         /**
          * Mark every notification up to now as read
-         * @description Household only. Sets the user's "seen up to" time to now; unreadCount becomes 0.
+         * @description Households and collectors. Sets the user's "seen up to" time to now; unreadCount becomes 0.
          */
         post: {
             parameters: {
@@ -608,6 +612,95 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Register this phone for push notifications
+         * @description Households and collectors. Saves (or refreshes) the device token from the push provider (FCM). A token
+         *     belongs to one user: registering it again moves it to the signed-in user. Pushes carry the same events
+         *     as the live socket, with the text written on the server in the user's language; tokens the provider
+         *     rejects are removed.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DeviceInput"];
+                };
+            };
+            responses: {
+                /** @description Saved */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                400: components["responses"]["Error"];
+                403: components["responses"]["Error"];
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/devices/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The device token, URL-encoded */
+                token: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Stop push notifications to this phone (on sign-out)
+         * @description Removes the token if it belongs to the signed-in user; succeeds either way.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The device token, URL-encoded */
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -860,6 +953,62 @@ export interface paths {
                 };
                 404: components["responses"]["Error"];
                 409: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pickups/{pickupId}/no-show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pickupId: components["parameters"]["PickupId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Collector reports the household not home; the pickup ends
+         * @description Assigned collector only, while ACCEPTED (409 INVALID_STATE otherwise), once the booked slot has started
+         *     (409 INVALID_STATE before), and with the collector's last location within 200 m of the address
+         *     (422 OUT_OF_RANGE otherwise; send a location ping first). ACCEPTED -> CANCELLED with reason NO_SHOW.
+         *     The household gets `pickup.cancelled` and a PICKUP_NO_SHOW notification; admins get an ops alert.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    pickupId: components["parameters"]["PickupId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description What the collector tried */
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Cancelled as a no-show */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pickup"];
+                    };
+                };
+                404: components["responses"]["Error"];
+                409: components["responses"]["Error"];
+                422: components["responses"]["Error"];
             };
         };
         delete?: never;
@@ -1814,7 +1963,8 @@ export interface paths {
         /**
          * Status counts and the needs-attention list (A1)
          * @description Admin only. Counts are of pickups now in each status, except completedToday (completed since midnight,
-         *     Dhaka). weighing is ARRIVED plus WEIGHED. Attention items, most urgent first: WAITING_TOO_LONG (a request
+         *     Dhaka). weighing is ARRIVED plus WEIGHED. Attention items, most urgent first (NO_SHOW: a collector
+         *     reported a household not home in the last 24 hours; pickupId, area and the collector's name): WAITING_TOO_LONG (a request
          *     still REQUESTED longer than ADMIN_ATTENTION.waitingMinutes after it was made), CODE_LOCKED (an ACCEPTED
          *     pickup locked after 5 wrong codes), DISPUTE_REVIEW (a dispute waiting for staff), RELEASES (a collector who
          *     gave back more than ADMIN_ATTENTION.maxReleases30d requests in 30 days).
@@ -1835,6 +1985,51 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["AdminOverview"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Operational alerts right now (A1 banner)
+         * @description Admin only. Checked every minute (and on this call), most severe first:
+         *     ACCEPTED_PAST_SLOT (ACCEPTED more than OPS_ALERTS.acceptedPastSlotMinutes after the slot ended),
+         *     CONFIRMED_UNPAID (CONFIRMED longer than OPS_ALERTS.confirmedUnpaidMinutes),
+         *     REVIEW_OVERDUE (a dispute with staff longer than OPS_ALERTS.reviewOverdueHours),
+         *     OTP_FAILURES (more than OPS_ALERTS.otpFailures wrong codes in the last 10 minutes, all phones),
+         *     PAYMENT_REPORTED and NO_SHOW (each in the last 24 hours). A new alert is also sent as `ops.alert` and
+         *     written to the log as an `alert` line.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Alerts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpsAlert"][];
                     };
                 };
             };
@@ -2510,10 +2705,15 @@ export interface components {
         /**
          * @description PICKUP_ACCEPTED, PICKUP_RELEASED (the collector gave the request back; it is searching again),
          *     PICKUP_WEIGHED (weights ready to check; data.weighVersion > 1 for a re-weigh), PICKUP_PAID,
-         *     PICKUP_EXPIRED, PICKUP_CANCELLED (by an admin), DISPUTE_RESOLVED, RATES_PUBLISHED.
+         *     PICKUP_EXPIRED, PICKUP_CANCELLED (households: by an admin; collectors: by the household or an admin
+         *     after accept), PICKUP_NO_SHOW (households: the collector found nobody home), DISPUTE_RESOLVED,
+         *     RATES_PUBLISHED. Collectors only: APPLICATION_APPROVED, APPLICATION_REJECTED (data.note),
+         *     PICKUP_CONFIRMED (the household approved the weights; pay data.amount by data.method),
+         *     PICKUP_DISPUTED (the household rejected the weights; data.disputeStatus REWEIGH or ADMIN_REVIEW),
+         *     PAYMENT_REPORTED (the household says the money did not arrive), RATED (data.stars).
          * @enum {string}
          */
-        NotificationType: "PICKUP_ACCEPTED" | "PICKUP_RELEASED" | "PICKUP_WEIGHED" | "PICKUP_PAID" | "PICKUP_EXPIRED" | "PICKUP_CANCELLED" | "DISPUTE_RESOLVED" | "RATES_PUBLISHED";
+        NotificationType: "PICKUP_ACCEPTED" | "PICKUP_RELEASED" | "PICKUP_WEIGHED" | "PICKUP_PAID" | "PICKUP_EXPIRED" | "PICKUP_CANCELLED" | "PICKUP_NO_SHOW" | "DISPUTE_RESOLVED" | "RATES_PUBLISHED" | "APPLICATION_APPROVED" | "APPLICATION_REJECTED" | "PICKUP_CONFIRMED" | "PICKUP_DISPUTED" | "PAYMENT_REPORTED" | "RATED";
         Notification: {
             /** @description Stable id, e.g. "se:123", "dr:<uuid>", "rp:2026-11-15" */
             id: string;
@@ -2531,14 +2731,20 @@ export interface components {
             data: {
                 categoryCodes?: string[];
                 collectorName?: string | null;
+                /** @description Collector feed */
+                householdName?: string | null;
                 amount?: components["schemas"]["Money"];
                 totalKg?: components["schemas"]["Kg"];
                 method?: components["schemas"]["PaymentMethod"];
                 weighVersion?: number;
                 disputeType?: components["schemas"]["DisputeType"];
+                disputeStatus?: components["schemas"]["DisputeStatus"];
                 outcome?: components["schemas"]["DisputeOutcome"];
                 /** Format: date */
                 effectiveDate?: string;
+                /** @description The admin's note (APPLICATION_REJECTED) */
+                note?: string | null;
+                stars?: number;
             };
         };
         NotificationPage: {
@@ -2712,10 +2918,10 @@ export interface components {
          *     or expired. pickup.*: the household and the assigned collector. collector.location: the household while
          *     ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
          *     collector.verification: the collector an admin approved or rejected. collector.applied: admins only, when a
-         *     collector submits (or resubmits) an application.
+         *     collector submits (or resubmits) an application. ops.alert: admins only, when a new ops alert appears.
          * @enum {string}
          */
-        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved" | "collector.verification" | "collector.applied";
+        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved" | "collector.verification" | "collector.applied" | "ops.alert";
         /** @description collector.applied (admins only) */
         EventCollectorApplied: {
             /** Format: uuid */
@@ -2777,7 +2983,7 @@ export interface components {
         EventDispute: components["schemas"]["Dispute"];
         AttentionItem: {
             /** @enum {string} */
-            kind: "WAITING_TOO_LONG" | "CODE_LOCKED" | "DISPUTE_REVIEW" | "RELEASES";
+            kind: "WAITING_TOO_LONG" | "CODE_LOCKED" | "DISPUTE_REVIEW" | "RELEASES" | "NO_SHOW";
             /** Format: uuid */
             pickupId: string | null;
             displayNo: string | null;
@@ -2894,6 +3100,8 @@ export interface components {
                 /** @description Area of the default address */
                 area: string | null;
                 completedCount: number;
+                /** @description Pickups collectors reported as not home in the last 30 days */
+                noShows30d: number;
                 totalReceived: components["schemas"]["Money"];
             } | null;
             /** @description For collectors; null for households and before sign-up */
@@ -2910,6 +3118,36 @@ export interface components {
             items: components["schemas"]["AdminUserRow"][];
             nextCursor: string | null;
         };
+        DeviceInput: {
+            /** @description The push provider's device token */
+            token: string;
+            /** @enum {string} */
+            platform: "ANDROID" | "IOS";
+        };
+        OpsAlert: {
+            /** @description Stable while the alert lasts, e.g. "CONFIRMED_UNPAID:<pickupId>" */
+            id: string;
+            /** @enum {string} */
+            kind: "ACCEPTED_PAST_SLOT" | "CONFIRMED_UNPAID" | "REVIEW_OVERDUE" | "OTP_FAILURES" | "PAYMENT_REPORTED" | "NO_SHOW";
+            /** @enum {string} */
+            severity: "CRITICAL" | "WARNING";
+            /** Format: uuid */
+            pickupId: string | null;
+            displayNo: string | null;
+            /**
+             * Format: uuid
+             * @description The collector
+             */
+            userId: string | null;
+            /** @description The collector's name */
+            name: string | null;
+            /** Format: date-time */
+            since: string;
+            /** @description Wrong codes in the window */
+            count: number | null;
+        };
+        /** @description ops.alert (admins only) */
+        EventOpsAlert: components["schemas"]["OpsAlert"];
     };
     responses: {
         /** @description Error */

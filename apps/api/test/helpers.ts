@@ -8,6 +8,8 @@ import { AppModule } from '../src/app.module.js';
 import { SMS_SENDER, type SmsSender } from '../src/modules/sms/services/sms.service.js';
 import { configureApp } from '../src/configure-app.js';
 import { REDIS } from '../src/modules/redis/redis.module.js';
+import { PUSH_SENDER } from '../src/modules/push/services/push.service.js';
+import type { PushMessage, PushSender } from '../src/modules/push/types/push-sender.type.js';
 import { PHOTO_STORAGE } from '../src/modules/storage/storage.module.js';
 import type { PhotoStorage } from '../src/modules/storage/types/photo-storage.type.js';
 
@@ -39,11 +41,26 @@ export class FakeStorage implements PhotoStorage {
   }
 }
 
+/** Catches pushes; tokens listed in `invalid` are reported back as rejected by the provider. */
+export class FakePush implements PushSender {
+  readonly sent: PushMessage[] = [];
+  readonly invalid = new Set<string>();
+  async send(messages: PushMessage[]): Promise<{ invalidTokens: string[] }> {
+    this.sent.push(...messages);
+    return { invalidTokens: messages.map((m) => m.token).filter((t) => this.invalid.has(t)) };
+  }
+  /** Lets fire-and-forget pushes finish. */
+  async settle(): Promise<void> {
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
 export interface TestContext {
   app: INestApplication<App>;
   http: () => ReturnType<typeof request>;
   sms: FakeSms;
   storage: FakeStorage;
+  push: FakePush;
   db: DataSource;
   redis: Redis;
 }
@@ -51,11 +68,14 @@ export interface TestContext {
 export async function createTestApp(): Promise<TestContext> {
   const sms = new FakeSms();
   const storage = new FakeStorage();
+  const push = new FakePush();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(SMS_SENDER)
     .useValue(sms)
     .overrideProvider(PHOTO_STORAGE)
     .useValue(storage)
+    .overrideProvider(PUSH_SENDER)
+    .useValue(push)
     .compile();
   const app = configureApp(moduleRef.createNestApplication()) as INestApplication<App>;
   await app.init();
@@ -64,6 +84,7 @@ export async function createTestApp(): Promise<TestContext> {
     http: () => request(app.getHttpServer()),
     sms,
     storage,
+    push,
     db: app.get(DataSource),
     redis: app.get<Redis>(REDIS),
   };
@@ -73,12 +94,14 @@ export async function createTestApp(): Promise<TestContext> {
 export async function resetData(ctx: TestContext): Promise<void> {
   await ctx.db.query(
     `TRUNCATE status_events, ratings, disputes, payments, pickup_photos, weigh_lines, pickup_items,
-              pickups, daily_rates, notification_reads, collector_profiles, collector_selfies, addresses, users RESTART IDENTITY CASCADE`,
+              pickups, daily_rates, notification_reads, push_devices, collector_profiles, collector_selfies, addresses, users RESTART IDENTITY CASCADE`,
   );
   await ctx.redis.flushdb();
   ctx.sms.codes.clear();
   ctx.sms.sent.length = 0;
   ctx.storage.uploaded.clear();
+  ctx.push.sent.length = 0;
+  ctx.push.invalid.clear();
 }
 
 export async function signIn(

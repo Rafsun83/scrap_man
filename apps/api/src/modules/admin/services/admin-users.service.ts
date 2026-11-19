@@ -52,7 +52,7 @@ export class AdminUsersService {
       releaseFlag: r.role === 'COLLECTOR' && r.releases_30d > ADMIN_ATTENTION.maxReleases30d,
       household:
         r.role === 'HOUSEHOLD'
-          ? { area: r.home_area, completedCount: r.completed_count, totalReceived: Number(r.total_received) }
+          ? { area: r.home_area, completedCount: r.completed_count, totalReceived: Number(r.total_received), noShows30d: r.no_shows_30d }
           : null,
       collector:
         r.role === 'COLLECTOR' && r.has_profile

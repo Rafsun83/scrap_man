@@ -169,3 +169,11 @@ export interface AdminDisputeRow extends DisputeRow {
   household_name: string | null;
   collector_name: string | null;
 }
+
+/** What a no-show report checks: the booked slot and the collector's distance from the address. */
+export interface NoShowFactsRow {
+  slot_date: string;
+  slot: TimeSlot;
+  last_seen_at: Date | null;
+  distance_m: number | null;
+}

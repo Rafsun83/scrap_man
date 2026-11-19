@@ -20,6 +20,8 @@ Households in Dhaka sell scrap (iron, old newspaper, plastic, carton, aluminium,
 - `pnpm test:e2e`: API end-to-end tests against `bhangariwala_test` and Redis db 15 (the config refuses any database not ending in `_test`)
 - `pnpm db:up` (Postgres, Redis, S3 storage), `pnpm db:migrate`, `pnpm db:seed -- --sample-rates`
 - `pnpm gen:api`: regenerate `packages/shared/src/generated/api.ts` after editing the contract
+- `pnpm smoke` / `pnpm smoke:down`: build `docker-compose.prod.yml` (API, admin behind nginx, data services) and run `scripts/smoke.mjs` through nginx
+- `pnpm --filter @bw/api load -- --pairs 20 --api http://localhost:3000`: parallel full sales against a local API (dev database only)
 
 Development sign-in: every OTP is `123456` (`OTP_DEV_CODE`); admin phone `+8801700000000`.
 
@@ -67,6 +69,7 @@ These rules do not apply to the React app in `apps/web/`.
 | REQUESTED -> REQUESTED | System | 5 min after the request: radius 1000 -> 3000 m |
 | REQUESTED -> EXPIRED | System | end of the booked slot |
 | REQUESTED or ACCEPTED -> CANCELLED | Household or admin | `POST /pickups/{id}/cancel` (admin: any active status) |
+| ACCEPTED -> CANCELLED | Collector | `POST /pickups/{id}/no-show`: nobody home, once the slot started and within 200 m of the address |
 | ACCEPTED -> REQUESTED | Collector | `POST /pickups/{id}/release`: clears collector, code and locked rates |
 | ACCEPTED -> ARRIVED | Collector | `POST /pickups/{id}/arrive` with the code |
 | ARRIVED -> WEIGHED | Collector | `POST /pickups/{id}/weights` with lines and a scale photo |
@@ -76,7 +79,7 @@ These rules do not apply to the React app in `apps/web/`.
 | DISPUTED -> CANCELLED | Admin | `POST /admin/disputes/{id}/resolve` outcome CANCEL |
 | CONFIRMED -> COMPLETED | Collector | `POST /pickups/{id}/payment` (TrxID required for BKASH and NAGAD) |
 
-Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`, `pickup.released`, `pickup.code_locked` (admins), `dispute.opened`, `dispute.resolved`. Payloads and recipients: `SocketEvents` and `Event*` in `docs/openapi.yaml`.
+Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`, `pickup.released`, `pickup.code_locked` (admins), `dispute.opened`, `dispute.resolved`, `collector.verification`, `collector.applied` (admins), `ops.alert` (admins). The same pickup events also go out as push notifications to whoever they are news for (`src/modules/push`). Payloads and recipients: `SocketEvents` and `Event*` in `docs/openapi.yaml`.
 
 ## Milestones
 
@@ -88,6 +91,7 @@ When a milestone is complete, add `milestones/<id>-<name>.md` with a checklist o
 - [x] M3 Household app screens, plus summary, notifications feed (`src/modules/notifications`), `Pickup.collectorLocation` and `Pickup.rating`. Maps need `GOOGLE_MAPS_API_KEY` in `apps/mobile/.env.local`. Notes: `milestones/M3-household-app.md` (phone walk-through still pending)
 - [x] M4 Collector app screens, collector sign-up and approval endpoints (`src/modules/collectors`), ledger, offline weigh draft, items added at weighing. Support line from `EXPO_PUBLIC_SUPPORT_PHONE`. Notes: `milestones/M4-collector-app.md` (phone walk-through still pending)
 - [x] M5 Admin panel (A1-A5 in `apps/admin`: React Router, TanStack Query, Socket.IO, Leaflet map), admin read models (`src/modules/admin`), `Pickup.updatedAt`, user status. Admin strings in `@bw/shared` `admin-i18n.ts`. Notes: `milestones/M5-admin-panel.md` (operations walk-through still pending)
-- [ ] M6 Pilot readiness: tests, FCM push, monitoring, deployment
+- [x] M6 Pilot readiness, no outside services: collector notification feed, household no-show flow, push notifications behind a sender interface (device tokens, server-side text; console/fake senders), SMS gateway adapter behind the existing interface, structured logs with request ids, ops alerts (checks, `GET /admin/alerts`, admin banner), Dockerfiles and a production compose file, race and load tests, shared API client and Dhaka formatting in `@bw/shared`, doc fixes. Notes: `milestones/M6-pilot-readiness.md`
+- [ ] M7 Launch, needs outside services or people: Firebase project and FCM keys, a Bangladeshi SMS provider, an alert destination (Slack, email or pager), hosting and domain, EAS builds and Google Play listing, background location (Play approval), Google Maps key, real-device and operations walk-throughs, content (support number, help, terms, privacy policy, collector agreement), map tile provider decision
 
 The product spec, technical blueprint and clickable prototype live in Rafsun's claude.ai account; `docs/product.md`, `docs/design/` and this file are copies of what they decided. If they disagree, ask Rafsun.

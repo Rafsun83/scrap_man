@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCategories, useMyPickups } from '../../../src/api/hooks';
+import { useCategories, useMyPickups, useNotifications } from '../../../src/api/hooks';
 import type { NearbyRequest } from '../../../src/api/types';
 import { useSession } from '../../../src/auth/session';
 import { useCollectorProfile, useLedger, useNearby, useSetOnline } from '../../../src/collector/api';
@@ -37,6 +37,8 @@ export default function Requests() {
   const active = useMyPickups('ACTIVE', 20);
   const job = currentJob(active.data?.items ?? []);
   const nearby = useNearby(position, online);
+  const feed = useNotifications();
+  const unread = feed.data?.pages[0]?.unreadCount ?? 0;
   const skipped = useSkipped();
   const categories = useCategories();
   const slotLabel = useSlotLabel();
@@ -68,6 +70,21 @@ export default function Requests() {
       <NavyHeader
         title={name ? t('greetName', { greeting: t(greetingKey()), name }) : t(greetingKey())}
         right={
+          <View style={s.headRight}>
+          <Pressable
+            testID="bell"
+            accessibilityRole="button"
+            accessibilityLabel={unread > 0 ? `${t('notifications')}, ${t('unreadCount', { count: localDigits(unread, lang) })}` : t('notifications')}
+            onPress={() => router.push('/inbox')}
+            style={s.bell}
+          >
+            <Icon name="bell" size={22} color={colors.surface} />
+            {unread > 0 ? (
+              <View style={s.badge}>
+                <Text style={[body(12, 700), { color: colors.surface }]}>{localDigits(unread > 9 ? '9+' : unread, lang)}</Text>
+              </View>
+            ) : null}
+          </Pressable>
           <Pressable
             testID="online-switch"
             accessibilityRole="switch"
@@ -82,6 +99,7 @@ export default function Requests() {
               <View style={s.knob} />
             </View>
           </Pressable>
+          </View>
         }
       >
         <View style={s.stats}>
@@ -167,6 +185,9 @@ export default function Requests() {
 }
 
 const s = StyleSheet.create({
+  headRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bell: { width: minTouch, height: minTouch, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: tones.dashed },
+  badge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: colors.gamcha, alignItems: 'center', justifyContent: 'center' },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: minTouch, paddingLeft: 14, paddingRight: 6, borderRadius: radius.pill, borderWidth: 2 },
   track: { width: 44, height: 26, borderRadius: 13, padding: 3, flexDirection: 'row' },
   knob: { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.surface },

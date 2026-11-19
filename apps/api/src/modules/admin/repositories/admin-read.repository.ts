@@ -17,7 +17,7 @@ export interface StatusCountsRow {
 }
 
 export interface AttentionRow {
-  kind: 'WAITING_TOO_LONG' | 'CODE_LOCKED' | 'DISPUTE_REVIEW' | 'RELEASES';
+  kind: 'WAITING_TOO_LONG' | 'CODE_LOCKED' | 'DISPUTE_REVIEW' | 'RELEASES' | 'NO_SHOW';
   pickup_id: string | null;
   display_no: string | null;
   area: string | null;
@@ -57,6 +57,7 @@ export interface AdminUserDbRow {
   home_area: string | null;
   completed_count: number;
   total_received: string;
+  no_shows_30d: number;
   has_profile: boolean;
   work_areas: string[] | null;
   rating_avg: string | null;
@@ -115,12 +116,17 @@ export class AdminReadRepository {
          WHERE d.status = 'ADMIN_REVIEW'
          ORDER BY d.created_at LIMIT 20)
        UNION ALL
-       (SELECT 'WAITING_TOO_LONG', p.id, p.display_no::text, p.area, NULL, NULL, p.requested_at, NULL, 3
+       (SELECT 'NO_SHOW', p.id, p.display_no::text, p.area, se.actor_id, u.name, se.at, NULL, 3
+          FROM status_events se JOIN pickups p ON p.id = se.pickup_id LEFT JOIN users u ON u.id = se.actor_id
+         WHERE se.to_status = 'CANCELLED' AND se.meta->>'reason' = 'NO_SHOW' AND se.at > $1::timestamptz - interval '24 hours'
+         ORDER BY se.at DESC LIMIT 20)
+       UNION ALL
+       (SELECT 'WAITING_TOO_LONG', p.id, p.display_no::text, p.area, NULL, NULL, p.requested_at, NULL, 4
           FROM pickups p
          WHERE p.status = 'REQUESTED' AND p.requested_at < $2 AND p.expires_at > $1
          ORDER BY p.requested_at LIMIT 20)
        UNION ALL
-       (SELECT 'RELEASES', NULL, NULL, NULL, se.actor_id, u.name, max(se.at), count(*)::int, 4
+       (SELECT 'RELEASES', NULL, NULL, NULL, se.actor_id, u.name, max(se.at), count(*)::int, 5
           FROM status_events se JOIN users u ON u.id = se.actor_id
          WHERE se.${RELEASE} AND se.at > $3
          GROUP BY se.actor_id, u.name
@@ -178,6 +184,7 @@ export class AdminReadRepository {
       `SELECT u.id, u.phone, u.role, u.name, u.language, u.status, u.status_note, u.created_at,
               home.area AS home_area,
               COALESCE(done.n, 0)::int AS completed_count, COALESCE(done.total, 0) AS total_received,
+              COALESCE(ns.n, 0)::int AS no_shows_30d,
               cp.user_id IS NOT NULL AS has_profile, cp.work_areas, cp.rating_avg, cp.verification_status, cp.is_online,
               COALESCE(work.n, 0)::int AS pickups_30d, COALESCE(rel.n, 0)::int AS releases_30d
          FROM users u
@@ -188,6 +195,10 @@ export class AdminReadRepository {
            SELECT count(*) AS n, sum(p.total_amount) AS total FROM pickups p
             WHERE p.household_id = u.id AND p.status = 'COMPLETED'
          ) done ON u.role = 'HOUSEHOLD'
+         LEFT JOIN LATERAL (
+           SELECT count(*) AS n FROM status_events se JOIN pickups p ON p.id = se.pickup_id
+            WHERE p.household_id = u.id AND se.to_status = 'CANCELLED' AND se.meta->>'reason' = 'NO_SHOW' AND se.at > $3
+         ) ns ON u.role = 'HOUSEHOLD'
          LEFT JOIN collector_profiles cp ON cp.user_id = u.id
          LEFT JOIN LATERAL (
            SELECT count(*) AS n FROM pickups p

@@ -29,6 +29,16 @@ describe('validateEnv', () => {
     expect(() => validateEnv({ ...base, NODE_ENV: 'production' })).toThrow('S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY');
   });
 
+  it('uses console SMS in development and needs a gateway in production', () => {
+    expect(validateEnv(base).SMS_PROVIDER).toBe('console');
+    const s3 = { S3_BUCKET: 'b', S3_ACCESS_KEY: 'k', S3_SECRET_KEY: 's' };
+    expect(() => validateEnv({ ...base, ...s3, NODE_ENV: 'production' })).toThrow('SMS_PROVIDER=http needs SMS_HTTP_URL and SMS_HTTP_API_KEY');
+    expect(validateEnv({ ...base, ...s3, NODE_ENV: 'production', SMS_PROVIDER: 'console' }).SMS_PROVIDER).toBe('console');
+    const http = validateEnv({ ...base, SMS_PROVIDER: 'http', SMS_HTTP_URL: 'https://sms', SMS_HTTP_API_KEY: 'k' });
+    expect(http).toMatchObject({ SMS_PROVIDER: 'http', SMS_TIMEOUT_MS: 5000 });
+    expect(() => validateEnv({ ...base, SMS_PROVIDER: 'pigeon' })).toThrow('console or http');
+  });
+
   it('names every missing variable', () => {
     expect(() => validateEnv({})).toThrow('DATABASE_URL, REDIS_URL, JWT_SECRET');
   });

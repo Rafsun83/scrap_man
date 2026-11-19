@@ -114,6 +114,7 @@ export const SOCKET_EVENTS = [
   'dispute.resolved',
   'collector.verification',
   'collector.applied',
+  'ops.alert',
 ] as const;
 export type SocketEvent = (typeof SOCKET_EVENTS)[number];
 
@@ -187,3 +188,24 @@ export const ADMIN_ATTENTION = {
 
 export const USER_STATUSES = ['ACTIVE', 'FLAGGED', 'SUSPENDED'] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
+
+/** Ops alert thresholds (GET /admin/alerts, the `alert` log lines). */
+export const OPS_ALERTS = {
+  /** An ACCEPTED pickup this long after its slot ended. */
+  acceptedPastSlotMinutes: 60,
+  /** A CONFIRMED pickup still unpaid after this long. */
+  confirmedUnpaidMinutes: 120,
+  /** A dispute with staff (ADMIN_REVIEW) longer than this. */
+  reviewOverdueHours: 24,
+  /** More wrong OTP codes than this in the window, across all phones. */
+  otpFailures: 20,
+  otpWindowMinutes: 10,
+  /** PAYMENT_REPORTED and NO_SHOW alerts last this long. */
+  recentHours: 24,
+} as const;
+
+/** A collector may report a household not home only this close to the address. */
+export const NO_SHOW_MAX_DISTANCE_M = 200;
+
+export const DEVICE_PLATFORMS = ['ANDROID', 'IOS'] as const;
+export type DevicePlatform = (typeof DEVICE_PLATFORMS)[number];

@@ -36,7 +36,7 @@ export class StorageModule implements OnApplicationBootstrap, OnModuleDestroy {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    if (this.storage instanceof S3PhotoStorageService && this.config.get('NODE_ENV', { infer: true }) === 'development') {
+    if (this.storage instanceof S3PhotoStorageService && this.config.get('S3_CREATE_BUCKET', { infer: true })) {
       await this.storage.ensureBucket();
     }
   }
