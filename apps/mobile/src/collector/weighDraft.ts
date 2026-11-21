@@ -18,6 +18,7 @@ export type WeighDraft = {
   /** The weigh version this round will create; a draft for an older round is dropped. */
   round: number;
   lines: DraftLine[];
+  /** Optional scale photo. */
   photo: LocalPhoto | null;
   /** Set once the scale photo is uploaded, so a retry does not upload it again. */
   photoId: string | null;
@@ -57,14 +58,34 @@ export type SendOutcome =
   | { kind: 'QUEUED'; draft: WeighDraft }
   | { kind: 'FAILED'; draft: WeighDraft; error: unknown };
 
-/** No answer from the server (or from storage): worth retrying with the same key. */
+/** No answer from the API: worth retrying with the same key. */
 export function isOffline(error: unknown): boolean {
-  return !(error instanceof ApiError) || error.code === 'NETWORK' || error.status >= 500;
+  return error instanceof ApiError && (error.code === 'NETWORK' || error.status >= 500);
 }
 
 /**
- * Uploads the scale photo (once) and sends the round. Offline failures keep the draft queued for a retry;
- * a refused scale photo clears it so the collector takes a new one.
+ * The API answered but the photo did not reach storage (for example storage the phone cannot reach). Not a lost
+ * connection, so it is not queued: the photo is dropped and the collector sends without it or takes a new one.
+ */
+export class PhotoUploadError extends Error {
+  constructor(cause: unknown) {
+    super(`Scale photo upload failed: ${String(cause)}`);
+    this.name = 'PhotoUploadError';
+  }
+}
+
+/** Uploads the photo; storage failures become PhotoUploadError, API failures stay ApiError. */
+async function uploadScalePhoto(api: ApiClient, pickupId: string, photo: LocalPhoto): Promise<string> {
+  try {
+    return await uploadPhoto(api, `/pickups/${pickupId}/photos`, { kind: 'SCALE' }, photo);
+  } catch (error) {
+    throw error instanceof ApiError ? error : new PhotoUploadError(error);
+  }
+}
+
+/**
+ * Uploads the scale photo (once, when there is one) and sends the round. Offline failures keep the draft queued
+ * for a retry; a photo that cannot be uploaded or is refused is dropped so the collector can send without it.
  */
 export async function sendDraft(
   api: ApiClient,
@@ -74,24 +95,23 @@ export async function sendDraft(
 ): Promise<SendOutcome> {
   let current = draft;
   try {
-    if (!current.photoId) {
-      if (!current.photo) throw new Error('No scale photo');
-      const photoId = await uploadPhoto(api, `/pickups/${draft.pickupId}/photos`, { kind: 'SCALE' }, current.photo);
+    if (current.photo && !current.photoId) {
+      const photoId = await uploadScalePhoto(api, draft.pickupId, current.photo);
       current = { ...current, photoId };
       save(current);
     }
     const pickup = await api.request<Pickup>('POST', `/pickups/${draft.pickupId}/weights`, {
-      body: { lines, scalePhotoId: current.photoId },
+      body: { lines, ...(current.photoId ? { scalePhotoId: current.photoId } : {}) },
       idempotencyKey: current.key,
     });
     return { kind: 'SENT', pickup };
   } catch (error) {
-    if (isOffline(error) && current.photo) {
+    if (isOffline(error)) {
       current = { ...current, queued: true };
       save(current);
       return { kind: 'QUEUED', draft: current };
     }
-    if (error instanceof ApiError && error.code === 'SCALE_PHOTO_REQUIRED') {
+    if (error instanceof PhotoUploadError || (error instanceof ApiError && error.code === 'SCALE_PHOTO_REQUIRED')) {
       current = { ...current, photo: null, photoId: null, key: Crypto.randomUUID(), queued: false };
     } else {
       current = { ...current, queued: false };
@@ -135,9 +155,12 @@ export function useWeighDraft(pickup: Pickup, initial: () => DraftLine[], toLine
   }, []);
 
   const setLines = useCallback((lines: DraftLine[]) => update((d) => ({ ...d, lines })), [update]);
-  // A new photo is a new round body: new key, upload again.
+  // A new or removed photo is a new round body: new key, upload again.
   const setPhoto = useCallback(
-    (photo: LocalPhoto) => update((d) => ({ ...d, photo, photoId: null, key: Crypto.randomUUID(), queued: false })),
+    (photo: LocalPhoto | null) => {
+      setError(null);
+      update((d) => ({ ...d, photo, photoId: null, key: Crypto.randomUUID(), queued: false }));
+    },
     [update],
   );
 

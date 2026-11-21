@@ -9,7 +9,7 @@ import { errorMessage } from '../lib/errors'
 import { teamLines } from '../lib/weights'
 import { Button } from './ui'
 
-/** After TEAM_REWEIGH: the team's weights with a new scale photo (POST /pickups/{id}/weights as admin). */
+/** After TEAM_REWEIGH: the team's weights, with an optional scale photo (POST /pickups/{id}/weights as admin). */
 export function TeamWeighForm({ pickup, categories }: { pickup: Pickup; categories: Category[] | undefined }) {
   const { t, lang } = useT()
   const { api } = useSession()
@@ -24,12 +24,12 @@ export function TeamWeighForm({ pickup, categories }: { pickup: Pickup; categori
   const lines = teamLines(rows)
 
   const submit = async () => {
-    if (!lines || !file) return
+    if (!lines) return
     setError(null)
     setUploading(true)
     try {
-      const scalePhotoId = await uploadPhoto(api, `/pickups/${pickup.id}/photos`, { kind: 'SCALE' }, file)
-      save.mutate({ pickupId: pickup.id, body: { lines, scalePhotoId }, key: crypto.randomUUID() }, { onError: setError })
+      const scalePhotoId = file ? await uploadPhoto(api, `/pickups/${pickup.id}/photos`, { kind: 'SCALE' }, file) : undefined
+      save.mutate({ pickupId: pickup.id, body: { lines, ...(scalePhotoId ? { scalePhotoId } : {}) }, key: crypto.randomUUID() }, { onError: setError })
     } catch (err) {
       setError(err)
     } finally {
@@ -70,9 +70,9 @@ export function TeamWeighForm({ pickup, categories }: { pickup: Pickup; categori
         {t('scalePhoto')}
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
       </label>
-      {!lines || !file ? <p className="muted" style={{ margin: 0 }}>{t('weightsIncomplete')}</p> : null}
+      {!lines ? <p className="muted" style={{ margin: 0 }}>{t('weightsIncomplete')}</p> : null}
       {error ? <p className="alert" role="alert">{errorMessage(error, lang)}</p> : null}
-      <Button variant="primary" busy={uploading || save.isPending} disabled={!lines || !file} onClick={() => void submit()}>
+      <Button variant="primary" busy={uploading || save.isPending} disabled={!lines} onClick={() => void submit()}>
         ✓ {t('saveWeights')}
       </Button>
     </section>

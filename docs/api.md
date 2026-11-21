@@ -65,7 +65,7 @@ Every error has the same shape. `message` is plain English that says what happen
 | `BELOW_MINIMUM` | 422 | Reserved for the 2 kg minimum; not returned today because every weight band starts at 2 kg |
 | `OUT_OF_RANGE` | 422 | The collector is too far from the request, offline, or has no recent location |
 | `CODE_MISMATCH` | 422 | Wrong pickup code; `details.attemptsLeft` |
-| `SCALE_PHOTO_REQUIRED` | 422 | Weights sent without a usable, uploaded scale photo |
+| `SCALE_PHOTO_REQUIRED` | 422 | Weights sent with a scale photo that is not uploaded, not this sender's, or already used (the photo itself is optional) |
 | `TRX_ID_REQUIRED` | 422 | bKash or Nagad payment without a TrxID |
 | `CODE_LOCKED` | 423 | Five wrong pickup codes; an admin must step in |
 | `OTP_RATE_LIMIT` | 429 | Too many sign-in codes requested |
@@ -1892,7 +1892,7 @@ Sends a weigh round. The server computes every amount and the totals (status `WE
 - First weigh while `ARRIVED`; re-weigh while `DISPUTED` with an open `REWEIGH` dispute (closes it); an admin weighs after resolving with `TEAM_REWEIGH`.
 - One line per category, at most once; kg to 0.1. Per-kg lines use the rate copied at accept; electronics need `quotedAmount`. Requested categories left out are not sold.
 - **Since M4:** a category the household did not list (found at the door) is added to the pickup; a per-kg one takes the rate in effect at that moment (`400 VALIDATION_ERROR` if it has never had a rate). See the example below.
-- `scalePhotoId` must be an uploaded `SCALE` photo of this pickup by the same user, not used by an earlier round.
+- `scalePhotoId` is **optional** (since 2026-11-21). When sent, it must be an uploaded `SCALE` photo of this pickup by the same user, not used by an earlier round. A round sent without one has `scalePhotoId: null` in `weighRounds`.
 
 **Request**
 
@@ -2085,7 +2085,7 @@ _Shortened to the fields this call changes; every pickup response has the full s
 | `VALIDATION_ERROR` | 400 | Unknown or inactive category, an added category with no rate, duplicate, kg not to 0.1, quote missing or not allowed |
 | `INVALID_STATE` | 409 | Not ARRIVED, or the dispute is with admins |
 
-<details><summary>Example: Without an uploaded scale photo</summary>
+<details><summary>Example: A scale photo that was never uploaded</summary>
 
 ```http
 POST /api/v1/pickups/7d5454fd-9794-4bdb-bea8-d34ac7b7e83f/weights
@@ -2110,7 +2110,7 @@ Idempotency-Key: 6f1d2c3a-…
 ```json
 {
   "code": "SCALE_PHOTO_REQUIRED",
-  "message": "Take a new photo of the scale for this weigh and upload it first."
+  "message": "This scale photo cannot be used. Take a new one, or send the weights without a photo."
 }
 ```
 

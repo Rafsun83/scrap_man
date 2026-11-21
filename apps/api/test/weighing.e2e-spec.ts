@@ -54,7 +54,7 @@ describe('Pickup code, weighing, confirmation and payment (e2e)', () => {
     expect(view).toMatchObject({ status: 'ARRIVED', pickupCode: null });
   });
 
-  it('weighing needs an uploaded scale photo of this pickup', async () => {
+  it('a scale photo, when sent, must be an uploaded photo of this pickup', async () => {
     const { collector, id } = await pickupAt(ctx, 'ARRIVED');
     const lines = [{ categoryCode: 'IRON', kg: 9.5 }];
     const post = (scalePhotoId: string) =>
@@ -70,6 +70,23 @@ describe('Pickup code, weighing, confirmation and payment (e2e)', () => {
 
     const good = await uploadPhoto(ctx, collector.token, id, 'SCALE');
     await post(good).expect(200);
+  });
+
+  it('weights can be sent without a scale photo, and a re-weigh too', async () => {
+    const { household, collector, id } = await pickupAt(ctx, 'ARRIVED');
+    const send = (kg: number, extra: object = {}) =>
+      ctx.http().post(`/api/v1/pickups/${id}/weights`).set(bearer(collector.token)).set(idem()).send({ lines: [{ categoryCode: 'IRON', kg }], ...extra });
+
+    const first = await send(9.5).expect(200);
+    expect(first.body).toMatchObject({ status: 'WEIGHED', weighRounds: [{ version: 1, scalePhotoId: null }] });
+    expect(first.body.photos.filter((ph: { kind: string }) => ph.kind === 'SCALE')).toEqual([]);
+
+    await ctx.http().post(`/api/v1/pickups/${id}/dispute`).set(bearer(household.token)).send({ type: 'WEIGHT', reason: 'Too low' }).expect(201);
+    const again = await send(10, { scalePhotoId: null }).expect(200);
+    expect(again.body.weighRounds.map((r: { version: number; scalePhotoId: string | null }) => [r.version, r.scalePhotoId])).toEqual([
+      [1, null],
+      [2, null],
+    ]);
   });
 
   it('computes every amount on the server from the locked rates', async () => {

@@ -39,7 +39,7 @@ These are the source files of the clickable prototype (35 boards). Each `.dc.htm
 | C1 | Nearby requests | `CollectorHome.dc.html` | Online switch, today's totals, request cards (area, distance, items, slot, weight band) |
 | C2 | Request detail | `RequestDetail.dc.html` | Approximate area only, items with today's rates, estimate, accept or skip |
 | C3 | Arrive and verify | `ActivePickup.dc.html` | Full address and note after accept, call, directions, enter the pickup code |
-| C4 | Weigh items | `WeighEntry.dc.html` | Kg steppers per item (0.5 steps, 0.1 precision), scale photo, live total |
+| C4 | Weigh items | `WeighEntry.dc.html` | Kg steppers per item (0.5 steps, 0.1 precision), optional scale photo, live total |
 | C10 | Re-weigh after a dispute | `Reweigh.dc.html` | Household's reason, previous weights, new weights, required new photo |
 | C5 | Pay and complete | `CollectorPay.dc.html` | Household confirmed, amount, method and wallet number, TrxID entry |
 | C8 | My pickups | `MyPickups.dc.html` | Today, upcoming, past |

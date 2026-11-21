@@ -57,7 +57,7 @@ These rules do not apply to the React app in `apps/web/`.
 - Collectors see area and distance only; exact address and household phone unlock on accept.
 - Rates are copied onto the pickup (`pickup_items.rate_snapshot`) at accept.
 - Pickup code: 4 digits, created at accept, stored hashed, shown only to the household. The collector must enter it to reach ARRIVED; 5 wrong tries lock the pickup and alert an admin.
-- Weighing: kg per item to 0.1 kg; a scale photo is required. Weigh rounds are versioned in `weigh_lines`.
+- Weighing: kg per item to 0.1 kg; a scale photo is optional (decided 2026-11-21). Weigh rounds are versioned in `weigh_lines`.
 - The household must approve the weights; nothing is auto-confirmed. First rejection: collector re-weighs. Second rejection: dispute goes to admin review.
 - Payment: cash, or bKash/Nagad sent by the collector with a TrxID. A TrxID can be used once (`UNIQUE (method, trx_id)`). A "not received" report opens a PAYMENT dispute without changing the pickup status.
 - Every status change writes a row to `status_events`.
@@ -73,7 +73,7 @@ These rules do not apply to the React app in `apps/web/`.
 | ACCEPTED -> CANCELLED | Collector | `POST /pickups/{id}/no-show`: nobody home, once the slot started and within 200 m of the address |
 | ACCEPTED -> REQUESTED | Collector | `POST /pickups/{id}/release`: clears collector, code and locked rates |
 | ACCEPTED -> ARRIVED | Collector | `POST /pickups/{id}/arrive` with the code |
-| ARRIVED -> WEIGHED | Collector | `POST /pickups/{id}/weights` with lines and a scale photo |
+| ARRIVED -> WEIGHED | Collector | `POST /pickups/{id}/weights` with lines (scale photo optional) |
 | WEIGHED -> CONFIRMED | Household | `POST /pickups/{id}/confirm` with a payment method |
 | WEIGHED -> DISPUTED | Household | `POST /pickups/{id}/dispute` type WEIGHT (1st: REWEIGH, 2nd: ADMIN_REVIEW) |
 | DISPUTED -> WEIGHED | Collector or admin | re-weigh (version + 1), or admin accepts the weights |

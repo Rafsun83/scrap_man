@@ -1,5 +1,5 @@
 import { ApiError, type ApiClient } from '../api/client';
-import { sendDraft, type WeighDraft } from './weighDraft';
+import { PhotoUploadError, sendDraft, type WeighDraft } from './weighDraft';
 
 jest.mock('expo-crypto', () => ({ randomUUID: () => `key-${Math.random()}` }));
 jest.mock('expo-secure-store', () => ({ setItemAsync: jest.fn(async () => {}), getItemAsync: jest.fn(async () => null), deleteItemAsync: jest.fn(async () => {}) }));
@@ -63,13 +63,49 @@ describe('weigh draft sending', () => {
     expect(online.calls[0].opts?.idempotencyKey).toBe('key-1');
   });
 
-  it('queues when the photo upload itself fails for lack of connection', async () => {
-    globalThis.fetch = jest.fn(async () => {
+  it('sends the weights without a photo when none was taken', async () => {
+    const { api, calls } = fakeApi(async () => ({ id: 'p1', status: 'WEIGHED' }));
+    const out = await sendDraft(api, draft({ photo: null }), lines, () => {});
+    expect(out.kind).toBe('SENT');
+    expect(calls.map((c) => c.path)).toEqual(['/pickups/p1/weights']);
+    expect(calls[0].opts).toEqual({ body: { lines }, idempotencyKey: 'key-1' });
+  });
+
+  it('queues without a photo when the API cannot be reached', async () => {
+    const { api } = fakeApi(async () => {
+      throw new ApiError('NETWORK', 'offline', 0);
+    });
+    const out = await sendDraft(api, draft({ photo: null }), lines, () => {});
+    expect(out.kind).toBe('QUEUED');
+  });
+
+  it('does not call it "no internet" when the API answered but storage did not', async () => {
+    // The phone reached the API (upload slot given) but not the storage link, e.g. S3_ENDPOINT=localhost.
+    globalThis.fetch = jest.fn(async (url: string) => {
+      if (url.startsWith('file:')) return { blob: async () => 'blob' } as never;
       throw new TypeError('Network request failed');
     }) as never;
-    const { api } = fakeApi(async () => ({}));
+    const { api, calls } = fakeApi(async () => ({}));
+    const out = await sendDraft(api, draft(), lines, () => {});
+    expect(out.kind).toBe('FAILED');
+    if (out.kind !== 'FAILED') return;
+    expect(out.error).toBeInstanceOf(PhotoUploadError);
+    expect(out.draft).toMatchObject({ photo: null, photoId: null, queued: false });
+    expect(out.draft.key).not.toBe('key-1');
+    expect(calls.map((c) => c.path)).toEqual(['/pickups/p1/photos']);
+  });
+
+  it('still queues when the upload slot request itself finds no connection', async () => {
+    const api: ApiClient = {
+      refresh: async () => true,
+      request: (async () => {
+        throw new ApiError('NETWORK', 'offline', 0);
+      }) as ApiClient['request'],
+    };
     const out = await sendDraft(api, draft(), lines, () => {});
     expect(out.kind).toBe('QUEUED');
+    if (out.kind !== 'QUEUED') return;
+    expect(out.draft.photo).not.toBeNull();
   });
 
   it('asks for a new photo when the server refuses the scale photo', async () => {

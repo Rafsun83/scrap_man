@@ -105,11 +105,15 @@ describe('C4 weigh', () => {
       </QueryClientProvider>,
     );
 
-  it('previews line amounts at the locked rate and needs a scale photo before sending', async () => {
+  const weighMocks = () => {
     mockRequest.mockImplementation(async (method: string, path: string) =>
       path.endsWith('/photos') ? { photoId: 'photo-1', uploadUrl: 'https://s3/u', expiresAt: '' } : { ...arrived, status: 'WEIGHED' },
     );
     globalThis.fetch = jest.fn(async (url: string) => (url.startsWith('file:') ? { blob: async () => 'b' } : { ok: true })) as never;
+  };
+
+  it('previews line amounts at the locked rate and sends without a scale photo', async () => {
+    weighMocks();
     await renderWeigh();
     await waitFor(() => expect(screen.getByTestId('inc-IRON')).toBeTruthy());
 
@@ -117,16 +121,35 @@ describe('C4 weigh', () => {
     expect(screen.getByTestId('amount-IRON').props.children).toBe('৳৭৫');
     await fireEvent.changeText(screen.getByTestId('kg-NEWSPAPER'), '৫');
     expect(screen.getByTestId('preview-total').props.children).toBe('৳২২৫');
-    expect(screen.getByTestId('send-weights').props.accessibilityState.disabled).toBe(true);
+    expect(screen.getByText('ঐচ্ছিক। ছবি দিলে গ্রাহক অ্যাপে দেখতে পাবেন')).toBeTruthy();
 
-    await fireEvent.press(screen.getByTestId('scale-photo'));
     await waitFor(() => expect(screen.getByTestId('send-weights').props.accessibilityState.disabled).toBe(false));
     await fireEvent.press(screen.getByTestId('send-weights'));
     await waitFor(() =>
       expect(mockRequest).toHaveBeenCalledWith('POST', '/pickups/p1/weights', {
-        body: { lines: [{ categoryCode: 'IRON', kg: 1.5 }, { categoryCode: 'NEWSPAPER', kg: 5 }], scalePhotoId: 'photo-1' },
+        body: { lines: [{ categoryCode: 'IRON', kg: 1.5 }, { categoryCode: 'NEWSPAPER', kg: 5 }] },
         idempotencyKey: 'key-1',
       }),
+    );
+    expect(mockRequest).not.toHaveBeenCalledWith('POST', '/pickups/p1/photos', expect.anything());
+  });
+
+  it('uploads a scale photo when one is taken, and it can be removed', async () => {
+    weighMocks();
+    await renderWeigh();
+    await waitFor(() => expect(screen.getByTestId('inc-IRON')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('inc-IRON'));
+
+    await fireEvent.press(screen.getByTestId('scale-photo'));
+    await waitFor(() => expect(screen.getByTestId('remove-scale-photo')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('remove-scale-photo'));
+    await waitFor(() => expect(screen.queryByTestId('remove-scale-photo')).toBeNull());
+
+    await fireEvent.press(screen.getByTestId('scale-photo'));
+    await waitFor(() => expect(screen.getByTestId('remove-scale-photo')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('send-weights'));
+    await waitFor(() =>
+      expect(mockRequest).toHaveBeenCalledWith('POST', '/pickups/p1/weights', expect.objectContaining({ body: expect.objectContaining({ scalePhotoId: 'photo-1' }) })),
     );
   });
 
@@ -143,7 +166,7 @@ describe('C4 weigh', () => {
     expect(screen.getByText('রাশেদা বেগম ওজনে আপত্তি করেছেন')).toBeTruthy();
     expect(screen.getByText('“লোহার ওজন কম”')).toBeTruthy();
     expect(screen.getByText('আগে: ৯.৫ কেজি')).toBeTruthy();
-    expect(screen.getByText('এই ধাপে ছবি বাধ্যতামূলক')).toBeTruthy();
+    expect(screen.getByText('ঐচ্ছিক। ছবি দিলে গ্রাহক অ্যাপে দেখতে পাবেন')).toBeTruthy();
   });
 });
 

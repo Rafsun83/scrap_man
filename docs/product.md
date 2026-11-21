@@ -32,7 +32,7 @@ Not in v1: automatic bKash/Nagad payments, households buying items, reselling to
 | Launch area | All of Dhaka |
 | Minimum pickup | 2 kg estimated; electronics exempt |
 | Matching | 1 km, widening to 3 km after 5 minutes; expires at the end of the booked slot |
-| Scale photo | Required on every weigh |
+| Scale photo | Optional on every weigh (changed from required on 2026-11-21) |
 | SMS and maps | A local SMS gateway for OTP; Google Maps within its free monthly allowance where possible |
 | Apps | One mobile app with a role chosen at sign-up |
 

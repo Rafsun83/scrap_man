@@ -555,8 +555,8 @@ paths:
         VALIDATION_ERROR if it has never had a rate). Listed PER_KG categories use the rate copied at accept;
         ON_INSPECTION lines need quotedAmount. Listed categories left out of the lines are not sold.
         The server computes every amount and the totals.
-        scalePhotoId must be an uploaded SCALE photo of this pickup not used by an earlier round
-        (else 422 SCALE_PHOTO_REQUIRED).
+        scalePhotoId is optional. When sent, it must be an uploaded SCALE photo of this pickup, uploaded by
+        the sender and not used by an earlier round (else 422 SCALE_PHOTO_REQUIRED).
       requestBody:
         required: true
         content:
@@ -1375,7 +1375,10 @@ components:
           items: { $ref: '#/components/schemas/PickupLine' }
         totalKg: { $ref: '#/components/schemas/Kg' }
         totalAmount: { $ref: '#/components/schemas/Money' }
-        scalePhotoId: { type: string, format: uuid }
+        scalePhotoId:
+          type: [string, 'null']
+          format: uuid
+          description: null when the round was sent without a scale photo
         weighedBy: { type: string, enum: [COLLECTOR, ADMIN] }
         createdAt: { type: string, format: date-time }
 
@@ -1577,7 +1580,7 @@ components:
 
     WeightsInput:
       type: object
-      required: [lines, scalePhotoId]
+      required: [lines]
       properties:
         lines:
           type: array
@@ -1591,7 +1594,10 @@ components:
               quotedAmount:
                 anyOf: [{ $ref: '#/components/schemas/Money' }, { type: 'null' }]
                 description: Required for ON_INSPECTION categories such as electronics; not allowed otherwise
-        scalePhotoId: { type: string, format: uuid }
+        scalePhotoId:
+          type: [string, 'null']
+          format: uuid
+          description: Optional photo of the scale reading; leave out (or null) to send the weights without one
 
     Dispute:
       type: object

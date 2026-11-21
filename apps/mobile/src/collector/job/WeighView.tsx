@@ -12,11 +12,11 @@ import { body, colors, display, radius, tones } from '../../ui/theme';
 import { takePhoto } from '../camera';
 import { NavyHeader } from '../ui';
 import { initialLines, parseKg, previewTotals, rateLookup, stepKg, toWeightLines, type DraftLine } from '../weigh';
-import { useWeighDraft } from '../weighDraft';
+import { PhotoUploadError, useWeighDraft } from '../weighDraft';
 
 /**
  * C4 (first weigh, ARRIVED) and C10 (re-weigh after the household's first dispute). Kg steppers in 0.5 kg steps
- * with typed entry to 0.1 kg, a quote for inspection items, items found at the door, a required new scale photo,
+ * with typed entry to 0.1 kg, a quote for inspection items, items found at the door, an optional scale photo,
  * and a live total that previews the server's sum. The round is kept on the phone and retried when offline.
  */
 export function WeighView({
@@ -40,7 +40,7 @@ export function WeighView({
   if (!draft) return null;
   const lines = draft.lines;
   const preview = previewTotals(lines, categories, rateOf);
-  const ready = toLines(lines) !== null && draft.photo !== null;
+  const ready = toLines(lines) !== null;
   const reweigh = mode === 'reweigh';
   const previous = pickup.lines;
 
@@ -69,7 +69,11 @@ export function WeighView({
       footer={
         <>
           {draft.queued ? <Note tone="warn" icon="wifi-off" text={t('weighQueued')} /> : null}
-          {error ? <Text style={[body(15, 600), { color: colors.alert }]}>{errorMessage(error, lang)}</Text> : null}
+          {error ? (
+            <Text style={[body(15, 600), { color: colors.alert }]}>
+              {error instanceof PhotoUploadError ? t('scalePhotoUploadFailed') : errorMessage(error, lang)}
+            </Text>
+          ) : null}
           {!ready ? <Text style={[body(14), { color: colors.muted }]}>{t('weighIncomplete')}</Text> : null}
           <Button
             testID="send-weights"
@@ -172,7 +176,7 @@ export function WeighView({
             const photo = await takePhoto(lang, 'back');
             if (photo) setPhoto(photo);
           }}
-          style={[s.photo, reweigh && !draft.photo && { borderColor: colors.alert }]}
+          style={s.photo}
         >
           {draft.photo ? (
             <Image source={{ uri: draft.photo.uri }} style={s.thumb} accessibilityLabel={t('scalePhotoTaken')} />
@@ -184,10 +188,20 @@ export function WeighView({
               {draft.photo ? t('scalePhotoTaken') : reweigh ? t('newScalePhoto') : t('takeScalePhoto')}
             </Text>
             <Text style={[body(13), { color: colors.muted }]}>
-              {draft.photo ? t('retake') : reweigh ? t('photoRequiredNow') : t('scalePhotoHint')}
+              {draft.photo ? t('retake') : t('scalePhotoHint')}
             </Text>
           </View>
         </Pressable>
+        {draft.photo ? (
+          <Button
+            testID="remove-scale-photo"
+            label={t('removeScalePhoto')}
+            icon="x"
+            variant="link"
+            onPress={() => setPhoto(null)}
+            style={{ alignSelf: 'flex-start' }}
+          />
+        ) : null}
 
         <TotalsLabelCard
           leftLabel={reweigh ? t('newTotal') : t('totalWeight')}

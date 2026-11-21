@@ -1163,8 +1163,8 @@ export interface paths {
          *     VALIDATION_ERROR if it has never had a rate). Listed PER_KG categories use the rate copied at accept;
          *     ON_INSPECTION lines need quotedAmount. Listed categories left out of the lines are not sold.
          *     The server computes every amount and the totals.
-         *     scalePhotoId must be an uploaded SCALE photo of this pickup not used by an earlier round
-         *     (else 422 SCALE_PHOTO_REQUIRED).
+         *     scalePhotoId is optional. When sent, it must be an uploaded SCALE photo of this pickup, uploaded by
+         *     the sender and not used by an earlier round (else 422 SCALE_PHOTO_REQUIRED).
          */
         post: {
             parameters: {
@@ -2550,8 +2550,11 @@ export interface components {
             lines: components["schemas"]["PickupLine"][];
             totalKg: components["schemas"]["Kg"];
             totalAmount: components["schemas"]["Money"];
-            /** Format: uuid */
-            scalePhotoId: string;
+            /**
+             * Format: uuid
+             * @description null when the round was sent without a scale photo
+             */
+            scalePhotoId: string | null;
             /** @enum {string} */
             weighedBy: "COLLECTOR" | "ADMIN";
             /** Format: date-time */
@@ -2764,8 +2767,11 @@ export interface components {
                 /** @description Required for ON_INSPECTION categories such as electronics; not allowed otherwise */
                 quotedAmount?: components["schemas"]["Money"] | null;
             }[];
-            /** Format: uuid */
-            scalePhotoId: string;
+            /**
+             * Format: uuid
+             * @description Optional photo of the scale reading; leave out (or null) to send the weights without one
+             */
+            scalePhotoId?: string | null;
         };
         Dispute: {
             /** Format: uuid */

@@ -87,13 +87,17 @@ export class WeighingService {
    */
   async submitWeights(actor: Viewer, pickupId: string, input: SubmitWeightsDto): Promise<PickupDto> {
     const now = this.clock.now();
-    // Check the upload outside the transaction so no row lock is held during a network call.
-    const photo = await this.photosRepository.findOnPickup(input.scalePhotoId, pickupId);
-    if (!photo || photo.kind !== 'SCALE' || photo.uploaded_by !== actor.id || photo.weigh_version !== null) {
-      throw AppError.scalePhotoRequired('Take a new photo of the scale for this weigh and upload it first.');
-    }
-    if (!(await this.storage.exists(photo.storage_key))) {
-      throw AppError.scalePhotoRequired('The scale photo has not finished uploading. Upload it again, then send the weights.');
+    // The scale photo is optional; when one is sent, check the upload outside the transaction so no row lock is
+    // held during a network call.
+    const scalePhotoId = input.scalePhotoId ?? null;
+    if (scalePhotoId) {
+      const photo = await this.photosRepository.findOnPickup(scalePhotoId, pickupId);
+      if (!photo || photo.kind !== 'SCALE' || photo.uploaded_by !== actor.id || photo.weigh_version !== null) {
+        throw AppError.scalePhotoRequired('This scale photo cannot be used. Take a new one, or send the weights without a photo.');
+      }
+      if (!(await this.storage.exists(photo.storage_key))) {
+        throw AppError.scalePhotoRequired('The scale photo has not finished uploading. Upload it again, or send the weights without a photo.');
+      }
     }
 
     const outcome = await this.pickupsRepository.transaction(async (tx) => {
@@ -139,8 +143,8 @@ export class WeighingService {
         return { item, kg: l.kg, rate: null, amountPaisa: moneyUtil.toPaisa(l.quotedAmount) };
       });
 
-      if (!(await this.photosRepository.lockUnused(tx, input.scalePhotoId))) {
-        throw AppError.scalePhotoRequired('This scale photo was already used. Take a new one.');
+      if (scalePhotoId && !(await this.photosRepository.lockUnused(tx, scalePhotoId))) {
+        throw AppError.scalePhotoRequired('This scale photo was already used. Take a new one, or send the weights without a photo.');
       }
 
       const version = await this.weighingRepository.nextVersion(tx, pickupId);
@@ -156,7 +160,7 @@ export class WeighingService {
           at: now,
         });
       }
-      await this.photosRepository.attachToWeigh(tx, input.scalePhotoId, version);
+      if (scalePhotoId) await this.photosRepository.attachToWeigh(tx, scalePhotoId, version);
 
       const totalKg = moneyUtil.tenthsToDb(lines.reduce((s, l) => s + moneyUtil.toTenths(l.kg), 0));
       const totalAmount = moneyUtil.paisaToDb(lines.reduce((s, l) => s + l.amountPaisa, 0));

@@ -18,7 +18,8 @@ export const submitWeightsDto = z.object({
     .array(z.object({ categoryCode: z.string().min(1).max(30), kg, quotedAmount: money.nullable().optional() }))
     .min(1)
     .max(10),
-  scalePhotoId: z.uuid(),
+  /** Optional: a photo of the scale reading. */
+  scalePhotoId: z.uuid().nullable().optional(),
 });
 
 export type SubmitWeightsDto = z.infer<typeof submitWeightsDto>;
