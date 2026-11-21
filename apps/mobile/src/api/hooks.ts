@@ -9,6 +9,7 @@ import type {
   Category,
   CreatePickup,
   MeSummary,
+  NearbyCollectors,
   NotificationPage,
   Dispute,
   DisputeType,
@@ -29,6 +30,7 @@ export const keys = {
   myPickups: (filter: PickupFilter | 'ALL', limit?: number) => ['me', 'pickups', filter, limit ?? 'pages'] as const,
   allMyPickups: ['me', 'pickups'] as const,
   pickup: (id: string) => ['pickup', id] as const,
+  nearbyCollectors: (id: string) => ['pickup', id, 'nearby-collectors'] as const,
   summary: ['me', 'summary'] as const,
   notifications: ['me', 'notifications'] as const,
   collectorProfile: ['collector', 'profile'] as const,
@@ -167,6 +169,18 @@ export function useMyPickupPages(filter: PickupFilter | 'ALL') {
 export function usePickup(id: string) {
   const { api } = useSession();
   return useQuery({ queryKey: keys.pickup(id), queryFn: () => api.request<Pickup>('GET', `/pickups/${id}`) });
+}
+
+/** H5 radar: online collectors inside the request's radius, polled while it is still REQUESTED. */
+export function useNearbyCollectors(id: string, enabled: boolean) {
+  const { api } = useSession();
+  return useQuery({
+    queryKey: keys.nearbyCollectors(id),
+    queryFn: () => api.request<NearbyCollectors>('GET', `/pickups/${id}/nearby-collectors`),
+    enabled,
+    refetchInterval: 15_000,
+    retry: false,
+  });
 }
 
 /** Stores the server's answer so the screen moves on without waiting for the socket event. */

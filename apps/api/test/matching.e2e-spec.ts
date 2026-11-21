@@ -26,6 +26,45 @@ describe('Matching: nearby, accept, release, cancel (e2e)', () => {
   const nearby = (token: string, at: { lat: number; lng: number }) =>
     ctx.http().get(`/api/v1/collector/requests/nearby?lat=${at.lat}&lng=${at.lng}`).set(bearer(token));
 
+  describe('household radar (GET /pickups/{id}/nearby-collectors)', () => {
+    const radar = (token: string, id: string) => ctx.http().get(`/api/v1/pickups/${id}/nearby-collectors`).set(bearer(token));
+    const east = (metres: number) => ({ lat: MIRPUR.lat, lng: MIRPUR.lng + metres / (111_320 * Math.cos((MIRPUR.lat * Math.PI) / 180)) });
+
+    it('shows online approved collectors inside the radius, anonymous and blurred', async () => {
+      const h = await makeHousehold(ctx);
+      await makeCollector(ctx, { at: north(437) });
+      await makeCollector(ctx, { at: east(780) });
+      await makeCollector(ctx, { at: north(1500) }); // outside 1 km
+      await makeCollector(ctx, { at: north(300), online: false });
+      await makeCollector(ctx, { at: north(300), status: 'PENDING' });
+      const p = await createPickup(ctx, h);
+
+      const res = await radar(h.token, p.id).expect(200);
+      expect(res.body).toEqual({
+        radiusM: 1000,
+        count: 2,
+        collectors: [
+          { distanceM: 400, bearingDeg: 0 },
+          { distanceM: 800, bearingDeg: 90 },
+        ],
+      });
+      expect(JSON.stringify(res.body)).not.toMatch(/userId|name|phone|lat/);
+    });
+
+    it('is only for the household that made the request, and only while REQUESTED', async () => {
+      const h = await makeHousehold(ctx);
+      const other = await makeHousehold(ctx);
+      const c = await makeCollector(ctx, { at: north(200) });
+      const p = await createPickup(ctx, h);
+      expect((await radar(other.token, p.id)).status).toBe(404);
+      expect((await radar(c.token, p.id)).status).toBe(403);
+      await accept(ctx, c, p.id).expect(200);
+      const res = await radar(h.token, p.id);
+      expect(res.status).toBe(409);
+      expect(res.body.code).toBe('INVALID_STATE');
+    });
+  });
+
   it('shows a request inside 1 km with area and distance only', async () => {
     const h = await makeHousehold(ctx);
     const p = await createPickup(ctx, h);

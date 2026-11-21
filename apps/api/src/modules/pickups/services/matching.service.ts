@@ -5,6 +5,7 @@ import { AppError } from '../../../common/errors.js';
 import type { Db } from '../../../common/sql.js';
 import { dhakaToday } from '../../../common/time.js';
 import { CollectorProfilesService } from '../../users/services/collector-profiles.service.js';
+import type { NearbyCollectorsDto } from '../dtos/nearby-collectors.dto.js';
 import type { NearbyRequestDto, PickupDto } from '../dtos/pickup.dto.js';
 import { MatchingRepository, type CollectorDistance } from '../repositories/matching.repository.js';
 import { PickupsRepository } from '../repositories/pickups.repository.js';
@@ -12,6 +13,7 @@ import type { PickupRecord, Viewer } from '../types/pickup-record.types.js';
 import { PickupCodeService } from './pickup-code.service.js';
 import { PickupEventsService } from './pickup-events.service.js';
 import { PickupStateService } from './pickup-state.service.js';
+import { RADAR_MAX_DOTS, radarUtil } from '../utils/radar.util.js';
 import { PickupViewsService } from './pickup-views.service.js';
 
 /** Finding collectors for a request, the nearby list, accept / release, and the time-based sweeps. */
@@ -51,6 +53,24 @@ export class MatchingService {
     if (!rec || rec.row.status !== 'REQUESTED') return 0;
     this.pickupEventsService.requestCreated(rec, collectors);
     return collectors.length;
+  }
+
+  /**
+   * H5 radar: the collectors this request is sent to, anonymous and blurred. Only its household sees it,
+   * and only while REQUESTED.
+   */
+  async nearbyCollectors(household: Viewer, pickupId: string): Promise<NearbyCollectorsDto> {
+    const facts = await this.matchingRepository.radarFacts(pickupId);
+    if (!facts || facts.household_id !== household.id) throw AppError.notFound('That pickup was not found.');
+    if (facts.status !== 'REQUESTED') {
+      throw AppError.invalidState('A collector has already been found or the request has closed. Refresh to see it.');
+    }
+    const around = await this.collectorsAround(pickupId);
+    return {
+      radiusM: facts.search_radius_m,
+      count: around.length,
+      collectors: around.slice(0, RADAR_MAX_DOTS).map((c) => radarUtil.blur(c.distanceM, c.bearingDeg, facts.search_radius_m)),
+    };
   }
 
   /** Open requests whose current radius reaches this point, nearest first. */

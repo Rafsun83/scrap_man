@@ -377,6 +377,26 @@ paths:
               schema: { $ref: '#/components/schemas/Pickup' }
         '404': { $ref: '#/components/responses/Error' }
 
+  /pickups/{pickupId}/nearby-collectors:
+    parameters:
+      - $ref: '#/components/parameters/PickupId'
+    get:
+      tags: [Pickups]
+      summary: Online collectors inside the request's radius (H5 radar)
+      description: |
+        Household owner only, while REQUESTED; anyone else gets NOT_FOUND, other statuses INVALID_STATE.
+        The same collectors the request is sent to (online, approved, seen in the last 10 minutes, inside the
+        current radius). Anonymous on purpose: no ids or names, distance rounded to 100 m and direction to 30
+        degrees. Apps poll it while the request is open.
+      responses:
+        '200':
+          description: Nearby collectors, nearest first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NearbyCollectors' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+
   /pickups/{pickupId}/cancel:
     parameters:
       - $ref: '#/components/parameters/PickupId'
@@ -1688,6 +1708,24 @@ components:
         photoId: { type: string, format: uuid }
         uploadUrl: { type: string, format: uri }
         expiresAt: { type: string, format: date-time }
+
+    NearbyCollectors:
+      type: object
+      required: [radiusM, count, collectors]
+      properties:
+        radiusM: { type: integer, description: The request's current search radius, examples: [1000] }
+        count: { type: integer, description: Every online collector inside the radius }
+        collectors:
+          type: array
+          description: Nearest first, at most 30
+          items: { $ref: '#/components/schemas/NearbyCollector' }
+
+    NearbyCollector:
+      type: object
+      required: [distanceM, bearingDeg]
+      properties:
+        distanceM: { type: integer, description: 'Rounded to 100 m (at least 100, at most the radius)', examples: [400] }
+        bearingDeg: { type: integer, description: 'From the address, 0 = north, clockwise; rounded to 30', examples: [60] }
 
     NearbyRequest:
       type: object

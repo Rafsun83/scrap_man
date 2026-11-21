@@ -1,23 +1,27 @@
-import { MATCHING } from '@bw/shared';
+import { localDigits, MATCHING } from '@bw/shared';
 import { useEffect, useRef } from 'react';
 import { Alert, Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import type { Category, Pickup } from '../../api/types';
+import type { Category, NearbyCollectors, Pickup } from '../../api/types';
 import { useT } from '../../i18n/lang';
 import { categoryNames, formatKm } from '../../lib/format';
 import { BackButton, Button, Card, Icon, Screen } from '../../ui/components';
 import { body, colors, display, tones } from '../../ui/theme';
+import { RADAR, radarDots } from './radar';
 import { InfoRow, useSlotLabel } from './shared';
 
-/** H5: waiting while nearby collectors see the request; cancel. */
+/** H5: waiting while nearby collectors see the request, with the online ones on the radar; cancel. */
 export function SearchingView({
   pickup,
   categories,
+  nearby,
   onCancel,
   cancelling,
   cancelError,
 }: {
   pickup: Pickup;
   categories: Category[] | undefined;
+  /** Online collectors inside the radius; undefined until the first answer (or if it failed). */
+  nearby?: NearbyCollectors;
   onCancel: () => void;
   cancelling: boolean;
   cancelError: string | null;
@@ -33,6 +37,17 @@ export function SearchingView({
     loop.start();
     return () => loop.stop();
   }, [ping]);
+
+  // The radar's answer is fresher than the pickup after the radius widens (that change sends no event).
+  const radiusM = nearby?.radiusM || pickup.searchRadiusM || MATCHING.initialRadiusM;
+  const dots = nearby ? radarDots(nearby.collectors, radiusM) : [];
+  const onlineText = !nearby
+    ? null
+    : nearby.count === 0
+      ? t('noCollectorsOnline')
+      : nearby.count === 1
+        ? t('oneCollectorOnline')
+        : t('collectorsOnline', { count: localDigits(nearby.count, lang) });
 
   const confirmCancel = () =>
     Alert.alert(t('cancelConfirmTitle'), t('cancelConfirmBody'), [
@@ -66,13 +81,24 @@ export function SearchingView({
         <View style={s.home}>
           <Icon name="home" size={24} color={colors.signal} />
         </View>
+        {dots.map((d, i) => (
+          <View key={i} testID="radar-collector" style={[s.dot, d]}>
+            <Icon name="truck" size={16} />
+          </View>
+        ))}
       </View>
       <View style={{ gap: 8 }}>
         <Text style={[display(27), { textAlign: 'center', lineHeight: 34 }]}>{t('searchingTitle')}</Text>
         <Text style={[body(16), { textAlign: 'center', color: colors.muted, lineHeight: 24 }]}>{t('searchingBody')}</Text>
         <Text style={[body(14, 600), { textAlign: 'center' }]}>
-          {t('searchRadius', { km: formatKm(pickup.searchRadiusM || MATCHING.initialRadiusM, lang) })}
+          {t('searchRadius', { km: formatKm(radiusM, lang) })}
         </Text>
+        {onlineText ? (
+          <View style={s.online} accessibilityLiveRegion="polite">
+            <Icon name={nearby!.count > 0 ? 'truck' : 'clock'} size={18} color={nearby!.count > 0 ? colors.ink : colors.muted} />
+            <Text style={[body(14, 600), { color: nearby!.count > 0 ? colors.ink : colors.muted, textAlign: 'center', flexShrink: 1 }]}>{onlineText}</Text>
+          </View>
+        ) : null}
       </View>
       <Card accessibilityLabel={t('requestSummary')}>
         <InfoRow icon="package" text={categoryNames(categories, pickup.categoryCodes, lang)} />
@@ -84,18 +110,30 @@ export function SearchingView({
 }
 
 const s = StyleSheet.create({
-  radar: { width: 260, height: 260, alignSelf: 'center' },
+  radar: { width: RADAR.size, height: RADAR.size, alignSelf: 'center' },
   ring: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 999, borderWidth: 2, borderColor: tones.ring },
   ping: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 999, backgroundColor: colors.signal },
   home: {
     position: 'absolute',
-    left: 105,
-    top: 105,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    left: (RADAR.size - RADAR.home) / 2,
+    top: (RADAR.size - RADAR.home) / 2,
+    width: RADAR.home,
+    height: RADAR.home,
+    borderRadius: RADAR.home / 2,
     backgroundColor: colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dot: {
+    position: 'absolute',
+    width: RADAR.dot,
+    height: RADAR.dot,
+    borderRadius: RADAR.dot / 2,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  online: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
 });

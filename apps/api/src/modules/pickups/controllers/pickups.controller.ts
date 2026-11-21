@@ -9,6 +9,7 @@ import { confirmPickupDto, type ConfirmPickupDto } from '../dtos/confirm-pickup.
 import { createPickupDto, type CreatePickupDto } from '../dtos/create-pickup.dto.js';
 import type { DisputeDto } from '../dtos/dispute.dto.js';
 import { openDisputeDto, type OpenDisputeDto } from '../dtos/open-dispute.dto.js';
+import type { NearbyCollectorsDto } from '../dtos/nearby-collectors.dto.js';
 import { photoUploadDto, type PhotoUploadDto, type PhotoUploadSlotDto } from '../dtos/photo-upload.dto.js';
 import { pickupIdDto } from '../dtos/pickup-id.dto.js';
 import type { PickupDto } from '../dtos/pickup.dto.js';
@@ -41,6 +42,12 @@ export class PickupsController {
   @Get(':pickupId')
   get(@CurrentUser() user: UserEntity, @Param('pickupId', id) pickupId: string): Promise<PickupDto> {
     return this.pickupsService.get(user, pickupId);
+  }
+
+  @Get(':pickupId/nearby-collectors')
+  @Roles('HOUSEHOLD')
+  nearbyCollectors(@CurrentUser() user: UserEntity, @Param('pickupId', id) pickupId: string): Promise<NearbyCollectorsDto> {
+    return this.matchingService.nearbyCollectors(user, pickupId);
   }
 
   @Post(':pickupId/cancel')

@@ -4,6 +4,7 @@ import {
   useCategories,
   useConfirmPickup,
   useIdempotencyKey,
+  useNearbyCollectors,
   usePickup,
   useRateCollector,
 } from '../../../../src/api/hooks';
@@ -29,6 +30,7 @@ export default function PickupScreen() {
   const confirm = useConfirmPickup(id);
   const rate = useRateCollector(id);
   const idem = useIdempotencyKey();
+  const nearby = useNearbyCollectors(id, pickup.data?.status === 'REQUESTED');
 
   if (pickup.isPending) return <LoadingView />;
   if (pickup.isError) return <ErrorView message={errorMessage(pickup.error, lang)} onRetry={() => pickup.refetch()} />;
@@ -43,6 +45,7 @@ export default function PickupScreen() {
         <SearchingView
           pickup={p}
           categories={cats}
+          nearby={nearby.data}
           onCancel={() => cancel.mutate(undefined)}
           cancelling={cancel.isPending}
           cancelError={cancel.error ? errorMessage(cancel.error, lang) : null}

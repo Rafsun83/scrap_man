@@ -8,6 +8,14 @@ import type { PickupRef } from '../types/pickup-record.types.js';
 export interface CollectorDistance {
   userId: string;
   distanceM: number;
+  /** Direction from the request to the collector, 0 = north, clockwise. */
+  bearingDeg: number;
+}
+
+export interface RadarFacts {
+  household_id: string;
+  status: PickupStatus;
+  search_radius_m: number;
 }
 
 export interface AcceptFailureFacts {
@@ -35,7 +43,8 @@ export class MatchingRepository {
   ): Promise<CollectorDistance[]> {
     return rows<CollectorDistance>(
       db,
-      `SELECT cp.user_id AS "userId", ST_Distance(cp.last_location, p.location)::int AS "distanceM"
+      `SELECT cp.user_id AS "userId", ST_Distance(cp.last_location, p.location)::int AS "distanceM",
+              COALESCE(degrees(ST_Azimuth(p.location, cp.last_location)), 0)::int AS "bearingDeg"
          FROM pickups p
          JOIN collector_profiles cp
            ON cp.is_online AND cp.verification_status = 'APPROVED' AND cp.last_location IS NOT NULL
@@ -47,6 +56,11 @@ export class MatchingRepository {
         ORDER BY 2`,
       [pickupId, staleBefore, outsideM, exclude],
     );
+  }
+
+  /** Owner, status and radius of a request, for its radar; null when it does not exist. */
+  radarFacts(pickupId: string): Promise<RadarFacts | null> {
+    return one<RadarFacts>(this.db, 'SELECT household_id, status, search_radius_m FROM pickups WHERE id = $1', [pickupId]);
   }
 
   /** Open, unexpired requests whose current radius reaches this point, nearest first (at most 50). */

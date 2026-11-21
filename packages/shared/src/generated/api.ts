@@ -806,6 +806,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pickups/{pickupId}/nearby-collectors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pickupId: components["parameters"]["PickupId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Online collectors inside the request's radius (H5 radar)
+         * @description Household owner only, while REQUESTED; anyone else gets NOT_FOUND, other statuses INVALID_STATE.
+         *     The same collectors the request is sent to (online, approved, seen in the last 10 minutes, inside the
+         *     current radius). Anonymous on purpose: no ids or names, distance rounded to 100 m and direction to 30
+         *     degrees. Apps poll it while the request is open.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    pickupId: components["parameters"]["PickupId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Nearby collectors, nearest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NearbyCollectors"];
+                    };
+                };
+                404: components["responses"]["Error"];
+                409: components["responses"]["Error"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pickups/{pickupId}/cancel": {
         parameters: {
             query?: never;
@@ -2863,6 +2911,29 @@ export interface components {
             uploadUrl: string;
             /** Format: date-time */
             expiresAt: string;
+        };
+        NearbyCollectors: {
+            /**
+             * @description The request's current search radius
+             * @example 1000
+             */
+            radiusM: number;
+            /** @description Every online collector inside the radius */
+            count: number;
+            /** @description Nearest first, at most 30 */
+            collectors: components["schemas"]["NearbyCollector"][];
+        };
+        NearbyCollector: {
+            /**
+             * @description Rounded to 100 m (at least 100, at most the radius)
+             * @example 400
+             */
+            distanceM: number;
+            /**
+             * @description From the address, 0 = north, clockwise; rounded to 30
+             * @example 60
+             */
+            bearingDeg: number;
         };
         NearbyRequest: {
             /** Format: uuid */

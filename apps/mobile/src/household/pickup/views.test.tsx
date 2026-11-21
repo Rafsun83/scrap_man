@@ -26,6 +26,39 @@ describe('H5 searching', () => {
     buttons.find((b) => b.style === 'destructive')!.onPress!();
     expect(onCancel).toHaveBeenCalled();
   });
+
+  it('shows online collectors on the radar and how many there are', async () => {
+    const nearby = {
+      radiusM: 3000,
+      count: 2,
+      collectors: [
+        { distanceM: 400, bearingDeg: 0 },
+        { distanceM: 2100, bearingDeg: 120 },
+      ],
+    };
+    await renderScreen(
+      <SearchingView pickup={makePickup()} categories={categories} nearby={nearby} onCancel={jest.fn()} cancelling={false} cancelError={null} />,
+    );
+    expect(screen.getAllByTestId('radar-collector', { includeHiddenElements: true })).toHaveLength(2);
+    expect(screen.getByText('কাছে ২ জন সংগ্রাহক অনলাইনে আছেন')).toBeTruthy();
+    // the radar's radius is newer than the pickup's after widening
+    expect(screen.getByText('৩.০ কিমির মধ্যে খোঁজা হচ্ছে')).toBeTruthy();
+  });
+
+  it('says so when nobody is online nearby', async () => {
+    await renderScreen(
+      <SearchingView
+        pickup={makePickup()}
+        categories={categories}
+        nearby={{ radiusM: 1000, count: 0, collectors: [] }}
+        onCancel={jest.fn()}
+        cancelling={false}
+        cancelError={null}
+      />,
+    );
+    expect(screen.queryAllByTestId('radar-collector', { includeHiddenElements: true })).toHaveLength(0);
+    expect(screen.getByText(/এই মুহূর্তে কাছে কেউ অনলাইনে নেই/)).toBeTruthy();
+  });
 });
 
 describe('H6 tracking', () => {
