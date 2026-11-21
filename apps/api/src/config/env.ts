@@ -29,6 +29,15 @@ export interface Env {
   SMS_HTTP_API_KEY?: string;
   SMS_SENDER_ID?: string;
   SMS_TIMEOUT_MS: number;
+  /**
+   * Where pushes go: `console` (the API log; development) or `fcm` (Firebase Cloud Messaging). Production defaults
+   * to `fcm`; choosing console there must be explicit.
+   */
+  PUSH_PROVIDER: 'console' | 'fcm';
+  /** The Firebase service-account key as JSON text. Without it, FCM uses GOOGLE_APPLICATION_CREDENTIALS or keyless sign-in. */
+  FCM_SERVICE_ACCOUNT_JSON?: string;
+  /** The Firebase project id; read from the key when one is given. */
+  FCM_PROJECT_ID?: string;
 }
 
 function bool(raw: unknown, name: string, fallback: boolean): boolean {
@@ -83,6 +92,18 @@ export function validateEnv(raw: Record<string, unknown>): Env {
   if (smsProvider === 'http' && smsMissing.length > 0) {
     throw new Error(`SMS_PROVIDER=http needs ${smsMissing.join(' and ')}. Set them, or SMS_PROVIDER=console for local runs.`);
   }
+  const pushProvider = raw.PUSH_PROVIDER ? asText(raw.PUSH_PROVIDER) : nodeEnv === 'production' ? 'fcm' : 'console';
+  if (pushProvider !== 'console' && pushProvider !== 'fcm') {
+    throw new Error(`PUSH_PROVIDER must be console or fcm, got "${pushProvider}".`);
+  }
+  const fcmKey = raw.FCM_SERVICE_ACCOUNT_JSON ? asText(raw.FCM_SERVICE_ACCOUNT_JSON) : undefined;
+  if (fcmKey) serviceAccountProjectId(fcmKey);
+  const fcmProjectId = raw.FCM_PROJECT_ID ? asText(raw.FCM_PROJECT_ID) : undefined;
+  if (pushProvider === 'fcm' && !fcmKey && !raw.GOOGLE_APPLICATION_CREDENTIALS && !fcmProjectId) {
+    throw new Error(
+      'PUSH_PROVIDER=fcm needs FCM_SERVICE_ACCOUNT_JSON, GOOGLE_APPLICATION_CREDENTIALS (path to the key file) or, for keyless sign-in, FCM_PROJECT_ID. Set one, or PUSH_PROVIDER=console for local runs.',
+    );
+  }
   return {
     NODE_ENV: nodeEnv as Env['NODE_ENV'],
     PORT: positiveInt(raw.PORT, 'PORT', 3000),
@@ -107,5 +128,24 @@ export function validateEnv(raw: Record<string, unknown>): Env {
     SMS_HTTP_API_KEY: raw.SMS_HTTP_API_KEY ? asText(raw.SMS_HTTP_API_KEY) : undefined,
     SMS_SENDER_ID: raw.SMS_SENDER_ID ? asText(raw.SMS_SENDER_ID) : undefined,
     SMS_TIMEOUT_MS: positiveInt(raw.SMS_TIMEOUT_MS, 'SMS_TIMEOUT_MS', 5000),
+    PUSH_PROVIDER: pushProvider,
+    FCM_SERVICE_ACCOUNT_JSON: fcmKey,
+    FCM_PROJECT_ID: fcmProjectId,
   };
+}
+
+/** Checks a Firebase service-account key and returns its project id; the error never echoes the key. */
+export function serviceAccountProjectId(json: string): string {
+  let key: unknown;
+  try {
+    key = JSON.parse(json);
+  } catch {
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON is not valid JSON. Paste the whole key file from Firebase on one line.');
+  }
+  const k = key as Record<string, unknown> | null;
+  const missing = ['project_id', 'client_email', 'private_key'].filter((field) => typeof k?.[field] !== 'string' || !k[field]);
+  if (missing.length > 0) {
+    throw new Error(`FCM_SERVICE_ACCOUNT_JSON is missing ${missing.join(', ')}. Use the service-account key from Firebase.`);
+  }
+  return k!.project_id as string;
 }

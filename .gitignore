@@ -6,6 +6,10 @@ coverage/
 .env
 .env.*
 !.env.example
+# Firebase: the app config and any service-account key stay out of git
+google-services.json
+GoogleService-Info.plist
+*firebase-adminsdk*.json
 .expo/
 web-build/
 ios/

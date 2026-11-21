@@ -60,6 +60,9 @@ services:
       SMS_HTTP_URL: ${SMS_HTTP_URL:-}
       SMS_HTTP_API_KEY: ${SMS_HTTP_API_KEY:-}
       SMS_SENDER_ID: ${SMS_SENDER_ID:-}
+      PUSH_PROVIDER: ${PUSH_PROVIDER:-fcm}
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
       LOG_FORMAT: json
     depends_on:
       postgres: { condition: service_healthy }

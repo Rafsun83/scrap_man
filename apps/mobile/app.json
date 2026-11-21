@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.bhangariwala.app"
+      "bundleIdentifier": "com.bhangariwala"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.bhangariwala.app"
+      "package": "com.bhangariwala"
     },
     "web": {
       "favicon": "./assets/favicon.png"

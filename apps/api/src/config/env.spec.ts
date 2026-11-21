@@ -33,10 +33,34 @@ describe('validateEnv', () => {
     expect(validateEnv(base).SMS_PROVIDER).toBe('console');
     const s3 = { S3_BUCKET: 'b', S3_ACCESS_KEY: 'k', S3_SECRET_KEY: 's' };
     expect(() => validateEnv({ ...base, ...s3, NODE_ENV: 'production' })).toThrow('SMS_PROVIDER=http needs SMS_HTTP_URL and SMS_HTTP_API_KEY');
-    expect(validateEnv({ ...base, ...s3, NODE_ENV: 'production', SMS_PROVIDER: 'console' }).SMS_PROVIDER).toBe('console');
+    expect(validateEnv({ ...base, ...s3, NODE_ENV: 'production', SMS_PROVIDER: 'console', PUSH_PROVIDER: 'console' }).SMS_PROVIDER).toBe('console');
     const http = validateEnv({ ...base, SMS_PROVIDER: 'http', SMS_HTTP_URL: 'https://sms', SMS_HTTP_API_KEY: 'k' });
     expect(http).toMatchObject({ SMS_PROVIDER: 'http', SMS_TIMEOUT_MS: 5000 });
     expect(() => validateEnv({ ...base, SMS_PROVIDER: 'pigeon' })).toThrow('console or http');
+  });
+
+  it('uses console push in development and needs Firebase credentials in production', () => {
+    expect(validateEnv(base).PUSH_PROVIDER).toBe('console');
+    const prod = { ...base, NODE_ENV: 'production', S3_BUCKET: 'b', S3_ACCESS_KEY: 'k', S3_SECRET_KEY: 's', SMS_PROVIDER: 'console' };
+    expect(() => validateEnv(prod)).toThrow('PUSH_PROVIDER=fcm needs FCM_SERVICE_ACCOUNT_JSON');
+    expect(validateEnv({ ...prod, PUSH_PROVIDER: 'console' }).PUSH_PROVIDER).toBe('console');
+    expect(validateEnv({ ...prod, GOOGLE_APPLICATION_CREDENTIALS: '/run/secrets/fcm.json' }).PUSH_PROVIDER).toBe('fcm');
+    expect(validateEnv({ ...prod, FCM_PROJECT_ID: 'bw' }).FCM_PROJECT_ID).toBe('bw');
+    expect(() => validateEnv({ ...base, PUSH_PROVIDER: 'apns' })).toThrow('console or fcm');
+  });
+
+  it('checks the Firebase key without echoing it', () => {
+    const key = JSON.stringify({ project_id: 'bw', client_email: 'a@bw.iam.gserviceaccount.com', private_key: 'secret-pem' });
+    expect(validateEnv({ ...base, PUSH_PROVIDER: 'fcm', FCM_SERVICE_ACCOUNT_JSON: key }).FCM_SERVICE_ACCOUNT_JSON).toBe(key);
+    expect(() => validateEnv({ ...base, FCM_SERVICE_ACCOUNT_JSON: '{secret-pem' })).toThrow('not valid JSON');
+    expect(() => validateEnv({ ...base, FCM_SERVICE_ACCOUNT_JSON: JSON.stringify({ project_id: 'bw', private_key: 'secret-pem' }) })).toThrow(
+      'missing client_email',
+    );
+    try {
+      validateEnv({ ...base, FCM_SERVICE_ACCOUNT_JSON: '{secret-pem' });
+    } catch (error) {
+      expect(String(error)).not.toContain('secret-pem');
+    }
   });
 
   it('names every missing variable', () => {

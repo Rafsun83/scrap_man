@@ -11,6 +11,9 @@ export const pushEnabled = Constants.expoConfig?.extra?.pushEnabled === true;
 
 const TOKEN_KEY = 'bw.push.token';
 
+/** Must match ANDROID_CHANNEL_ID in the API's FCM sender. */
+const ANDROID_CHANNEL_ID = 'default';
+
 type NotificationsModule = typeof import('expo-notifications');
 
 /** Loaded only when push is enabled, so builds and tests without Firebase never touch the native module. */
@@ -32,6 +35,14 @@ export function usePushRegistration(signedIn: boolean, role: string | undefined,
     });
     let cancelled = false;
     void (async () => {
+      // Android 8+ shows pushes only on a channel; create it before asking, so Android 13 shows the prompt.
+      if (Platform.OS === 'android') {
+        await N.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+          name: 'ভাঙ্গারিওয়ালা',
+          importance: N.AndroidImportance.HIGH,
+          sound: 'default',
+        });
+      }
       const perm = await N.requestPermissionsAsync();
       if (!perm.granted || cancelled) return;
       const { data: token } = await N.getDevicePushTokenAsync();
