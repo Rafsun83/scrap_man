@@ -11,6 +11,10 @@ export function handleAdminEvent(qc: QueryClient, event: string, payload: unknow
     invalidate(keys.alerts)
     return
   }
+  if (event === 'rates.published') {
+    invalidate(keys.allRates) // every date's A2 table, e.g. in another admin's tab
+    return
+  }
   if (event === 'collector.applied' || event === 'collector.verification') {
     invalidate(keys.allCollectors)
     invalidate(keys.overview)

@@ -33,6 +33,7 @@ export const keys = {
   pickup: (id: string) => ['admin', 'pickup', id] as const,
   events: (id: string) => ['admin', 'pickup', id, 'events'] as const,
   rates: (date: string) => ['admin', 'rates', date] as const,
+  allRates: ['admin', 'rates'] as const,
   categories: ['categories'] as const,
   collectors: (status: VerificationStatus) => ['admin', 'collectors', status] as const,
   allCollectors: ['admin', 'collectors'] as const,

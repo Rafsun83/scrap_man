@@ -16,6 +16,11 @@ export class RealtimeService {
     if (rooms.length > 0) server.to(rooms).emit(event, payload);
   }
 
+  /** To every connected socket, for public news such as new rates. */
+  broadcast(event: SocketEvent, payload: unknown): void {
+    this.gateway.server?.emit(event, payload);
+  }
+
   /** One payload per user (e.g. each collector's own distance), not copied to admins. */
   emitEach(event: SocketEvent, items: { userId: string; payload: unknown }[]): void {
     const server = this.gateway.server;

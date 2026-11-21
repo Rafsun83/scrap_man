@@ -80,7 +80,7 @@ These rules do not apply to the React app in `apps/web/`.
 | DISPUTED -> CANCELLED | Admin | `POST /admin/disputes/{id}/resolve` outcome CANCEL |
 | CONFIRMED -> COMPLETED | Collector | `POST /pickups/{id}/payment` (TrxID required for BKASH and NAGAD) |
 
-Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`, `pickup.released`, `pickup.code_locked` (admins), `dispute.opened`, `dispute.resolved`, `collector.verification`, `collector.applied` (admins), `ops.alert` (admins). The same pickup events also go out as push notifications to whoever they are news for (`src/modules/push`). Payloads and recipients: `SocketEvents` and `Event*` in `docs/openapi.yaml`.
+Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`, `pickup.released`, `pickup.code_locked` (admins), `dispute.opened`, `dispute.resolved`, `collector.verification`, `collector.applied` (admins), `ops.alert` (admins), `rates.published` (everyone connected). The same pickup events also go out as push notifications to whoever they are news for (`src/modules/push`). Payloads and recipients: `SocketEvents` and `Event*` in `docs/openapi.yaml`.
 
 ## Milestones
 

@@ -21,6 +21,13 @@ describe('admin live events', () => {
     expect(keysOf(spy)).toEqual(expect.arrayContaining(['["admin","disputes"]', '["admin","pickup","p2"]']))
   })
 
+  it('published rates refresh the rates table for every date', () => {
+    const qc = new QueryClient()
+    const spy = vi.spyOn(qc, 'invalidateQueries')
+    handleAdminEvent(qc, 'rates.published', { effectiveDate: '2026-11-21', at: '' })
+    expect(keysOf(spy)).toEqual(['["admin","rates"]'])
+  })
+
   it('a new application refreshes the queue and the badge', () => {
     const qc = new QueryClient()
     const spy = vi.spyOn(qc, 'invalidateQueries')

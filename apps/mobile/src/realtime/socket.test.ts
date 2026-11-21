@@ -14,6 +14,15 @@ describe('live events', () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: ['me', 'summary'] });
   });
 
+  it('refetches today\u2019s rates and the feed when rates are published', () => {
+    const qc = new QueryClient();
+    const spy = jest.spyOn(qc, 'invalidateQueries');
+    handleEvent(qc, 'rates.published', { effectiveDate: '2026-11-21', at: '' });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['rates', 'today'] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['me', 'notifications'] });
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
   it('refetches for dispute events and expiry', () => {
     const qc = new QueryClient();
     const spy = jest.spyOn(qc, 'invalidateQueries');

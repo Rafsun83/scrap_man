@@ -1,6 +1,7 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
+import { dhakaToday } from '../src/common/time.js';
 import { MatchingJobsService } from '../src/modules/jobs/services/matching-jobs.service.js';
 import { bearer, createTestApp, resetData, type TestContext } from './helpers.js';
 import {
@@ -86,6 +87,26 @@ describe('Live events over Socket.IO (e2e)', () => {
     await settle();
     expect(far.named('request.created')).toHaveLength(1);
     expect(near.named('request.created')).toHaveLength(1);
+  });
+
+  it('rates.published reaches every connected user when an admin publishes rates', async () => {
+    const adminSession = await makeAdminSession(ctx);
+    const [hc, cc, ac] = await Promise.all([
+      connect(await makeHousehold(ctx)),
+      connect(await makeCollector(ctx, { at: north(200) })),
+      connect(adminSession),
+    ]);
+    const effectiveDate = dhakaToday();
+    await ctx
+      .http()
+      .put('/api/v1/admin/rates')
+      .set(bearer(adminSession.token))
+      .send({ effectiveDate, rates: [{ categoryCode: 'IRON', ratePerKg: 61 }] })
+      .expect(204);
+    await settle();
+    for (const c of [hc, cc, ac]) {
+      expect(c.named('rates.published')).toEqual([{ effectiveDate, at: expect.any(String) }]);
+    }
   });
 
   it('accept tells the household and takes the request away from other collectors', async () => {

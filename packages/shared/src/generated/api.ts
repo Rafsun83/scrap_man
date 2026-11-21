@@ -1818,7 +1818,10 @@ export interface paths {
                 400: components["responses"]["Error"];
             };
         };
-        /** Publish rates for a date */
+        /**
+         * Publish rates for a date
+         * @description Sends `rates.published` to every connected user, so apps refresh today's rates.
+         */
         put: {
             parameters: {
                 query?: never;
@@ -2925,9 +2928,21 @@ export interface components {
          *     ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
          *     collector.verification: the collector an admin approved or rejected. collector.applied: admins only, when a
          *     collector submits (or resubmits) an application. ops.alert: admins only, when a new ops alert appears.
+         *     rates.published: every connected user, when an admin publishes or corrects rates (clients refetch
+         *     GET /rates/today and the notification feed).
          * @enum {string}
          */
-        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved" | "collector.verification" | "collector.applied" | "ops.alert";
+        SocketEvents: "request.created" | "request.taken" | "request.expired" | "pickup.accepted" | "pickup.released" | "collector.location" | "pickup.arrived" | "pickup.code_locked" | "pickup.weighed" | "pickup.confirmed" | "pickup.disputed" | "pickup.paid" | "pickup.cancelled" | "dispute.opened" | "dispute.resolved" | "collector.verification" | "collector.applied" | "ops.alert" | "rates.published";
+        /** @description rates.published (every connected user). Clients refetch GET /rates/today for the rates. */
+        EventRatesPublished: {
+            /**
+             * Format: date
+             * @description The day the published rates take effect
+             */
+            effectiveDate: string;
+            /** Format: date-time */
+            at: string;
+        };
         /** @description collector.applied (admins only) */
         EventCollectorApplied: {
             /** Format: uuid */

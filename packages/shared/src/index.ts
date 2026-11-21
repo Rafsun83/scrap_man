@@ -36,6 +36,7 @@ export type AdminUserRow = components['schemas']['AdminUserRow'];
 export type AdminUserPage = components['schemas']['AdminUserPage'];
 export type EventCollectorApplied = components['schemas']['EventCollectorApplied'];
 export type OpsAlert = components['schemas']['OpsAlert'];
+export type EventRatesPublished = components['schemas']['EventRatesPublished'];
 export type DeviceInput = components['schemas']['DeviceInput'];
 export type Notification = components['schemas']['Notification'];
 export type NotificationType = components['schemas']['NotificationType'];

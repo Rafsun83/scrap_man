@@ -883,6 +883,7 @@ paths:
     put:
       tags: [Admin]
       summary: Publish rates for a date
+      description: Sends `rates.published` to every connected user, so apps refresh today's rates.
       requestBody:
         required: true
         content:
@@ -1759,9 +1760,20 @@ components:
         ACCEPTED. pickup.code_locked: admins only. dispute.opened, dispute.resolved: both sides.
         collector.verification: the collector an admin approved or rejected. collector.applied: admins only, when a
         collector submits (or resubmits) an application. ops.alert: admins only, when a new ops alert appears.
+        rates.published: every connected user, when an admin publishes or corrects rates (clients refetch
+        GET /rates/today and the notification feed).
       enum: [request.created, request.taken, request.expired, pickup.accepted, pickup.released, collector.location,
              pickup.arrived, pickup.code_locked, pickup.weighed, pickup.confirmed, pickup.disputed, pickup.paid,
-             pickup.cancelled, dispute.opened, dispute.resolved, collector.verification, collector.applied, ops.alert]
+             pickup.cancelled, dispute.opened, dispute.resolved, collector.verification, collector.applied, ops.alert,
+             rates.published]
+
+    EventRatesPublished:
+      description: rates.published (every connected user). Clients refetch GET /rates/today for the rates.
+      type: object
+      required: [effectiveDate, at]
+      properties:
+        effectiveDate: { type: string, format: date, description: The day the published rates take effect }
+        at: { type: string, format: date-time }
 
     EventCollectorApplied:
       description: collector.applied (admins only)

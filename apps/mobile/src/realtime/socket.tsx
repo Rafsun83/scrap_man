@@ -68,6 +68,12 @@ export function handleEvent(qc: QueryClient, event: string, payload: unknown) {
     qc.invalidateQueries({ queryKey: keys.notifications });
     return;
   }
+  if (event === 'rates.published') {
+    // Rate board, sell estimate and weigh screen read today's rates; the feed gains a RATES_PUBLISHED item.
+    qc.invalidateQueries({ queryKey: keys.rates });
+    qc.invalidateQueries({ queryKey: keys.notifications });
+    return;
+  }
   if (event === 'collector.location') {
     const p = payload as { pickupId: string } & Location;
     setCollectorLocation(p.pickupId, { lat: p.lat, lng: p.lng, at: p.at });

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { EventRatesPublished } from '@bw/shared';
 import { AppError } from '../../../common/errors.js';
 import { dhakaToday } from '../../../common/time.js';
 import type { AdminRatesDto } from '../dtos/admin-rates.dto.js';
@@ -6,12 +7,16 @@ import type { CategoryDto } from '../dtos/category.dto.js';
 import type { PublishRatesDto } from '../dtos/publish-rates.dto.js';
 import type { TodayRatesDto } from '../dtos/today-rates.dto.js';
 import type { CategoryEntity } from '../entities/category.entity.js';
+import { RealtimeService } from '../../realtime/services/realtime.service.js';
 import { CatalogRepository } from '../repositories/catalog.repository.js';
 import { todayRatesUtil } from '../utils/today-rates.util.js';
 
 @Injectable()
 export class CatalogService {
-  constructor(private readonly catalogRepository: CatalogRepository) {}
+  constructor(
+    private readonly catalogRepository: CatalogRepository,
+    private readonly realtimeService: RealtimeService,
+  ) {}
 
   async activeCategories(): Promise<CategoryDto[]> {
     return (await this.catalogRepository.activeCategories()).map((c) => this.toCategoryDto(c));
@@ -44,7 +49,7 @@ export class CatalogService {
     };
   }
 
-  /** Publishes (or corrects) the rates for today or a future date. */
+  /** Publishes (or corrects) the rates for today or a future date, then tells every connected app. */
   async publishRates(adminId: string, input: PublishRatesDto): Promise<void> {
     const { effectiveDate, rates } = input;
     if (effectiveDate < dhakaToday()) {
@@ -68,6 +73,8 @@ export class CatalogService {
       rates.map((r) => ({ categoryId: byCode.get(r.categoryCode)!.id, ratePerKg: r.ratePerKg })),
       adminId,
     );
+    const event: EventRatesPublished = { effectiveDate, at: new Date().toISOString() };
+    this.realtimeService.broadcast('rates.published', event);
   }
 
   private toCategoryDto(c: CategoryEntity): CategoryDto {

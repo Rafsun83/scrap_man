@@ -115,6 +115,7 @@ export const SOCKET_EVENTS = [
   'collector.verification',
   'collector.applied',
   'ops.alert',
+  'rates.published',
 ] as const;
 export type SocketEvent = (typeof SOCKET_EVENTS)[number];
 
