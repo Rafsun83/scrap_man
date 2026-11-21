@@ -11,6 +11,7 @@ One note per finished milestone: what was built, how it was checked, and what is
 | M4 Collector app screens | [M4-collector-app.md](M4-collector-app.md) | 2026-11-16 (phone walk-through pending) |
 | M5 Admin panel | [M5-admin-panel.md](M5-admin-panel.md) | 2026-11-17 (operations walk-through pending) |
 | M6 Pilot readiness | [M6-pilot-readiness.md](M6-pilot-readiness.md) | 2026-11-17 (outside services are M7) |
+| M7 Push notifications (part of M7 Launch) | [M7-push-notifications.md](M7-push-notifications.md) | 2026-11-21 (phone test pending) |
 
 The endpoints from all milestones so far are documented in [`docs/api.md`](../docs/api.md).
 
