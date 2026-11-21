@@ -11,6 +11,7 @@ This repository is the v1 monorepo. Milestones **M0** (project setup) and **M1**
 | `apps/api` | Backend API under `/api/v1` | NestJS 12 (ESM), TypeORM 1, PostgreSQL + PostGIS, Redis |
 | `apps/mobile` | One app for households and collectors | Expo SDK 58, React Native 0.88 |
 | `apps/admin` | Admin panel for the operations team | React 19, Vite 8 |
+| `apps/landing` | Public landing page: how it works, today's live rates, what we buy, safety, collector sign-up, FAQ (Bangla first, English toggle) | React 19, Vite 8 |
 | `packages/shared` | Brand tokens, Bangla/English strings, enums, API types | TypeScript, generated from `docs/openapi.yaml` |
 | `docs/openapi.yaml` | The API contract (OpenAPI 3.1) | |
 | `docs/api.md` | API reference: every endpoint, its purpose, real sample requests and responses, live events | |
@@ -32,6 +33,7 @@ Check it works:
 
 - API: <http://localhost:3000/api/v1/health> returns `{"status":"ok", ...}`
 - Admin panel: <http://localhost:5173> shows "The API, database and Redis are answering"
+- Landing page: `pnpm dev:landing`, then <http://localhost:5174> shows today's rate board from the API
 
 ### Already ran M0?
 

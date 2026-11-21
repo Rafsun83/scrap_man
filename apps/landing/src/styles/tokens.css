@@ -1,0 +1,28 @@
+/* Brand tokens: the same values as `colors`, `fonts` and `radius` in @bw/shared (packages/shared/src/theme.ts). */
+:root {
+  --ink: #13304a;
+  --ink-2: #1e4466;
+  --ink-200: #d3dce5;
+  --signal: #ffc72c;
+  --money: #0b7a5c;
+  --money-bg: #dcefe7;
+  --ground: #eef0ec;
+  --surface: #ffffff;
+  --line: #d5d9d3;
+  --muted: #4f5b66;
+  --alert: #a63d16;
+  --gamcha: #d9483b;
+  --tint: #fff4cc;
+
+  --font-display: 'Anek Bangla', 'Noto Sans Bengali', sans-serif;
+  --font-body: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --touch: 48px;
+  --container: 1160px;
+  --gutter: 20px;
+  --shadow: 0 10px 30px rgb(19 48 74 / 0.12);
+}

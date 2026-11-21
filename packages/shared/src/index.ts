@@ -2,6 +2,7 @@ export * from './theme.js';
 export * from './enums.js';
 export * from './i18n.js';
 export * from './admin-i18n.js';
+export * from './landing-i18n.js';
 export * from './api-client.js';
 export * from './dhaka.js';
 export type { paths, components } from './generated/api.js';

@@ -1,0 +1,63 @@
+/* Buttons: 48 px touch targets, icon plus text. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: var(--touch); padding: 0 18px; border-radius: var(--radius-md);
+  border: 2px solid var(--ink); background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 16px; font-weight: 700; text-decoration: none; cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.btn:hover { color: var(--ink); transform: translateY(-1px); box-shadow: 0 4px 0 var(--ink); }
+.btn:active { transform: translateY(0); box-shadow: none; }
+.btn.primary { background: var(--signal); }
+.btn.outline { background: transparent; }
+.btn.dark { background: var(--ink); color: #fff; }
+.btn.dark:hover { color: #fff; }
+.btn.ghost { background: transparent; border-color: var(--ink-200); color: #fff; }
+.btn.ghost:hover { color: var(--ink); background: var(--signal); border-color: var(--signal); box-shadow: none; }
+.btn.big { min-height: 56px; padding: 0 24px; font-size: 18px; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px;
+  border-radius: 999px; background: var(--surface); border: 2px solid var(--ink);
+  font-weight: 700; font-size: 15px;
+}
+
+/* Section heading */
+.section-heading { display: flex; flex-direction: column; gap: 8px; max-width: 640px; margin-bottom: 36px; }
+.section-heading .kicker {
+  font-weight: 700; font-size: 15px; color: var(--money); text-transform: uppercase; letter-spacing: 0.04em;
+}
+.section-heading h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.section-heading .lead { color: var(--muted); font-size: 18px; }
+.section-heading.dark .kicker { color: var(--signal); }
+.section-heading.dark .lead { color: var(--ink-200); }
+
+/* Rate list: name, dotted leader, price (H2 home card and H12 rates screen). */
+.rate-list { display: flex; flex-direction: column; gap: 10px; }
+.rate-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; font-size: 18px; font-weight: 500; }
+.rate-leader { flex: 1; min-width: 24px; border-bottom: 2px dotted var(--ink); transform: translateY(-5px); }
+.rate-price { font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.rate-price.muted-price { font-family: var(--font-body); font-size: 16px; font-weight: 600; color: var(--muted); }
+.rate-trend {
+  flex-basis: 100%; display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end;
+  font-size: 14px; font-weight: 600; color: var(--muted);
+}
+.rate-trend.up { color: var(--money); }
+.rate-trend.down { color: var(--alert); }
+
+/* The gamcha check: the red-and-yellow chequered strip of a Bangladeshi gamcha towel, as a divider. */
+.gamcha {
+  height: 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--gamcha) 0 22px, var(--signal) 22px 26px, var(--gamcha) 26px 34px, var(--ink) 34px 36px
+  );
+}
+
+.spinner {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 3px solid var(--line); border-top-color: var(--ink);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }

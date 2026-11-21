@@ -1,4 +1,4 @@
-# Production-like stack: API, admin panel (nginx), PostgreSQL with PostGIS, Redis, S3-compatible storage.
+# Production-like stack: API, admin panel and landing page (nginx), PostgreSQL with PostGIS, Redis, S3-compatible storage.
 # Settings come from .env.prod (copy the production section of .env.example). Locally:
 #   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 # In real hosting, managed Postgres/Redis/S3 usually replace the three data services (M7).
@@ -77,6 +77,16 @@ services:
       - api
     ports:
       - "${ADMIN_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  landing:
+    build:
+      context: .
+      dockerfile: docker/landing/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "${LANDING_PORT:-8081}:8080"
     restart: unless-stopped
 
 volumes:

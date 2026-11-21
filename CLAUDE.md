@@ -7,6 +7,7 @@ Households in Dhaka sell scrap (iron, old newspaper, plastic, carton, aluminium,
 - `apps/api`: NestJS 12 (ESM only), TypeORM 1, PostgreSQL 17 + PostGIS, Redis (ioredis 5). Prefix `/api/v1`.
 - `apps/mobile`: Expo SDK 58, React Native 0.88. One app, two roles.
 - `apps/admin`: React 19 + Vite 8. English UI with a Bangla toggle.
+- `apps/landing`: public landing page, React 19 + Vite 8 (no router or query library). Bangla first with an English toggle; reads only the public `GET /categories` and `GET /rates/today`. Strings in `@bw/shared` `landing-i18n.ts`; sections in `src/sections/`, shared pieces in `src/components/`, styles split in `src/styles/`.
 - `packages/shared` (`@bw/shared`): brand tokens, Bangla/English strings, enums, matching constants, and API types generated from `docs/openapi.yaml`.
 - `docs/openapi.yaml`: the API contract (OpenAPI 3.1). Source of truth for endpoints, shapes and error codes.
 - `docs/README.md`: index of every project document, with its claude.ai link and the local copy to read (the links need Rafsun's sign-in; use the copies).
@@ -15,12 +16,12 @@ Households in Dhaka sell scrap (iron, old newspaper, plastic, carton, aluminium,
 
 ## Commands
 
-- `pnpm dev` (API :3000 + admin :5173), `pnpm dev:mobile`
+- `pnpm dev` (API :3000 + admin :5173), `pnpm dev:mobile`, `pnpm dev:landing` (landing :5174, proxies `/api` to :3000)
 - `pnpm turbo run lint typecheck test build`: run before calling any task done
 - `pnpm test:e2e`: API end-to-end tests against `bhangariwala_test` and Redis db 15 (the config refuses any database not ending in `_test`)
 - `pnpm db:up` (Postgres, Redis, S3 storage), `pnpm db:migrate`, `pnpm db:seed -- --sample-rates`
 - `pnpm gen:api`: regenerate `packages/shared/src/generated/api.ts` after editing the contract
-- `pnpm smoke` / `pnpm smoke:down`: build `docker-compose.prod.yml` (API, admin behind nginx, data services) and run `scripts/smoke.mjs` through nginx
+- `pnpm smoke` / `pnpm smoke:down`: build `docker-compose.prod.yml` (API, admin and landing page behind nginx, data services) and run `scripts/smoke.mjs` through nginx
 - `pnpm --filter @bw/api load -- --pairs 20 --api http://localhost:3000`: parallel full sales against a local API (dev database only)
 
 Development sign-in: every OTP is `123456` (`OTP_DEV_CODE`); admin phone `+8801700000000`.

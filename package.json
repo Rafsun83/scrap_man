@@ -15,6 +15,7 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "dev:mobile": "pnpm --filter @bw/mobile dev",
+    "dev:landing": "pnpm --filter @bw/landing dev",
     "db:migrate": "pnpm --filter @bw/shared build && pnpm --filter @bw/api migration:run",
     "db:seed": "pnpm --filter @bw/shared build && pnpm --filter @bw/api db:seed",
     "test:e2e": "pnpm --filter @bw/shared build && pnpm --filter @bw/api test:e2e",
