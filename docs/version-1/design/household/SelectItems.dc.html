@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Select items</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 52px 20px 0; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <a href="Home.dc.html" aria-label="ফিরে যান" style="width: 48px; height: 48px; border-radius: 6px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </a>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+        <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.2">কী বিক্রি করবেন?</h1>
+        <div style="font-size: 13px; color: #5B6B7A">ধাপ ১ / ২ · এক বা একাধিক জিনিস বেছে নিন</div>
+      </div>
+    </div>
+    <div style="height: 4px; border-radius: 4px; background: #E3E6E0; overflow: hidden">
+      <div style="width: 50%; height: 100%; border-radius: 4px; background: #13304A"></div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 20px 20px 12px; display: flex; flex-direction: column; gap: 20px">
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{items}}" as="it" hint-placeholder-count="6">
+        <button onClick="{{it.pick}}" aria-pressed="{{it.on}}" style="{{it.style}}">
+          <div style="width: 40px; height: 40px; border-radius: 4px; background: {{it.tint}}; display: flex; align-items: center; justify-content: center; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 15px; color: #13304A; flex-shrink: 0">{{it.initial}}</div>
+          <div style="display: flex; flex-direction: column; gap: 1px; text-align: left; min-width: 0">
+            <div style="font-size: 15px; font-weight: 600; color: #13304A">{{it.name}}</div>
+            <div style="font-size: 13px; color: #5B6B7A">{{it.price}}</div>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">সব মিলিয়ে আনুমানিক ওজন</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{bands}}" as="b" hint-placeholder-count="4">
+          <button onClick="{{b.pick}}" aria-pressed="{{b.on}}" style="{{b.style}}">{{b.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <button style="min-height: 64px; box-sizing: border-box; border-radius: 6px; border: 1.5px dashed #C9CFC6; background: transparent; padding: 10px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; color: inherit">
+      <div style="width: 40px; height: 40px; border-radius: 4px; background: #FFFFFF; border: 1px solid #E3E6E0; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1px">
+        <div style="font-size: 15px; font-weight: 600">ছবি তুলুন <span style="font-weight: 400; color: #5B6B7A">(ঐচ্ছিক)</span></div>
+        <div style="font-size: 13px; color: #5B6B7A">ছবি দিলে সংগ্রাহক আগে থেকেই বুঝবেন</div>
+      </div>
+    </button>
+  </div>
+
+  <div style="background: #FFFFFF; border-top: 1px solid #EDEFEA; padding: 14px 20px 28px; display: flex; align-items: center; gap: 14px">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+      <div style="font-size: 13px; color: #5B6B7A">বেছে নিয়েছেন</div>
+      <div style="font-size: 16px; font-weight: 600">{{countLabel}}</div>
+    </div>
+    <a href="Schedule.dc.html" style="height: 56px; padding: 0 24px; border-radius: 6px; background: #13304A; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; gap: 10px">
+      পরবর্তী
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { picked: { 0: true, 1: true, 2: true }, band: 1 };
+}
+renderVals() {
+const bn = ['০','১','২','৩','৪','৫','৬'];
+const data = [
+{ name: 'লোহা', initial: 'লো', tint: '#E8ECF1', price: '৳৫০/কেজি' },
+{ name: 'পুরোনো পত্রিকা', initial: 'প', tint: '#FFF4D6', price: '৳৩০/কেজি' },
+{ name: 'প্লাস্টিক', initial: 'প্লা', tint: '#E3F2EC', price: '৳৩৫/কেজি' },
+{ name: 'কার্টন', initial: 'কা', tint: '#F3ECE2', price: '৳১৮/কেজি' },
+{ name: 'অ্যালুমিনিয়াম', initial: 'অ্যা', tint: '#F1EAF6', price: '৳১৬০/কেজি' },
+{ name: 'ইলেকট্রনিক্স', initial: 'ই', tint: '#E6EEF5', price: 'দেখে দর' }
+];
+const cardBase = 'height: 72px; box-sizing: border-box; border-radius: 6px; padding: 0 12px; background: #FFFFFF; display: flex; align-items: center; gap: 10px; cursor: pointer; font-family: inherit; ';
+const picked = this.state.picked;
+const items = data.map((d, i) => {
+const on = !!picked[i];
+return Object.assign({}, d, {
+on: on,
+style: cardBase + (on ? 'border: 1.5px solid #8A97A3;' : 'border: 1.5px solid #E3E6E0;'),
+pick: () => { const next = Object.assign({}, picked); if (next[i]) { delete next[i]; } else { next[i] = true; } this.setState({ picked: next }); }
+});
+});
+const chipBase = 'height: 48px; border-radius: 6px; background: #FFFFFF; color: #13304A; cursor: pointer; font: 500 15px \'Hind Siliguri\', sans-serif; ';
+const bandLabels = ['৫ কেজির কম', '৫–১৫ কেজি', '১৫ কেজির বেশি', 'জানি না'];
+const bands = bandLabels.map((label, i) => ({
+label: label,
+on: this.state.band === i,
+style: chipBase + (this.state.band === i ? 'border: 1.5px solid #8A97A3; font-weight: 600;' : 'border: 1.5px solid #E3E6E0;'),
+pick: () => this.setState({ band: i })
+}));
+const n = Object.keys(picked).length;
+return {
+items: items,
+bands: bands,
+countLabel: n === 0 ? 'কিছু বাছা হয়নি' : bn[n] + 'টি জিনিস'
+};
+}
+}
+</script>
+</body>
+</html>

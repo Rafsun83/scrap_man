@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>My pickups</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 56px 20px 12px; display: flex; flex-direction: column; gap: 18px">
+    <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 24px; line-height: 1.2">আমার পিকআপ</h1>
+
+    <div role="group" aria-label="সময়" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="{{t.style}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <sc-for list="{{rows}}" as="p" hint-placeholder-count="3">
+        <a href="{{p.href}}" style="background: #FFFFFF; border-radius: 6px; border: 1.5px solid {{p.border}}; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: #13304A">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+            <span style="font-size: 16px; font-weight: 600">{{p.name}}</span>
+            <span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: {{p.chipBg}}; color: {{p.chipFg}}">{{p.status}}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+            <span style="font-size: 13px; color: #5B6B7A">{{p.meta}}</span>
+            <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 16px; color: {{p.amountColor}}">{{p.amount}}</span>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+
+  <nav aria-label="প্রধান মেনু" style="background: #FFFFFF; border-top: 1px solid #EDEFEA; padding: 10px 16px 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+    <a href="CHome.dc.html" style="height: 56px; border-radius: 6px; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #5B6B7A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>
+      <span style="font-size: 12px; font-weight: 500">অনুরোধ</span>
+    </a>
+    <a href="CPickups.dc.html" aria-current="page" style="height: 56px; border-radius: 6px; background: #EEF2F6; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #13304A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="17" r="3"></circle><circle cx="18" cy="17" r="3"></circle><path d="M6 17h4l3-7h4l1 7"></path><path d="M13 10l-2-4H8"></path></svg>
+      <span style="font-size: 12px; font-weight: 600">আমার পিকআপ</span>
+    </a>
+    <a href="CLedger.dc.html" style="height: 56px; border-radius: 6px; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #5B6B7A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
+      <span style="font-size: 12px; font-weight: 500">হিসাব</span>
+    </a>
+    <a href="CProfile.dc.html" style="height: 56px; border-radius: 6px; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #5B6B7A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>
+      <span style="font-size: 12px; font-weight: 500">প্রোফাইল</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { tab: 0 };
+}
+renderVals() {
+const active = { status: 'চলতি', chipBg: '#FFF4D6', chipFg: '#8A5A00', amountColor: '#5B6B7A', border: '#8A97A3', href: 'CActive.dc.html' };
+const done = { status: 'সম্পন্ন', chipBg: '#E3F2EC', chipFg: '#0B7A5C', amountColor: '#0B7A5C', border: '#E3E6E0', href: '#done' };
+const booked = { status: 'গ্রহণ করেছেন', chipBg: '#E8ECF1', chipFg: '#13304A', amountColor: '#5B6B7A', border: '#E3E6E0', href: '#booked' };
+const data = [
+[
+Object.assign({ name: 'রাশেদা বেগম', meta: 'মিরপুর ১০ · সকাল ৯টা–১২টা', amount: 'আনু. ৳২০০–৬০০' }, active),
+Object.assign({ name: 'আব্দুল করিম', meta: 'মিরপুর ১১ · ১৯ কেজি · বিকাশ', amount: '৳৭৭০' }, done),
+Object.assign({ name: 'শাহানা আক্তার', meta: 'পল্লবী · ৯.৫ কেজি · ক্যাশ', amount: '৳৩৮০' }, done)
+],
+[
+Object.assign({ name: 'পল্লবী, সেকশন ১২', meta: 'আগামীকাল · সকাল ৯টা–১২টা', amount: '১৫+ কেজি' }, booked),
+Object.assign({ name: 'কাফরুল, রোড ৩', meta: 'বৃহঃ ২৬ · বিকাল ৩টা–৬টা', amount: '৫–১৫ কেজি' }, booked)
+],
+[
+Object.assign({ name: 'মাহফুজ রহমান', meta: '২৩ নভেম্বর · ১২ কেজি · নগদ', amount: '৳৫১০' }, done),
+Object.assign({ name: 'নাসরিন সুলতানা', meta: '২৩ নভেম্বর · ৭ কেজি · ক্যাশ', amount: '৳২৪৫' }, done),
+Object.assign({ name: 'সেলিম হোসেন', meta: '২২ নভেম্বর · ২৪ কেজি · বিকাশ', amount: '৳৯৯০' }, done)
+]
+];
+const base = 'height: 44px; border-radius: 6px; background: #FFFFFF; color: #13304A; cursor: pointer; font: 500 15px \'Hind Siliguri\', sans-serif; ';
+const t = this.state.tab;
+return {
+tabs: ['আজ', 'আসন্ন', 'আগের'].map((label, i) => ({
+label: label,
+on: t === i,
+style: base + (t === i ? 'border: 1.5px solid #8A97A3; font-weight: 600;' : 'border: 1.5px solid #E3E6E0;'),
+pick: () => this.setState({ tab: i })
+})),
+rows: data[t]
+};
+}
+}
+</script>
+</body>
+</html>

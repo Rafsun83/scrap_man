@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Finding a collector</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; padding: 64px 20px 28px; gap: 28px; overflow: hidden">
+
+  <div style="display: flex; justify-content: center; padding-top: 12px">
+    <div style="width: 220px; height: 220px; border-radius: 50%; border: 1px solid #E3E6E0; display: flex; align-items: center; justify-content: center">
+      <div style="width: 160px; height: 160px; border-radius: 50%; border: 1px solid #D9DDD5; display: flex; align-items: center; justify-content: center">
+        <div style="width: 100px; height: 100px; border-radius: 50%; background: #FFFFFF; border: 1px solid #C9CFC6; display: flex; align-items: center; justify-content: center">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; text-align: center">
+    <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 24px; line-height: 1.3">কাছের সংগ্রাহক খোঁজা হচ্ছে</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #5B6B7A">আপনার এলাকার সংগ্রাহকেরা অনুরোধটি দেখছেন। যিনি প্রথমে গ্রহণ করবেন, তিনিই আসবেন।</p>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #EDEFEA">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B6B7A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8l-1.5 3h-5z"></path><path d="M9.5 7C6 9.5 4.5 13 5 16.5 5.4 19.5 8 21 12 21s6.6-1.5 7-4.5C19.5 13 18 9.5 14.5 7"></path></svg>
+      <span style="font-size: 15px">লোহা, পুরোনো পত্রিকা, প্লাস্টিক</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #EDEFEA">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B6B7A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      <span style="font-size: 15px">আজ, সকাল ৯টা–১২টা</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B6B7A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+      <span style="font-size: 15px">বাড়ি ১২, রোড ৪, ব্লক সি, মিরপুর ১০</span>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <p style="margin: 0; text-align: center; font-size: 13px; color: #5B6B7A">কেউ গ্রহণ করলে সাথে সাথে জানিয়ে দেব</p>
+    <a href="Home.dc.html" style="height: 56px; border-radius: 6px; background: #FFFFFF; border: 1.5px solid #E3E6E0; box-sizing: border-box; color: #A63D16; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      অনুরোধ বাতিল করুন
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

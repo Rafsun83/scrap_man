@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Style guide</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+input::placeholder,textarea::placeholder{color:#8A97A3}
+</style>
+</helmet>
+<div style="width: 560px; min-height: 1080px; box-sizing: border-box; padding: 40px; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; gap: 32px">
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <div style="font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B7A">Version 1 · design language</div>
+    <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 32px; line-height: 1.2">শান্ত, সহজ, পরিষ্কার</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #5B6B7A">Same brand colours, used more quietly: white cards on a soft ground, ink for actions, yellow only where the eye must go, green only for money.</p>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B7A">Colours</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+      <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 56px; border-radius: 4px; background: #13304A"></div>
+        <div style="font-size: 14px; font-weight: 600">Ink</div>
+        <div style="font-size: 12px; color: #5B6B7A">#13304A · text, buttons</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 56px; border-radius: 4px; background: #FFC72C"></div>
+        <div style="font-size: 14px; font-weight: 600">Signal yellow</div>
+        <div style="font-size: 12px; color: #5B6B7A">#FFC72C · one key action</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 56px; border-radius: 4px; background: #0B7A5C"></div>
+        <div style="font-size: 14px; font-weight: 600">Money green</div>
+        <div style="font-size: 12px; color: #5B6B7A">#0B7A5C · taka, success</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 56px; border-radius: 4px; background: #F5F6F2; border: 1px solid #E3E6E0; box-sizing: border-box"></div>
+        <div style="font-size: 14px; font-weight: 600">Ground</div>
+        <div style="font-size: 12px; color: #5B6B7A">#F5F6F2 · page background</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 56px; border-radius: 4px; background: #5B6B7A"></div>
+        <div style="font-size: 14px; font-weight: 600">Muted ink</div>
+        <div style="font-size: 12px; color: #5B6B7A">#5B6B7A · secondary text</div>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 56px; border-radius: 4px; background: #A63D16"></div>
+        <div style="font-size: 14px; font-weight: 600">Alert</div>
+        <div style="font-size: 12px; color: #5B6B7A">#A63D16 · errors only</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B7A">Type</h2>
+    <div style="background: #FFFFFF; border-radius: 6px; padding: 20px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+        <div style="font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 28px; line-height: 1.2">আজকের রেট</div>
+        <div style="font-size: 12px; color: #5B6B7A">Anek Bangla 600 · 28 / 22</div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+        <div style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 28px; color: #0B7A5C">৳ ৬২০</div>
+        <div style="font-size: 12px; color: #5B6B7A">Anek Bangla 700 · amounts</div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+        <div style="font-size: 16px; line-height: 1.6">সংগ্রাহক আপনার দরজায় এসে ওজন করবেন।</div>
+        <div style="font-size: 12px; color: #5B6B7A; white-space: nowrap">Hind Siliguri 400 · 16</div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+        <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">মোবাইল নম্বর</div>
+        <div style="font-size: 12px; color: #5B6B7A">Hind Siliguri 500 · 14 labels</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B7A">Inputs</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="sg-a" style="font-size: 14px; font-weight: 500; color: #5B6B7A">Default</label>
+        <input id="sg-a" placeholder="আপনার নাম" style="height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; padding: 0 16px; font: 16px 'Hind Siliguri', sans-serif; color: #13304A; outline: none">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="sg-b" style="font-size: 14px; font-weight: 500; color: #13304A">Typing / selected</label>
+        <input id="sg-b" value="রহিমা আক্তার" style="height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #8A97A3; background: #FFFFFF; padding: 0 16px; font: 16px 'Hind Siliguri', sans-serif; color: #13304A; outline: none">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="sg-c" style="font-size: 14px; font-weight: 500; color: #A63D16">Error</label>
+        <input id="sg-c" value="১৭১২" style="height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #A63D16; background: #FFF8F5; padding: 0 16px; font: 16px 'Hind Siliguri', sans-serif; color: #13304A; outline: none">
+        <div style="font-size: 13px; color: #A63D16">নম্বরটি ১১ সংখ্যার হতে হবে</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">Chips (selected · not)</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button style="height: 40px; padding: 0 16px; border-radius: 6px; border: 1.5px solid #8A97A3; background: #FFFFFF; color: #13304A; font: 600 14px 'Hind Siliguri', sans-serif">আজ</button>
+          <button style="height: 40px; padding: 0 16px; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; color: #13304A; font: 500 14px 'Hind Siliguri', sans-serif">আগামীকাল</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B7A">Buttons · 56 px tall, icon + text</h2>
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <button style="height: 56px; border-radius: 6px; border: none; background: #13304A; color: #FFFFFF; font: 600 16px 'Hind Siliguri', sans-serif; display: flex; align-items: center; justify-content: center; gap: 10px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        Primary · কোড পাঠান
+      </button>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <button style="height: 56px; border-radius: 6px; border: none; background: #FFC72C; color: #13304A; font: 600 16px 'Hind Siliguri', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          Key · বিক্রি
+        </button>
+        <button style="height: 56px; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; color: #13304A; font: 600 16px 'Hind Siliguri', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>
+          Quiet · কল
+        </button>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

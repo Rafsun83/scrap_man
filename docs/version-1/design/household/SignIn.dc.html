@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Sign in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+input::placeholder{color:#8A97A3}
+.bw-field:focus-within{border-color:#8A97A3 !important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; padding: 72px 24px 32px; gap: 36px; overflow: hidden">
+
+  <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 18px">
+    <img src="/_blob/235d27dd227c862adfb410b79bafdf7d" alt="ভাঙ্গারিওয়ালা লোগো" style="width: 64px; height: 64px; border-radius: 6px; object-fit: cover; box-shadow: 0 6px 20px rgba(19,48,74,0.12)">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 30px; line-height: 1.2">স্বাগতম</h1>
+      <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #5B6B7A">ঘরে বসেই ভাঙ্গারি বিক্রি করুন, আজকের ন্যায্য দামে।</p>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <label for="phone" style="font-size: 14px; font-weight: 500; color: #5B6B7A">মোবাইল নম্বর</label>
+    <div class="bw-field bw-press" style="height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; display: flex; align-items: center">
+      <div style="padding: 0 14px 0 16px; font-size: 16px; font-weight: 500; color: #13304A; border-right: 1.5px solid #E3E6E0; height: 28px; display: flex; align-items: center">+৮৮০</div>
+      <input id="phone" type="tel" inputmode="numeric" placeholder="১৭১২ ৩৪৫ ৬৭৮" value="{{phone}}" onInput="{{onPhone}}" style="flex: 1; min-width: 0; height: 100%; border: none; background: transparent; padding: 0 16px; font: 16px 'Hind Siliguri', sans-serif; color: #13304A; outline: none; letter-spacing: 0.02em">
+    </div>
+  </div>
+
+  <fieldset style="border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+    <legend style="padding: 0; margin-bottom: 10px; font-size: 14px; font-weight: 500; color: #5B6B7A">আপনি কী করতে চান?</legend>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <button class="bw-press" onClick="{{pickSell}}" aria-pressed="{{sellOn}}" style="{{sellStyle}}">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
+          <div style="width: 40px; height: 40px; border-radius: 4px; background: #FFF4D6; display: flex; align-items: center; justify-content: center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8l-1.5 3h-5z"></path><path d="M9.5 7C6 9.5 4.5 13 5 16.5 5.4 19.5 8 21 12 21s6.6-1.5 7-4.5C19.5 13 18 9.5 14.5 7"></path><path d="M10 14h4"></path></svg>
+          </div>
+        </div>
+        <div style="text-align: left">
+          <div style="font-size: 16px; font-weight: 600; color: #13304A">বিক্রি করব</div>
+          <div style="font-size: 13px; color: #5B6B7A; line-height: 1.4">বাসার ভাঙ্গারি</div>
+        </div>
+      </button>
+      <button class="bw-press" onClick="{{pickCollect}}" aria-pressed="{{collectOn}}" style="{{collectStyle}}">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
+          <div style="width: 40px; height: 40px; border-radius: 4px; background: #E3F2EC; display: flex; align-items: center; justify-content: center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="17" r="3"></circle><circle cx="18" cy="17" r="3"></circle><path d="M6 17h4l3-7h4l1 7"></path><path d="M13 10l-2-4H8"></path></svg>
+          </div>
+        </div>
+        <div style="text-align: left">
+          <div style="font-size: 16px; font-weight: 600; color: #13304A">সংগ্রহ করব</div>
+          <div style="font-size: 13px; color: #5B6B7A; line-height: 1.4">সংগ্রাহক হিসেবে</div>
+        </div>
+      </button>
+    </div>
+  </fieldset>
+
+  <div style="flex: 1"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <a href="OTP.dc.html" style="height: 56px; border-radius: 6px; background: #13304A; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(19,48,74,0.18)">
+      কোড পাঠান
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+    </a>
+    <p style="margin: 0; text-align: center; font-size: 13px; line-height: 1.5; color: #5B6B7A">চালিয়ে গেলে আপনি <a href="#terms">শর্তাবলী</a> মেনে নিচ্ছেন</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { role: 'sell', phone: '' };
+}
+renderVals() {
+const base = 'height: 132px; box-sizing: border-box; border-radius: 6px; padding: 14px; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; font-family: inherit; ';
+const on = base + 'border: 1.5px solid #8A97A3;';
+const off = base + 'border: 1.5px solid #E3E6E0;';
+const sell = this.state.role === 'sell';
+return {
+phone: this.state.phone,
+onPhone: (e) => this.setState({ phone: e.target.value }),
+sellOn: sell,
+collectOn: !sell,
+sellStyle: sell ? on : off,
+collectStyle: sell ? off : on,
+pickSell: () => this.setState({ role: 'sell' }),
+pickCollect: () => this.setState({ role: 'collect' })
+};
+}
+}
+</script>
+</body>
+</html>

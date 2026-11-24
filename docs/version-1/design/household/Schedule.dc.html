@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Schedule pickup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+textarea::placeholder{color:#8A97A3}
+.bw-area:focus{border-color:#8A97A3 !important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 52px 20px 0; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <a href="SelectItems.dc.html" aria-label="ফিরে যান" style="width: 48px; height: 48px; border-radius: 6px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </a>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+        <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.2">কখন আসবেন?</h1>
+        <div style="font-size: 13px; color: #5B6B7A">ধাপ ২ / ২</div>
+      </div>
+    </div>
+    <div style="height: 4px; border-radius: 4px; background: #E3E6E0; overflow: hidden">
+      <div style="width: 100%; height: 100%; border-radius: 4px; background: #13304A"></div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 22px 20px 16px; display: flex; flex-direction: column; gap: 22px">
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">ঠিকানা</div>
+      <button class="bw-press" style="min-height: 64px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; padding: 12px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; color: inherit">
+        <div style="width: 40px; height: 40px; border-radius: 4px; background: #FFF4D6; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+          <div style="font-size: 15px; font-weight: 600">বাসা</div>
+          <div style="font-size: 13px; color: #5B6B7A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">মিরপুর ১০, রোড ৩, বাড়ি ১২</div>
+        </div>
+        <span style="font-size: 14px; font-weight: 500; color: #13304A">বদলান</span>
+      </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">দিন</div>
+      <div style="display: flex; gap: 8px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+          <button class="bw-press" onClick="{{d.pick}}" aria-pressed="{{d.on}}" style="{{d.style}}">{{d.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">সময়</div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <sc-for list="{{slots}}" as="s" hint-placeholder-count="3">
+          <button class="bw-press" onClick="{{s.pick}}" aria-pressed="{{s.on}}" style="{{s.style}}">
+            <div style="{{s.radio}}">
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; text-align: left">
+              <div style="font-size: 16px; font-weight: 600; color: #13304A">{{s.name}}</div>
+              <div style="font-size: 13px; color: #5B6B7A">{{s.time}}</div>
+            </div>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="note" style="font-size: 14px; font-weight: 500; color: #5B6B7A">সংগ্রাহকের জন্য নোট <span style="font-weight: 400">(ঐচ্ছিক)</span></label>
+      <textarea id="note" class="bw-area" rows="2" placeholder="যেমন: গেটে দারোয়ানকে বলবেন" style="box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; padding: 14px 16px; font: 16px/1.5 'Hind Siliguri', sans-serif; color: #13304A; outline: none; resize: none"></textarea>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 6px 6px 0 0; box-shadow: 0 -8px 30px rgba(19,48,74,0.08); padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <div style="font-size: 14px; color: #5B6B7A">আনুমানিক আয়</div>
+      <div style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 22px; color: #0B7A5C">৳ ৩২০ – ৪১০</div>
+    </div>
+    <a href="Searching.dc.html" style="height: 56px; border-radius: 6px; background: #13304A; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(19,48,74,0.18)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+      {{cta}}
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { day: 0, slot: 0 };
+}
+renderVals() {
+const chipBase = 'height: 44px; padding: 0 18px; border-radius: 6px; font: 500 15px \'Hind Siliguri\', sans-serif; cursor: pointer; ';
+const chipOn = chipBase + 'border: 1.5px solid #8A97A3; background: #FFFFFF; color: #13304A; font-weight: 600;';
+const chipOff = chipBase + 'border: 1.5px solid #E3E6E0; background: #FFFFFF; color: #13304A;';
+const dayLabels = ['আজ', 'আগামীকাল', 'বৃহঃ ২৬'];
+const days = dayLabels.map((label, i) => ({
+label: label,
+on: this.state.day === i,
+style: this.state.day === i ? chipOn : chipOff,
+pick: () => this.setState({ day: i })
+}));
+const cardBase = 'height: 64px; box-sizing: border-box; border-radius: 6px; padding: 0 16px; background: #FFFFFF; display: flex; align-items: center; gap: 14px; cursor: pointer; font-family: inherit; ';
+const cardOn = cardBase + 'border: 1.5px solid #8A97A3;';
+const cardOff = cardBase + 'border: 1.5px solid #E3E6E0;';
+const radioBase = 'width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; ';
+const slotData = [
+{ name: 'সকাল', time: '৯টা – ১২টা' },
+{ name: 'দুপুর', time: '১২টা – ৩টা' },
+{ name: 'বিকাল', time: '৩টা – ৬টা' }
+];
+const slots = slotData.map((s, i) => {
+const on = this.state.slot === i;
+return {
+name: s.name,
+time: s.time,
+on: on,
+style: on ? cardOn : cardOff,
+radio: radioBase + (on ? 'border: 6px solid #5B6B7A;' : 'border: 2px solid #C9CFC6;'),
+pick: () => this.setState({ slot: i })
+};
+});
+return {
+days: days,
+slots: slots,
+cta: dayLabels[this.state.day] + ', ' + slotData[this.state.slot].name + ' — পিকআপ চাই'
+};
+}
+}
+</script>
+</body>
+</html>

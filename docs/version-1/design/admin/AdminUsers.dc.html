@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Users</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F2}
+a{color:#13304A}a:hover{color:#0B2236}
+input::placeholder{color:#8A97A3}
+.bw-in:focus{border-color:#8A97A3 !important}
+</style>
+</helmet>
+<div style="min-height: 100vh; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Admin menu" style="flex: 1 1 232px; max-width: 100%; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #E3E6E0; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 20px">
+      <img src="/_blob/235d27dd227c862adfb410b79bafdf7d" alt="" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover">
+      <div style="display: flex; flex-direction: column">
+        <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 17px">BhangariWala</span>
+        <span style="font-size: 12px; color: #5B6B7A">Admin</span>
+      </div>
+    </div>
+    <a href="AdminPickups.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+      Live pickups
+    </a>
+    <a href="AdminRates.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"></path></svg>
+      Daily rates
+    </a>
+    <a href="AdminCollectors.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c1.2-3.5 3.8-5 7-5s5.8 1.5 7 5"></path><path d="M16 11l2 2 4-4"></path></svg>
+      <span style="flex: 1">Collector approvals</span>
+      <span style="font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: #FFF4D6; color: #8A5A00">4</span>
+    </a>
+    <a href="AdminDisputes.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+      <span style="flex: 1">Disputes</span>
+      <span style="font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: #FBEAE3; color: #A63D16">2</span>
+    </a>
+    <a href="AdminUsers.dc.html" aria-current="page" style="height: 44px; padding: 0 12px; border-radius: 6px; background: #EEF2F6; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c1.2-3.5 3.8-5 7-5s5.8 1.5 7 5"></path><path d="M17 4a4 4 0 0 1 0 8M22 21c-.6-2-1.8-3.4-3.4-4.2"></path></svg>
+      Users
+    </a>
+    <div style="flex: 1; min-height: 24px"></div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 8px 0; border-top: 1px solid #EDEFEA">
+      <div style="width: 36px; height: 36px; border-radius: 6px; background: #13304A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px">FR</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-size: 14px; font-weight: 600">Farhana Rahman</span>
+        <span style="font-size: 12px; color: #5B6B7A">Operations</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px 40px; display: flex; flex-direction: column; gap: 20px; max-width: 1240px">
+
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 28px; line-height: 1.2">Users</h1>
+      <label style="position: relative; display: flex; align-items: center">
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search users</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B7A" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.2-4.2"></path></svg>
+        <input class="bw-in" placeholder="Search by name or phone" style="height: 44px; width: 280px; max-width: 100%; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; padding: 0 12px 0 38px; font: 15px 'Hind Siliguri', sans-serif; color: #13304A; outline: none">
+      </label>
+    </header>
+
+    <div role="group" aria-label="User type" style="display: flex; gap: 8px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+        <button onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="{{t.style}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isHouseholds}}" hint-placeholder-val="{{ true }}">
+      <section style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); overflow-x: auto">
+        <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; color: #5B6B7A; font-size: 13px">
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Name</th>
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Phone</th>
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Area</th>
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Pickups</th>
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Total received</th>
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Joined</th>
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Status</th>
+              <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{households}}" as="h" hint-placeholder-count="6">
+              <tr>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; font-weight: 600">{{h.name}}</td>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; color: #5B6B7A">{{h.phone}}</td>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2">{{h.area}}</td>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; text-align: right">{{h.pickups}}</td>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; text-align: right; font-weight: 600; color: #0B7A5C">{{h.total}}</td>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; color: #5B6B7A">{{h.joined}}</td>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: {{h.bg}}; color: {{h.fg}}">{{h.status}}</span></td>
+                <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; text-align: right"><a href="#view" style="font-weight: 600; text-decoration: none">View</a></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{isCollectors}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <section style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); overflow-x: auto">
+          <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px">
+            <thead>
+              <tr style="text-align: left; color: #5B6B7A; font-size: 13px">
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Name</th>
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Phone</th>
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Areas</th>
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Rating</th>
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Pickups, 30 days</th>
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Releases, 30 days</th>
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Status</th>
+                <th style="padding: 12px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{collectors}}" as="c" hint-placeholder-count="5">
+                <tr>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; font-weight: 600">{{c.name}}</td>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; color: #5B6B7A">{{c.phone}}</td>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2">{{c.areas}}</td>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; text-align: right">{{c.rating}}</td>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; text-align: right">{{c.pickups}}</td>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; text-align: right"><span style="{{c.releaseStyle}}">{{c.releases}}</span></td>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: {{c.bg}}; color: {{c.fg}}">{{c.status}}</span></td>
+                  <td style="padding: 12px 16px; border-bottom: 1px solid #F5F6F2; text-align: right"><a href="#view" style="font-weight: 600; text-decoration: none">View</a></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+        <p style="margin: 0; font-size: 14px; color: #5B6B7A">Collectors with more than 5 releases in 30 days are flagged for a call from operations.</p>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { tab: 0 };
+}
+renderVals() {
+const active = { status: 'Active', bg: '#E3F2EC', fg: '#0B7A5C' };
+const blocked = { status: 'Blocked', bg: '#FBEAE3', fg: '#A63D16' };
+const suspended = { status: 'Suspended', bg: '#FBEAE3', fg: '#A63D16' };
+const base = 'height: 44px; padding: 0 18px; border-radius: 6px; background: #FFFFFF; color: #13304A; cursor: pointer; font: 500 15px \'Hind Siliguri\', sans-serif; ';
+const t = this.state.tab;
+return {
+tabs: ['Households', 'Collectors'].map((label, i) => ({
+label: label,
+on: t === i,
+style: base + (t === i ? 'border: 1.5px solid #8A97A3; font-weight: 600;' : 'border: 1.5px solid #E3E6E0;'),
+pick: () => this.setState({ tab: i })
+})),
+isHouseholds: t === 0,
+isCollectors: t === 1,
+households: [
+Object.assign({ name: 'Rasheda Begum', phone: '+880 17XX-XXX456', area: 'Mirpur 10', pickups: '3', total: '৳1,470', joined: '28 Sep 2026' }, active),
+Object.assign({ name: 'Morium Khatun', phone: '+880 18XX-XXX102', area: 'Shyamoli', pickups: '5', total: '৳2,310', joined: '2 Oct 2026' }, active),
+Object.assign({ name: 'Rubina Yasmin', phone: '+880 19XX-XXX774', area: 'Kafrul', pickups: '2', total: '৳860', joined: '14 Oct 2026' }, active),
+Object.assign({ name: 'Nusrat Jahan', phone: '+880 16XX-XXX331', area: 'Pallabi', pickups: '0', total: '৳0', joined: 'Today' }, active),
+Object.assign({ name: 'Kamal Hossain', phone: '+880 17XX-XXX908', area: 'Kafrul', pickups: '7', total: '৳3,940', joined: '20 Sep 2026' }, active),
+Object.assign({ name: 'Unknown caller', phone: '+880 13XX-XXX000', area: 'Mirpur 2', pickups: '0', total: '৳0', joined: '9 Nov 2026' }, blocked)
+],
+collectors: [
+{ name: 'Jashim Uddin', phone: '+880 18XX-XXX774', areas: 'Mirpur, Pallabi', rating: '4.8', pickups: '112', releases: '1', status: 'Active', bg: '#E3F2EC', fg: '#0B7A5C' },
+{ name: 'Sohel Rana', phone: '+880 17XX-XXX219', areas: 'Shyamoli', rating: '4.5', pickups: '64', releases: '2', status: 'Active', bg: '#E3F2EC', fg: '#0B7A5C' },
+{ name: 'Rubel Mia', phone: '+880 19XX-XXX540', areas: 'Kafrul', rating: '4.1', pickups: '41', releases: '3', status: 'Active', bg: '#E3F2EC', fg: '#0B7A5C' },
+{ name: 'Mizan Rahman', phone: '+880 16XX-XXX815', areas: 'Mirpur', rating: '3.9', pickups: '27', releases: '7', status: 'Active', bg: '#E3F2EC', fg: '#0B7A5C' },
+Object.assign({ name: 'Alamgir Kabir', phone: '+880 18XX-XXX660', areas: 'Mohammadpur', rating: '3.2', pickups: '9', releases: '4' }, suspended)
+].map((c) => Object.assign({}, c, {
+releaseStyle: parseInt(c.releases, 10) > 5 ? 'font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #FBEAE3; color: #A63D16;' : 'font-size: 14px;'
+}))
+};
+}
+}
+</script>
+</body>
+</html>

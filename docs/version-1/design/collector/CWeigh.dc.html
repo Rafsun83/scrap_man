@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Weigh items</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 52px 20px 0; display: flex; align-items: center; gap: 12px">
+    <a href="CActive.dc.html" aria-label="ফিরে যান" style="width: 48px; height: 48px; border-radius: 6px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.2">ওজন লিখুন</h1>
+      <div style="font-size: 13px; color: #5B6B7A">গ্রাহকের সামনে পাল্লায় ওজন করুন</div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 20px 20px 12px; display: flex; flex-direction: column; gap: 12px">
+    <sc-for list="{{lines}}" as="l" hint-placeholder-count="3">
+      <div style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-size: 16px; font-weight: 600">{{l.name}}</span>
+          <span style="font-size: 13px; color: #5B6B7A">{{l.rate}}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <button onClick="{{l.minus}}" aria-label="{{l.minusLabel}}" style="width: 48px; height: 48px; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; color: #13304A; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg>
+          </button>
+          <div style="flex: 1; height: 48px; box-sizing: border-box; border-radius: 6px; background: #F5F6F2; display: flex; align-items: center; justify-content: center; gap: 4px">
+            <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 22px">{{l.kg}}</span>
+            <span style="font-size: 14px; color: #5B6B7A">কেজি</span>
+          </div>
+          <button onClick="{{l.plus}}" aria-label="{{l.plusLabel}}" style="width: 48px; height: 48px; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; color: #13304A; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+          <span style="width: 64px; text-align: right; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 16px">{{l.amount}}</span>
+        </div>
+      </div>
+    </sc-for>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <button style="min-height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px dashed #C9CFC6; background: transparent; padding: 8px 12px; display: flex; align-items: center; gap: 8px; font: 600 14px 'Hind Siliguri', sans-serif; color: #13304A; text-align: left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 5v14M5 12h14"></path></svg>
+        অন্য জিনিস যোগ করুন
+      </button>
+      <button style="min-height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px dashed #C9CFC6; background: transparent; padding: 8px 12px; display: flex; align-items: center; gap: 8px; font: 600 14px 'Hind Siliguri', sans-serif; color: #13304A; text-align: left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+        <span>পাল্লার ছবি <span style="font-weight: 400; color: #5B6B7A">(ঐচ্ছিক)</span></span>
+      </button>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-top: 1px solid #EDEFEA; padding: 14px 20px 28px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <div style="display: flex; flex-direction: column; gap: 1px">
+        <span style="font-size: 13px; color: #5B6B7A">মোট ওজন</span>
+        <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 20px">{{totalKg}} কেজি</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1px; align-items: flex-end">
+        <span style="font-size: 13px; color: #5B6B7A">গ্রাহক পাবেন</span>
+        <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 20px; color: #0B7A5C">{{totalTaka}}</span>
+      </div>
+    </div>
+    <a href="CPay.dc.html" style="height: 56px; border-radius: 6px; background: #13304A; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2-6z"></path></svg>
+      গ্রাহককে নিশ্চিত করতে পাঠান
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { kg: [8.5, 6, 3] };
+}
+renderVals() {
+const bn = (s) => String(s).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
+const fmtKg = (v) => bn(Number.isInteger(v) ? String(v) : v.toFixed(1));
+const fmtTk = (v) => '৳' + bn(String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+const items = [
+{ name: 'লোহা', rate: 50 },
+{ name: 'পুরোনো পত্রিকা', rate: 30 },
+{ name: 'প্লাস্টিক', rate: 35 }
+];
+const kg = this.state.kg;
+const set = (i, d) => { const next = kg.slice(); next[i] = Math.max(0, Math.round((next[i] + d) * 10) / 10); this.setState({ kg: next }); };
+let totalKg = 0;
+let totalTk = 0;
+const lines = items.map((it, i) => {
+totalKg += kg[i];
+totalTk += kg[i] * it.rate;
+return {
+name: it.name,
+rate: '৳' + bn(it.rate) + '/কেজি',
+kg: fmtKg(kg[i]),
+amount: fmtTk(kg[i] * it.rate),
+minus: () => set(i, -0.5),
+plus: () => set(i, 0.5),
+minusLabel: it.name + ' আধা কেজি কমান',
+plusLabel: it.name + ' আধা কেজি বাড়ান'
+};
+});
+return {
+lines: lines,
+totalKg: fmtKg(Math.round(totalKg * 10) / 10),
+totalTaka: fmtTk(totalTk)
+};
+}
+}
+</script>
+</body>
+</html>

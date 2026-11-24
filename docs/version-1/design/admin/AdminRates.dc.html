@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Daily rates</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F2}
+a{color:#13304A}a:hover{color:#0B2236}
+.bw-field:focus-within{border-color:#8A97A3 !important}
+</style>
+</helmet>
+<div style="min-height: 100vh; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Admin menu" style="flex: 1 1 232px; max-width: 100%; box-sizing: border-box; background: #FFFFFF; border-right: 1px solid #E3E6E0; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 20px">
+      <img src="/_blob/235d27dd227c862adfb410b79bafdf7d" alt="" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover">
+      <div style="display: flex; flex-direction: column">
+        <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 17px">BhangariWala</span>
+        <span style="font-size: 12px; color: #5B6B7A">Admin</span>
+      </div>
+    </div>
+    <a href="AdminPickups.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
+      Live pickups
+    </a>
+    <a href="AdminRates.dc.html" aria-current="page" style="height: 44px; padding: 0 12px; border-radius: 6px; background: #EEF2F6; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"></path></svg>
+      Daily rates
+    </a>
+    <a href="AdminCollectors.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c1.2-3.5 3.8-5 7-5s5.8 1.5 7 5"></path><path d="M16 11l2 2 4-4"></path></svg>
+      <span style="flex: 1">Collector approvals</span>
+      <span style="font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: #FFF4D6; color: #8A5A00">4</span>
+    </a>
+    <a href="AdminDisputes.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+      <span style="flex: 1">Disputes</span>
+      <span style="font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: #FBEAE3; color: #A63D16">2</span>
+    </a>
+    <a href="AdminUsers.dc.html" style="height: 44px; padding: 0 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 15px; color: #5B6B7A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21c1.2-3.5 3.8-5 7-5s5.8 1.5 7 5"></path><path d="M17 4a4 4 0 0 1 0 8M22 21c-.6-2-1.8-3.4-3.4-4.2"></path></svg>
+      Users
+    </a>
+    <div style="flex: 1; min-height: 24px"></div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 8px 0; border-top: 1px solid #EDEFEA">
+      <div style="width: 36px; height: 36px; border-radius: 6px; background: #13304A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px">FR</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-size: 14px; font-weight: 600">Farhana Rahman</span>
+        <span style="font-size: 12px; color: #5B6B7A">Operations</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px 40px; display: flex; flex-direction: column; gap: 20px; max-width: 1040px">
+
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 14px; color: #5B6B7A">Tuesday, 24 November 2026</span>
+        <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 28px; line-height: 1.2">Daily rates</h1>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <button onClick="{{copyYesterday}}" style="height: 44px; padding: 0 14px; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; font: 600 15px 'Hind Siliguri', sans-serif; color: #13304A; display: flex; align-items: center; gap: 8px; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg>
+          Copy yesterday's rates
+        </button>
+        <button onClick="{{publish}}" style="height: 44px; padding: 0 18px; border-radius: 6px; border: none; background: #13304A; color: #FFFFFF; font: 600 15px 'Hind Siliguri', sans-serif; display: flex; align-items: center; gap: 8px; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2-6z"></path></svg>
+          Publish rates
+        </button>
+      </div>
+    </header>
+
+    <sc-if value="{{dirty}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; gap: 10px; align-items: center; background: #FFF8E6; border: 1px solid #F1E1B4; border-radius: 6px; padding: 12px 16px; font-size: 14px; color: #5C4300">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A5A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+        You have unpublished changes. Households and collectors still see the last published rates.
+      </div>
+    </sc-if>
+    <sc-if value="{{justPublished}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 10px; align-items: center; background: #E3F2EC; border: 1px solid #BFE0D2; border-radius: 6px; padding: 12px 16px; font-size: 14px; color: #0B5A44">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B7A5C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        Rates published. Everyone connected sees them now.
+      </div>
+    </sc-if>
+
+    <section style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); overflow-x: auto">
+      <div style="padding: 12px 16px; border-bottom: 1px solid #EDEFEA; font-size: 14px; color: #5B6B7A">Rates per kg, in taka</div>
+      <table style="width: 100%; min-width: 600px; border-collapse: collapse; font-size: 15px">
+        <thead>
+          <tr style="text-align: left; color: #5B6B7A; font-size: 13px">
+            <th style="padding: 10px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Category</th>
+            <th style="padding: 10px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Pricing</th>
+            <th style="padding: 10px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Yesterday</th>
+            <th style="padding: 10px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA">Today</th>
+            <th style="padding: 10px 16px; font-weight: 500; border-bottom: 1px solid #EDEFEA; text-align: right">Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+            <tr>
+              <td style="padding: 10px 16px; border-bottom: 1px solid #F5F6F2"><div style="font-weight: 600">{{r.en}}</div><div style="font-size: 13px; color: #5B6B7A">{{r.bn}}</div></td>
+              <td style="padding: 10px 16px; border-bottom: 1px solid #F5F6F2; color: #5B6B7A">Per kg</td>
+              <td style="padding: 10px 16px; border-bottom: 1px solid #F5F6F2; text-align: right; color: #5B6B7A">৳{{r.yesterday}}</td>
+              <td style="padding: 10px 16px; border-bottom: 1px solid #F5F6F2">
+                <label class="bw-field" style="{{r.fieldStyle}}">
+                  <span style="color: #5B6B7A">৳</span>
+                  <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">{{r.en}} rate today</span>
+                  <input inputmode="decimal" value="{{r.today}}" onInput="{{r.onInput}}" style="width: 72px; border: none; outline: none; background: transparent; font: 600 16px 'Hind Siliguri', sans-serif; color: #13304A">
+                </label>
+              </td>
+              <td style="padding: 10px 16px; border-bottom: 1px solid #F5F6F2; text-align: right"><span style="font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: {{r.chipBg}}; color: {{r.chipFg}}">{{r.change}}</span></td>
+            </tr>
+          </sc-for>
+          <tr>
+            <td style="padding: 10px 16px"><div style="font-weight: 600">Electronics</div><div style="font-size: 13px; color: #5B6B7A">ইলেকট্রনিক্স</div></td>
+            <td style="padding: 10px 16px; color: #5B6B7A">On inspection</td>
+            <td style="padding: 10px 16px; text-align: right; color: #5B6B7A">None</td>
+            <td style="padding: 10px 16px; color: #5B6B7A" colspan="2">Collector quotes at the door</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #5B6B7A">New rates apply to pickups accepted after you publish. Pickups already accepted keep the rate that was live when the collector accepted them.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+today: ['50', '30', '35', '18', '160'],
+published: ['48', '30', '36', '17', '155'],
+justPublished: false
+};
+}
+renderVals() {
+const cats = [
+{ en: 'Iron', bn: 'লোহা', yesterday: 48 },
+{ en: 'Old newspaper', bn: 'পুরোনো পত্রিকা', yesterday: 30 },
+{ en: 'Plastic', bn: 'প্লাস্টিক', yesterday: 36 },
+{ en: 'Carton', bn: 'কার্টন', yesterday: 17 },
+{ en: 'Aluminium', bn: 'অ্যালুমিনিয়াম', yesterday: 155 }
+];
+const today = this.state.today;
+const pub = this.state.published;
+const dirty = today.some((v, i) => v !== pub[i]);
+const field = 'position: relative; height: 44px; width: 120px; box-sizing: border-box; border-radius: 6px; padding: 0 10px; display: flex; align-items: center; gap: 6px; background: #FFFFFF; ';
+return {
+dirty: dirty,
+justPublished: !dirty && this.state.justPublished,
+publish: () => this.setState({ published: today.slice(), justPublished: true }),
+copyYesterday: () => this.setState({ today: cats.map((c) => String(c.yesterday)), justPublished: false }),
+rows: cats.map((c, i) => {
+const v = parseFloat(today[i]);
+const d = isNaN(v) ? 0 : v - c.yesterday;
+const changed = today[i] !== pub[i];
+return {
+en: c.en,
+bn: c.bn,
+yesterday: c.yesterday,
+today: today[i],
+fieldStyle: field + (changed ? 'border: 1.5px solid #8A97A3;' : 'border: 1.5px solid #E3E6E0;'),
+onInput: (e) => { const next = today.slice(); next[i] = e.target.value; this.setState({ today: next, justPublished: false }); },
+change: d > 0 ? '+৳' + d : d < 0 ? '−৳' + Math.abs(d) : 'Same',
+chipBg: d > 0 ? '#E3F2EC' : d < 0 ? '#FBEAE3' : '#EEF0EC',
+chipFg: d > 0 ? '#0B7A5C' : d < 0 ? '#A63D16' : '#5B6B7A'
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>

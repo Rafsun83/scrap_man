@@ -4,7 +4,8 @@ The project's documents are grouped by version. Each version folder holds everyt
 
 | Version | Status | What it covers | Index |
 | --- | --- | --- | --- |
-| [`version-0/`](version-0/README.md) | Current | The first build, M0 to M7: backend, household and collector app, admin panel, landing page, pilot readiness | [`version-0/README.md`](version-0/README.md) |
+| [`version-0/`](version-0/README.md) | Shipped (reference) | The first build, M0 to M7: backend, household and collector app, admin panel, landing page, pilot readiness | [`version-0/README.md`](version-0/README.md) |
+| [`version-1/`](version-1/README.md) | Current | UI redesign of the household, collector and admin screens (V1-M1 designs done) | [`version-1/README.md`](version-1/README.md) |
 
 ## Starting a new version
 

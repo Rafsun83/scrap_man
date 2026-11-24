@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Report a problem</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+textarea::placeholder{color:#8A97A3}
+.bw-area:focus{border-color:#8A97A3 !important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 52px 20px 0; display: flex; align-items: center; gap: 12px">
+    <a href="ConfirmWeight.dc.html" aria-label="ফিরে যান" style="width: 48px; height: 48px; border-radius: 6px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.2">সমস্যা জানান</h1>
+      <div style="font-size: 13px; color: #5B6B7A">আজ · জসিম উদ্দিন · ১৭.৫ কেজি · ৳৭১০</div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 22px 20px 12px; display: flex; flex-direction: column; gap: 20px">
+
+    <fieldset style="border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+      <legend style="padding: 0; margin-bottom: 10px; font-size: 14px; font-weight: 500; color: #5B6B7A">কী সমস্যা হয়েছে?</legend>
+      <sc-for list="{{reasons}}" as="r" hint-placeholder-count="4">
+        <button onClick="{{r.pick}}" aria-pressed="{{r.on}}" style="{{r.style}}">
+          <div style="{{r.radio}}"></div>
+          <span style="font-size: 16px; font-weight: 500; color: #13304A">{{r.label}}</span>
+        </button>
+      </sc-for>
+    </fieldset>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="details" style="font-size: 14px; font-weight: 500; color: #5B6B7A">বিস্তারিত লিখুন</label>
+      <textarea id="details" class="bw-area" rows="3" placeholder="যেমন: লোহা আমার হিসাবে ১০ কেজির বেশি ছিল" style="box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; padding: 14px 16px; font: 16px/1.5 'Hind Siliguri', sans-serif; color: #13304A; outline: none; resize: none"></textarea>
+    </div>
+
+    <button style="min-height: 64px; box-sizing: border-box; border-radius: 6px; border: 1.5px dashed #C9CFC6; background: transparent; padding: 10px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; color: inherit">
+      <div style="width: 40px; height: 40px; border-radius: 4px; background: #FFFFFF; border: 1px solid #E3E6E0; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+      </div>
+      <div style="font-size: 15px; font-weight: 600">ছবি যোগ করুন <span style="font-weight: 400; color: #5B6B7A">(ঐচ্ছিক)</span></div>
+    </button>
+  </div>
+
+  <div style="padding: 12px 20px 28px">
+    <a href="Home.dc.html" style="height: 56px; border-radius: 6px; background: #13304A; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2-6z"></path></svg>
+      জমা দিন
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { reason: 0 };
+}
+renderVals() {
+const labels = ['ওজন ঠিক মনে হচ্ছে না', 'টাকা পাইনি', 'সংগ্রাহকের আচরণ', 'অন্য কিছু'];
+const base = 'height: 56px; box-sizing: border-box; border-radius: 6px; padding: 0 16px; background: #FFFFFF; display: flex; align-items: center; gap: 14px; cursor: pointer; font-family: inherit; text-align: left; ';
+const radioBase = 'width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%; flex-shrink: 0; ';
+return {
+reasons: labels.map((label, i) => {
+const on = this.state.reason === i;
+return {
+label: label,
+on: on,
+style: base + (on ? 'border: 1.5px solid #8A97A3;' : 'border: 1.5px solid #E3E6E0;'),
+radio: radioBase + (on ? 'border: 6px solid #5B6B7A;' : 'border: 2px solid #C9CFC6;'),
+pick: () => this.setState({ reason: i })
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>

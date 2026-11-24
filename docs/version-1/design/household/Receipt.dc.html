@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Paid</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; padding: 60px 20px 28px; gap: 20px; overflow: hidden">
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
+    <div style="width: 64px; height: 64px; border-radius: 6px; background: #E3F2EC; display: flex; align-items: center; justify-content: center">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0B7A5C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+    </div>
+    <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 32px; line-height: 1.2; color: #0B7A5C">৳৭১০ পেয়েছেন</h1>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 15px">বিকাশে পাঠানো হয়েছে: ০১৭XX-XXX৪৫৬</span>
+      <span style="font-size: 13px; color: #5B6B7A">২৪ নভেম্বর, সকাল ১০:২০</span>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column">
+    <div style="padding: 12px 16px; border-bottom: 1px solid #EDEFEA; font-size: 14px; font-weight: 600">রসিদ</div>
+    <div style="padding: 6px 16px; display: flex; flex-direction: column">
+      <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px"><span>লোহা, ৮.৫ কেজি</span><span>৳৪২৫</span></div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px"><span>পুরোনো পত্রিকা, ৬ কেজি</span><span>৳১৮০</span></div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px"><span>প্লাস্টিক, ৩ কেজি</span><span>৳১০৫</span></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 12px 16px; border-top: 1px dashed #D9DDD5">
+      <span style="font-size: 15px; font-weight: 600">মোট, ১৭.৫ কেজি</span>
+      <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 20px; color: #0B7A5C">৳৭১০</span>
+    </div>
+    <div style="padding: 10px 16px 14px; font-size: 13px; color: #5B6B7A">সংগ্রাহক: জসিম উদ্দিন</div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 6px; border: 1px solid #E3E6E0; padding: 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+    <span style="font-size: 15px; font-weight: 600">জসিমের সেবা কেমন ছিল?</span>
+    <div role="group" aria-label="রেটিং" style="display: flex; gap: 6px">
+      <sc-for list="{{stars}}" as="s" hint-placeholder-count="5">
+        <button onClick="{{s.pick}}" aria-label="{{s.label}}" aria-pressed="{{s.on}}" style="width: 48px; height: 48px; border: none; background: transparent; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z" fill="{{s.fill}}" stroke="{{s.stroke}}" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex: 1"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <a href="Home.dc.html" style="height: 56px; border-radius: 6px; background: #13304A; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>
+      হোমে ফিরুন
+    </a>
+    <a href="#share" style="height: 56px; border-radius: 6px; background: #FFFFFF; border: 1.5px solid #E3E6E0; box-sizing: border-box; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.5"></circle><circle cx="6" cy="12" r="2.5"></circle><circle cx="18" cy="19" r="2.5"></circle><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"></path></svg>
+      রসিদ শেয়ার করুন
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { rating: 4 };
+}
+renderVals() {
+const bn = ['১', '২', '৩', '৪', '৫'];
+return {
+stars: bn.map((n, i) => {
+const on = i < this.state.rating;
+return {
+label: n + ' তারা',
+on: on,
+fill: on ? '#FFC72C' : 'none',
+stroke: on ? '#E0A800' : '#C9CFC6',
+pick: () => this.setState({ rating: i + 1 })
+};
+})
+};
+}
+}
+</script>
+</body>
+</html>

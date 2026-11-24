@@ -1,0 +1,369 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-24T10:00:00Z"
+  },
+  "title": "BhangariWala v1 UI Samples",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 560,
+      "h": 1080,
+      "title": "Style: colours, type, inputs"
+    },
+    "SignIn.dc.html": {
+      "x": 640,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H1 Sign in",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Home.dc.html": {
+      "x": 1110,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H2 Home",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Schedule.dc.html": {
+      "x": 1580,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "H4 Schedule pickup",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "OTP.dc.html": {
+      "x": 0,
+      "y": 1420,
+      "w": 390,
+      "h": 844,
+      "title": "H9 Verify phone",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Rates.dc.html": {
+      "x": 470,
+      "y": 1420,
+      "w": 390,
+      "h": 844,
+      "title": "H12 All rates",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "SelectItems.dc.html": {
+      "x": 940,
+      "y": 1420,
+      "w": 390,
+      "h": 844,
+      "title": "H3 Select items",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Searching.dc.html": {
+      "x": 1410,
+      "y": 1420,
+      "w": 390,
+      "h": 844,
+      "title": "H5 Finding a collector",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Tracking.dc.html": {
+      "x": 1880,
+      "y": 1420,
+      "w": 390,
+      "h": 844,
+      "title": "H6 Collector on the way",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "ConfirmWeight.dc.html": {
+      "x": 2350,
+      "y": 1420,
+      "w": 390,
+      "h": 844,
+      "title": "H7 Confirm weight",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "ReportProblem.dc.html": {
+      "x": 0,
+      "y": 2620,
+      "w": 390,
+      "h": 844,
+      "title": "H14 Report a problem",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Receipt.dc.html": {
+      "x": 470,
+      "y": 2620,
+      "w": 390,
+      "h": 844,
+      "title": "H8 Paid",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "History.dc.html": {
+      "x": 940,
+      "y": 2620,
+      "w": 390,
+      "h": 844,
+      "title": "H11 Pickup history",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Notifications.dc.html": {
+      "x": 1410,
+      "y": 2620,
+      "w": 390,
+      "h": 844,
+      "title": "H13 Notifications",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "Profile.dc.html": {
+      "x": 1880,
+      "y": 2620,
+      "w": 390,
+      "h": 844,
+      "title": "H10 Profile and addresses",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CSignup.dc.html": {
+      "x": 0,
+      "y": 3820,
+      "w": 390,
+      "h": 1180,
+      "title": "C6 Sign up",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CPending.dc.html": {
+      "x": 470,
+      "y": 3820,
+      "w": 390,
+      "h": 844,
+      "title": "C7 Waiting for approval",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CHome.dc.html": {
+      "x": 940,
+      "y": 3820,
+      "w": 390,
+      "h": 844,
+      "title": "C1 Nearby requests",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CRequest.dc.html": {
+      "x": 1410,
+      "y": 3820,
+      "w": 390,
+      "h": 844,
+      "title": "C2 Request detail",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CActive.dc.html": {
+      "x": 1880,
+      "y": 3820,
+      "w": 390,
+      "h": 844,
+      "title": "C3 Arrive and verify",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CWeigh.dc.html": {
+      "x": 2350,
+      "y": 3820,
+      "w": 390,
+      "h": 844,
+      "title": "C4 Weigh items",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CReweigh.dc.html": {
+      "x": 0,
+      "y": 5300,
+      "w": 390,
+      "h": 844,
+      "title": "C10 Re-weigh after a dispute",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CPay.dc.html": {
+      "x": 470,
+      "y": 5300,
+      "w": 390,
+      "h": 844,
+      "title": "C5 Pay and complete",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CPickups.dc.html": {
+      "x": 940,
+      "y": 5300,
+      "w": 390,
+      "h": 844,
+      "title": "C8 My pickups",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CLedger.dc.html": {
+      "x": 1410,
+      "y": 5300,
+      "w": 390,
+      "h": 844,
+      "title": "C9 Ledger",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "CProfile.dc.html": {
+      "x": 1880,
+      "y": 5300,
+      "w": 390,
+      "h": 1040,
+      "title": "C11 Profile",
+      "is_interactive": true,
+      "radius": 36
+    },
+    "AdminPickups.dc.html": {
+      "x": 0,
+      "y": 6640,
+      "w": 1440,
+      "h": 1000,
+      "title": "A1 Live pickups",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminRates.dc.html": {
+      "x": 1520,
+      "y": 6640,
+      "w": 1440,
+      "h": 900,
+      "title": "A2 Daily rates",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminCollectors.dc.html": {
+      "x": 0,
+      "y": 7940,
+      "w": 1440,
+      "h": 960,
+      "title": "A3 Collector approvals",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminDisputes.dc.html": {
+      "x": 1520,
+      "y": 7940,
+      "w": 1440,
+      "h": 1180,
+      "title": "A4 Disputes",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "AdminUsers.dc.html": {
+      "x": 0,
+      "y": 9420,
+      "w": 1440,
+      "h": 900,
+      "title": "A5 Users",
+      "expand": "fill",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "SignIn.dc.html",
+    "Home.dc.html",
+    "Schedule.dc.html",
+    "OTP.dc.html",
+    "Rates.dc.html",
+    "SelectItems.dc.html",
+    "Searching.dc.html",
+    "Tracking.dc.html",
+    "ConfirmWeight.dc.html",
+    "ReportProblem.dc.html",
+    "Receipt.dc.html",
+    "History.dc.html",
+    "Notifications.dc.html",
+    "Profile.dc.html",
+    "CSignup.dc.html",
+    "CPending.dc.html",
+    "CHome.dc.html",
+    "CRequest.dc.html",
+    "CActive.dc.html",
+    "CWeigh.dc.html",
+    "CReweigh.dc.html",
+    "CPay.dc.html",
+    "CPickups.dc.html",
+    "CLedger.dc.html",
+    "CProfile.dc.html",
+    "AdminPickups.dc.html",
+    "AdminRates.dc.html",
+    "AdminCollectors.dc.html",
+    "AdminDisputes.dc.html",
+    "AdminUsers.dc.html"
+  ],
+  "notes": {
+    "heading": {
+      "x": 0,
+      "y": -300,
+      "text": "Version 1 — calm, simple, elegant",
+      "kind": "title1",
+      "maxW": 1970
+    },
+    "sellflow": {
+      "x": 0,
+      "y": 1160,
+      "text": "Household · sign-in and sell flow",
+      "kind": "title1",
+      "maxW": 2740
+    },
+    "after": {
+      "x": 0,
+      "y": 2360,
+      "text": "Household · after the sale and account",
+      "kind": "title1",
+      "maxW": 2270
+    },
+    "collector1": {
+      "x": 0,
+      "y": 3560,
+      "text": "Collector · join and pickup flow",
+      "kind": "title1",
+      "maxW": 2740
+    },
+    "collector2": {
+      "x": 0,
+      "y": 5040,
+      "text": "Collector · payment, pickups, ledger and profile",
+      "kind": "title1",
+      "maxW": 2270
+    },
+    "admin": {
+      "x": 0,
+      "y": 6380,
+      "text": "Admin panel · web, English with a Bangla toggle",
+      "kind": "title1",
+      "maxW": 2960
+    }
+  },
+  "designSystems": []
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Notifications</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 52px 20px 0; display: flex; align-items: center; gap: 12px">
+    <a href="Home.dc.html" aria-label="ফিরে যান" style="width: 48px; height: 48px; border-radius: 6px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <h1 style="flex: 1; margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.2">নোটিফিকেশন</h1>
+    <a href="#read-all" style="height: 48px; display: flex; align-items: center; font-size: 14px; font-weight: 500; text-decoration: none">সব পড়া হয়েছে</a>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 20px 20px 16px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 13px; font-weight: 600; color: #5B6B7A; letter-spacing: 0.02em">আজ</div>
+    <sc-for list="{{today}}" as="n" hint-placeholder-count="3">
+      <div style="background: #FFFFFF; border-radius: 6px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); padding: 14px; display: flex; gap: 12px">
+        <div style="width: 40px; height: 40px; border-radius: 4px; background: {{n.tint}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: {{n.ink}}; font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 16px">{{n.icon}}</div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <div style="display: flex; justify-content: space-between; gap: 8px">
+            <span style="font-size: 15px; font-weight: 600; line-height: 1.35">{{n.title}}</span>
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #FFC72C; flex-shrink: 0; margin-top: 7px"></span>
+          </div>
+          <span style="font-size: 14px; color: #5B6B7A; line-height: 1.5">{{n.body}}</span>
+          <span style="font-size: 12px; color: #5B6B7A">{{n.time}}</span>
+        </div>
+      </div>
+    </sc-for>
+
+    <div style="font-size: 13px; font-weight: 600; color: #5B6B7A; letter-spacing: 0.02em; margin-top: 10px">আগে</div>
+    <sc-for list="{{earlier}}" as="n" hint-placeholder-count="2">
+      <div style="border: 1px solid #E3E6E0; border-radius: 6px; padding: 14px; display: flex; gap: 12px">
+        <div style="width: 40px; height: 40px; border-radius: 4px; background: #EEF0EC; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #5B6B7A; font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 16px">{{n.icon}}</div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 15px; font-weight: 500; line-height: 1.35">{{n.title}}</span>
+          <span style="font-size: 14px; color: #5B6B7A; line-height: 1.5">{{n.body}}</span>
+          <span style="font-size: 12px; color: #5B6B7A">{{n.time}}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+today: [
+{ icon: '৳', tint: '#E3F2EC', ink: '#0B7A5C', title: '৳৭১০ বিকাশে পাঠানো হয়েছে', body: 'জসিম উদ্দিন আপনার বিক্রির টাকা পাঠিয়েছেন।', time: 'সকাল ১০:২০' },
+{ icon: '✓', tint: '#E8ECF1', ink: '#13304A', title: 'জসিম উদ্দিন অনুরোধ গ্রহণ করেছেন', body: 'আপনার পিকআপ কোড ৪৮২১। তিনি এলে কোডটি বলবেন।', time: 'সকাল ৯:৪৫' },
+{ icon: '▲', tint: '#FFF4D6', ink: '#8A5A00', title: 'আজকের দর প্রকাশিত হয়েছে', body: 'লোহা আজ ৳৫০/কেজি, গতকালের চেয়ে ৳২ বেশি।', time: 'সকাল ৮:০০' }
+],
+earlier: [
+{ icon: '৳', title: '৳৫২০ হাতে ক্যাশে পেয়েছেন', body: 'লোহা ও পুরোনো পত্রিকা, ১২ কেজি।', time: '৩ নভেম্বর' },
+{ icon: '!', title: 'অনুরোধের সময় শেষ হয়েছে', body: 'নির্ধারিত সময়ে কেউ গ্রহণ করেননি। আবার অনুরোধ পাঠাতে ট্যাপ করুন।', time: '২৮ সেপ্টেম্বর' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

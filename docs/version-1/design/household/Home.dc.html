@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 56px 20px 16px; display: flex; flex-direction: column; gap: 24px">
+
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 14px; color: #5B6B7A">শুভ সকাল,</div>
+        <div style="font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 24px; line-height: 1.2">রাশেদা বেগম</div>
+      </div>
+      <a href="Notifications.dc.html" aria-label="নোটিফিকেশন" style="position: relative; width: 48px; height: 48px; border-radius: 6px; border: none; background: #FFFFFF; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; justify-content: center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>
+        <span style="position: absolute; top: 12px; right: 13px; width: 9px; height: 9px; border-radius: 50%; background: #FFC72C; border: 2px solid #FFFFFF"></span>
+      </a>
+    </div>
+
+    <div style="background: #13304A; border-radius: 6px; padding: 22px; display: flex; flex-direction: column; gap: 18px; position: relative; overflow: hidden">
+      <div style="position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,199,44,0.10)"></div>
+      <div style="display: flex; flex-direction: column; gap: 6px; position: relative">
+        <div style="font-size: 13px; color: #B9C6D2">মঙ্গলবার · ২৪ নভেম্বর</div>
+        <div style="font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.3; color: #FFFFFF">আপনার ভাঙ্গারি,<br>আজকের ন্যায্য দামে</div>
+      </div>
+      <a href="SelectItems.dc.html" style="position: relative; height: 52px; border-radius: 6px; background: #FFC72C; color: #13304A; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+        ভাঙ্গারি বিক্রি করুন
+      </a>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 18px">আজকের রেট</h2>
+        <a href="Rates.dc.html" style="font-size: 14px; font-weight: 500; text-decoration: none">সব দেখুন</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{rates}}" as="r" hint-placeholder-count="4">
+          <div style="background: #FFFFFF; border-radius: 6px; padding: 14px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <div style="width: 36px; height: 36px; border-radius: 4px; background: {{r.tint}}; display: flex; align-items: center; justify-content: center; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 15px; color: #13304A">{{r.initial}}</div>
+              <span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: {{r.chipBg}}; color: {{r.chipFg}}">{{r.change}}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <div style="font-size: 14px; color: #5B6B7A">{{r.name}}</div>
+              <div style="display: flex; align-items: baseline; gap: 4px">
+                <span style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 22px">{{r.price}}</span>
+                <span style="font-size: 13px; color: #5B6B7A">/কেজি</span>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 18px">সাম্প্রতিক বিক্রি</h2>
+      <div style="background: #FFFFFF; border-radius: 6px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; gap: 14px">
+        <div style="width: 44px; height: 44px; border-radius: 6px; background: #E3F2EC; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B7A5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+          <div style="font-size: 15px; font-weight: 600">লোহা, পত্রিকা, প্লাস্টিক · ১৭.৫ কেজি</div>
+          <div style="font-size: 13px; color: #5B6B7A">২৪ নভেম্বর · বিকাশ</div>
+        </div>
+        <div style="font-family: 'Anek Bangla', sans-serif; font-weight: 700; font-size: 18px; color: #0B7A5C">৳ ৭১০</div>
+      </div>
+    </section>
+  </div>
+
+  <nav aria-label="প্রধান মেনু" style="background: #FFFFFF; border-top: 1px solid #EDEFEA; padding: 10px 16px 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+    <a href="Home.dc.html" aria-current="page" style="height: 56px; border-radius: 6px; background: #EEF2F6; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #13304A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>
+      <span style="font-size: 12px; font-weight: 600">হোম</span>
+    </a>
+    <a href="SelectItems.dc.html" style="height: 56px; border-radius: 6px; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #5B6B7A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M12 8v8M8 12h8"></path></svg>
+      <span style="font-size: 12px; font-weight: 500">বিক্রি</span>
+    </a>
+    <a href="History.dc.html" style="height: 56px; border-radius: 6px; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #5B6B7A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      <span style="font-size: 12px; font-weight: 500">ইতিহাস</span>
+    </a>
+    <a href="Profile.dc.html" style="height: 56px; border-radius: 6px; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #5B6B7A">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>
+      <span style="font-size: 12px; font-weight: 500">প্রোফাইল</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const up = { chipBg: '#E3F2EC', chipFg: '#0B7A5C' };
+const down = { chipBg: '#FBEAE3', chipFg: '#A63D16' };
+const same = { chipBg: '#EEF0EC', chipFg: '#5B6B7A' };
+return {
+rates: [
+Object.assign({ name: 'লোহা', initial: 'লো', tint: '#E8ECF1', price: '৳৫০', change: '▲ ২' }, up),
+Object.assign({ name: 'পুরোনো পত্রিকা', initial: 'প', tint: '#FFF4D6', price: '৳৩০', change: '— ০' }, same),
+Object.assign({ name: 'প্লাস্টিক', initial: 'প্লা', tint: '#E3F2EC', price: '৳৩৫', change: '▼ ১' }, down),
+Object.assign({ name: 'অ্যালুমিনিয়াম', initial: 'অ্যা', tint: '#F1EAF6', price: '৳১৬০', change: '▲ ৫' }, up)
+]
+};
+}
+}
+</script>
+</body>
+</html>

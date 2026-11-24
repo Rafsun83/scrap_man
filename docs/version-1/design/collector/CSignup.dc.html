@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>Collector sign up</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&amp;family=Hind+Siliguri:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#13304A}a:hover{color:#0B2236}
+input::placeholder{color:#8A97A3}
+.bw-in:focus{border-color:#8A97A3 !important}
+</style>
+</helmet>
+<div style="width: 390px; height: 1180px; box-sizing: border-box; background: #F5F6F2; font-family: 'Hind Siliguri', sans-serif; color: #13304A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 52px 20px 0; display: flex; align-items: center; gap: 12px">
+    <a href="SignIn.dc.html" aria-label="ফিরে যান" style="width: 48px; height: 48px; border-radius: 6px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(19,48,74,0.05), 0 6px 20px rgba(19,48,74,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <h1 style="margin: 0; font-family: 'Anek Bangla', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.2">সংগ্রাহক হিসেবে যোগ দিন</h1>
+      <div style="font-size: 13px; color: #5B6B7A">যাচাই শেষে অনুরোধ পেতে শুরু করবেন</div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; padding: 24px 20px 16px; display: flex; flex-direction: column; gap: 20px">
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="cs-name" style="font-size: 14px; font-weight: 500; color: #5B6B7A">নাম</label>
+      <input id="cs-name" class="bw-in" value="জসিম উদ্দিন" style="height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; padding: 0 16px; font: 16px 'Hind Siliguri', sans-serif; color: #13304A; outline: none">
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">মোবাইল নম্বর</div>
+      <div style="height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #EEF0EC; padding: 0 16px; display: flex; align-items: center; justify-content: space-between">
+        <span style="font-size: 16px">+৮৮০ ১৮XX-XXX২১০</span>
+        <span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: #E3F2EC; color: #0B7A5C">যাচাই হয়েছে</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="cs-nid" style="font-size: 14px; font-weight: 500; color: #5B6B7A">জাতীয় পরিচয়পত্র (এনআইডি) নম্বর</label>
+      <input id="cs-nid" class="bw-in" inputmode="numeric" placeholder="১০ বা ১৭ সংখ্যা" style="height: 56px; box-sizing: border-box; border-radius: 6px; border: 1.5px solid #E3E6E0; background: #FFFFFF; padding: 0 16px; font: 16px 'Hind Siliguri', sans-serif; color: #13304A; outline: none">
+      <span style="font-size: 13px; color: #5B6B7A; line-height: 1.5">এখন শুধু নম্বর লাগবে। কার্ডের ছবি পরে চাওয়া হতে পারে।</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">আপনার ছবি (সেলফি)</div>
+      <button style="min-height: 72px; box-sizing: border-box; border-radius: 6px; border: 1.5px dashed #C9CFC6; background: transparent; padding: 12px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; color: inherit">
+        <div style="width: 44px; height: 44px; border-radius: 4px; background: #FFFFFF; border: 1px solid #E3E6E0; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#13304A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="4"></circle><path d="M5 21c1.3-3.5 4-5 7-5s5.7 1.5 7 5"></path></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1px">
+          <span style="font-size: 15px; font-weight: 600">সেলফি তুলুন</span>
+          <span style="font-size: 13px; color: #5B6B7A">মুখ পরিষ্কার দেখা যাবে, চশমা বা টুপি ছাড়া</span>
+        </div>
+      </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">কোন এলাকায় কাজ করবেন?</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{areas}}" as="a" hint-placeholder-count="5">
+          <button onClick="{{a.pick}}" aria-pressed="{{a.on}}" style="{{a.style}}">{{a.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 14px; font-weight: 500; color: #5B6B7A">কীভাবে মাল নেবেন?</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{vehicles}}" as="v" hint-placeholder-count="3">
+          <button onClick="{{v.pick}}" aria-pressed="{{v.on}}" style="{{v.style}}">{{v.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <button onClick="{{toggleScale}}" role="checkbox" aria-checked="{{scale}}" style="min-height: 48px; border: none; background: transparent; padding: 0; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; cursor: pointer">
+        <span style="{{scaleBox}}">{{scaleTick}}</span>
+        <span style="font-size: 15px; color: #13304A">আমার নিজের ওজনের পাল্লা আছে</span>
+      </button>
+      <button onClick="{{toggleAgree}}" role="checkbox" aria-checked="{{agree}}" style="min-height: 48px; border: none; background: transparent; padding: 0; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; cursor: pointer">
+        <span style="{{agreeBox}}">{{agreeTick}}</span>
+        <span style="font-size: 15px; color: #13304A; line-height: 1.5"><span style="text-decoration: underline">সংগ্রাহক চুক্তি ও নিয়ম</span> পড়েছি এবং মেনে নিচ্ছি</span>
+      </button>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-top: 1px solid #EDEFEA; padding: 14px 20px 28px">
+    <a href="CPending.dc.html" style="height: 56px; border-radius: 6px; background: #13304A; color: #FFFFFF; font-weight: 600; font-size: 16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2-6z"></path></svg>
+      আবেদন জমা দিন
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1180}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { areas: { 0: true, 1: true }, vehicle: 0, scale: true, agree: false };
+}
+renderVals() {
+const chip = 'height: 44px; padding: 0 16px; border-radius: 6px; background: #FFFFFF; color: #13304A; cursor: pointer; font: 500 15px \'Hind Siliguri\', sans-serif; ';
+const on = chip + 'border: 1.5px solid #8A97A3; font-weight: 600;';
+const off = chip + 'border: 1.5px solid #E3E6E0;';
+const box = 'width: 24px; height: 24px; box-sizing: border-box; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #FFFFFF; ';
+const boxOn = box + 'background: #5B6B7A; border: none;';
+const boxOff = box + 'background: #FFFFFF; border: 1.5px solid #C9CFC6;';
+const areas = this.state.areas;
+return {
+areas: ['মিরপুর', 'পল্লবী', 'কাফরুল', 'শ্যামলী', 'মোহাম্মদপুর'].map((label, i) => ({
+label: label,
+on: !!areas[i],
+style: areas[i] ? on : off,
+pick: () => { const next = Object.assign({}, areas); if (next[i]) { delete next[i]; } else { next[i] = true; } this.setState({ areas: next }); }
+})),
+vehicles: ['ভ্যান', 'ঠেলাগাড়ি', 'হেঁটে'].map((label, i) => ({
+label: label,
+on: this.state.vehicle === i,
+style: this.state.vehicle === i ? on : off,
+pick: () => this.setState({ vehicle: i })
+})),
+scale: this.state.scale,
+scaleBox: this.state.scale ? boxOn : boxOff,
+scaleTick: this.state.scale ? '✓' : '',
+toggleScale: () => this.setState({ scale: !this.state.scale }),
+agree: this.state.agree,
+agreeBox: this.state.agree ? boxOn : boxOff,
+agreeTick: this.state.agree ? '✓' : '',
+toggleAgree: () => this.setState({ agree: !this.state.agree })
+};
+}
+}
+</script>
+</body>
+</html>

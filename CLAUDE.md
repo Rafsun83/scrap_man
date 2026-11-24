@@ -13,6 +13,7 @@ Households in Dhaka sell scrap (iron, old newspaper, plastic, carton, aluminium,
 - `docs/README.md`: how the docs are versioned. Everything decided and built so far is in `docs/version-0/` (`docs/version-0/README.md` lists each document, its claude.ai link and the local copy to read; the links need Rafsun's sign-in, so use the copies). A new round of work (for example a design refresh) gets its own `docs/version-<n>/`; see `docs/README.md`.
 - `docs/version-0/product.md`: what v1 is, users, decisions, non-functional requirements.
 - `docs/version-0/design/`: the prototype. `docs/version-0/design/README.md` maps every screen to its source file: H1-H14 in `household/`, C1-C11 in `collector/`, A1-A5 in `admin/`; build screens from those files' layout, colours and Bangla copy. Logos in `docs/version-0/design/logos/`.
+- `docs/version-1/design/`: the version 1 redesign of every screen (same IDs, split into `household/`, `collector/`, `admin/`), with the style rules in its `README.md`. When building v1 screens, follow these files over the version 0 prototype.
 
 ## Commands
 
@@ -84,7 +85,7 @@ Any other change is refused with INVALID_STATE. Live events (Socket.IO): `reques
 
 ## Milestones
 
-When a milestone is complete, add `<id>-<name>.md` to the current version's `milestones/` folder (today `docs/version-0/milestones/`) with a checklist of what was built and verified.
+When a milestone is complete, add `<id>-<name>.md` to the current version's `milestones/` folder (today `docs/version-1/milestones/`; version 1 milestones are V1-M1, V1-M2, ...) with a checklist of what was built and verified.
 
 - [x] M0 Project setup
 - [x] M1 Backend core: full schema, OTP sign-in, profile, addresses, categories, daily rates
@@ -94,5 +95,17 @@ When a milestone is complete, add `<id>-<name>.md` to the current version's `mil
 - [x] M5 Admin panel (A1-A5 in `apps/admin`: React Router, TanStack Query, Socket.IO, Leaflet map), admin read models (`src/modules/admin`), `Pickup.updatedAt`, user status. Admin strings in `@bw/shared` `admin-i18n.ts`. Notes: `docs/version-0/milestones/M5-admin-panel.md` (operations walk-through still pending)
 - [x] M6 Pilot readiness, no outside services: collector notification feed, household no-show flow, push notifications behind a sender interface (device tokens, server-side text; console/fake senders), SMS gateway adapter behind the existing interface, structured logs with request ids, ops alerts (checks, `GET /admin/alerts`, admin banner), Dockerfiles and a production compose file, race and load tests, shared API client and Dhaka formatting in `@bw/shared`, doc fixes. Notes: `docs/version-0/milestones/M6-pilot-readiness.md`
 - [ ] M7 Launch, needs outside services or people: Firebase project and FCM keys, a Bangladeshi SMS provider, an alert destination (Slack, email or pager), hosting and domain, EAS builds and Google Play listing, background location (Play approval), Google Maps key, real-device and operations walk-throughs, content (support number, help, terms, privacy policy, collector agreement), map tile provider decision
+
+Version 1 (`docs/version-1/`):
+
+- [x] V1-M1 UI design: style guide and all 30 screens (H1-H14, C1-C11, A1-A5) in the v1 style (no animation, grey border for selected or focused, 4-6 px corners). Designs only, not built yet. Notes: `docs/version-1/milestones/V1-M1-ui-design.md`; screen index and style rules: `docs/version-1/design/README.md`
+- [ ] V1-M2 Shared style and components: update tokens in `@bw/shared` (ground `#F5F6F2`, 4-6 px radius, grey `#8A97A3` selected/focus border) and rebuild the reusable pieces in `apps/mobile/src/ui` (buttons, inputs, cards, chips, tab bar, code boxes, weight steppers) with no animation
+- [ ] V1-M3 Household screens: rebuild H1-H14 from `docs/version-1/design/household/`, with loading, empty and error states; checked on a phone
+- [ ] V1-M4 Collector screens: rebuild C1-C11 from `docs/version-1/design/collector/`, with loading, empty and error states; checked on a phone
+- [ ] V1-M5 Admin panel: restyle A1-A5 in `apps/admin` from `docs/version-1/design/admin/` (side menu, status cards, tables, forms); operations walk-through
+- [ ] V1-M6 Polish and sign-off: final pass on both apps (Bangla/English strings, 48 px touch targets, low-end Android check) and fixes from Rafsun's review; done when Rafsun approves version 1
+
+Version 1 is a look-only change: no API or backend changes unless a screen needs new data, and then ask Rafsun first. Each V1 milestone ends with `pnpm turbo run lint typecheck test build` passing, a note in `docs/version-1/milestones/`, and a report to Rafsun; wait for Rafsun's go-ahead before starting the next one.
+
 
 The product spec, technical blueprint and clickable prototype live in Rafsun's claude.ai account; `docs/version-0/product.md`, `docs/version-0/design/` and this file are copies of what they decided. If they disagree, ask Rafsun.
