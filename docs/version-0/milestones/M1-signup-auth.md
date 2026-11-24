@@ -55,7 +55,7 @@ The full database schema, phone sign-in, profiles, saved addresses, categories a
 - [x] Docker creates the test database on a fresh volume; CI runs the e2e job against it
 
 ## Contract and docs
-- [x] `docs/openapi.yaml`: added `POST /auth/logout` and the `UNAUTHORIZED` error code; types regenerated
+- [x] `docs/version-0/openapi.yaml`: added `POST /auth/logout` and the `UNAUTHORIZED` error code; types regenerated
 - [x] README: M1 setup, development sign-in, API table
 - [x] `.env.example`: JWT secret, token and OTP timings, dev code, admin phone, test URLs
 

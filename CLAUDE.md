@@ -8,11 +8,11 @@ Households in Dhaka sell scrap (iron, old newspaper, plastic, carton, aluminium,
 - `apps/mobile`: Expo SDK 58, React Native 0.88. One app, two roles.
 - `apps/admin`: React 19 + Vite 8. English UI with a Bangla toggle.
 - `apps/landing`: public landing page, React 19 + Vite 8 (no router or query library). Bangla first with an English toggle; reads only the public `GET /categories` and `GET /rates/today`. Strings in `@bw/shared` `landing-i18n.ts`; sections in `src/sections/`, shared pieces in `src/components/`, styles split in `src/styles/`.
-- `packages/shared` (`@bw/shared`): brand tokens, Bangla/English strings, enums, matching constants, and API types generated from `docs/openapi.yaml`.
-- `docs/openapi.yaml`: the API contract (OpenAPI 3.1). Source of truth for endpoints, shapes and error codes.
-- `docs/README.md`: index of every project document, with its claude.ai link and the local copy to read (the links need Rafsun's sign-in; use the copies).
-- `docs/product.md`: what v1 is, users, decisions, non-functional requirements.
-- `docs/design/`: the prototype. `docs/design/README.md` maps every screen (H1-H14 household, C1-C11 collector, A1-A5 admin) to its source file in `docs/design/prototype/`; build screens from those files' layout, colours and Bangla copy. Logos in `docs/design/logos/`.
+- `packages/shared` (`@bw/shared`): brand tokens, Bangla/English strings, enums, matching constants, and API types generated from `docs/version-0/openapi.yaml`.
+- `docs/version-0/openapi.yaml`: the API contract (OpenAPI 3.1). Source of truth for endpoints, shapes and error codes.
+- `docs/README.md`: how the docs are versioned. Everything decided and built so far is in `docs/version-0/` (`docs/version-0/README.md` lists each document, its claude.ai link and the local copy to read; the links need Rafsun's sign-in, so use the copies). A new round of work (for example a design refresh) gets its own `docs/version-<n>/`; see `docs/README.md`.
+- `docs/version-0/product.md`: what v1 is, users, decisions, non-functional requirements.
+- `docs/version-0/design/`: the prototype. `docs/version-0/design/README.md` maps every screen to its source file: H1-H14 in `household/`, C1-C11 in `collector/`, A1-A5 in `admin/`; build screens from those files' layout, colours and Bangla copy. Logos in `docs/version-0/design/logos/`.
 
 ## Commands
 
@@ -28,7 +28,7 @@ Development sign-in: every OTP is `123456` (`OTP_DEV_CODE`); admin phone `+88017
 
 ## Conventions
 
-- Contract first: change `docs/openapi.yaml`, run `pnpm gen:api`, then code.
+- Contract first: change `docs/version-0/openapi.yaml`, run `pnpm gen:api`, then code.
 - API is ESM: relative imports end in `.js`; use `import.meta.dirname`. Tests use Vitest (`vi.fn()`).
 - Validation: Zod schemas with `new ZodPipe(schema)` on `@Body`/`@Param`.
 - Errors: throw `AppError` (`src/common/errors.ts`); the global filter returns `{ code, message, details }`. Use contract error codes only. Messages say what happened and what to do.
@@ -80,19 +80,19 @@ These rules do not apply to the React app in `apps/web/`.
 | DISPUTED -> CANCELLED | Admin | `POST /admin/disputes/{id}/resolve` outcome CANCEL |
 | CONFIRMED -> COMPLETED | Collector | `POST /pickups/{id}/payment` (TrxID required for BKASH and NAGAD) |
 
-Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`, `pickup.released`, `pickup.code_locked` (admins), `dispute.opened`, `dispute.resolved`, `collector.verification`, `collector.applied` (admins), `ops.alert` (admins), `rates.published` (everyone connected). The same pickup events also go out as push notifications to whoever they are news for (`src/modules/push`). Payloads and recipients: `SocketEvents` and `Event*` in `docs/openapi.yaml`.
+Any other change is refused with INVALID_STATE. Live events (Socket.IO): `request.created`, `request.taken`, `pickup.accepted`, `collector.location`, `pickup.arrived`, `pickup.weighed`, `pickup.confirmed`, `pickup.disputed`, `pickup.paid`, `pickup.cancelled`, `request.expired`, `pickup.released`, `pickup.code_locked` (admins), `dispute.opened`, `dispute.resolved`, `collector.verification`, `collector.applied` (admins), `ops.alert` (admins), `rates.published` (everyone connected). The same pickup events also go out as push notifications to whoever they are news for (`src/modules/push`). Payloads and recipients: `SocketEvents` and `Event*` in `docs/version-0/openapi.yaml`.
 
 ## Milestones
 
-When a milestone is complete, add `milestones/<id>-<name>.md` with a checklist of what was built and verified.
+When a milestone is complete, add `<id>-<name>.md` to the current version's `milestones/` folder (today `docs/version-0/milestones/`) with a checklist of what was built and verified.
 
 - [x] M0 Project setup
 - [x] M1 Backend core: full schema, OTP sign-in, profile, addresses, categories, daily rates
-- [x] M2 Pickup engine: create requests, PostGIS matching with radius widening, first accept wins, pickup code, weighing, disputes, confirm, payment, expiry jobs, Socket.IO events, photo uploads (S3-compatible storage; SeaweedFS locally, as MinIO no longer publishes images). Notes: `milestones/M2-pickup-engine.md`
-- [x] M3 Household app screens, plus summary, notifications feed (`src/modules/notifications`), `Pickup.collectorLocation` and `Pickup.rating`. Maps need `GOOGLE_MAPS_API_KEY` in `apps/mobile/.env.local`. Notes: `milestones/M3-household-app.md` (phone walk-through still pending)
-- [x] M4 Collector app screens, collector sign-up and approval endpoints (`src/modules/collectors`), ledger, offline weigh draft, items added at weighing. Support line from `EXPO_PUBLIC_SUPPORT_PHONE`. Notes: `milestones/M4-collector-app.md` (phone walk-through still pending)
-- [x] M5 Admin panel (A1-A5 in `apps/admin`: React Router, TanStack Query, Socket.IO, Leaflet map), admin read models (`src/modules/admin`), `Pickup.updatedAt`, user status. Admin strings in `@bw/shared` `admin-i18n.ts`. Notes: `milestones/M5-admin-panel.md` (operations walk-through still pending)
-- [x] M6 Pilot readiness, no outside services: collector notification feed, household no-show flow, push notifications behind a sender interface (device tokens, server-side text; console/fake senders), SMS gateway adapter behind the existing interface, structured logs with request ids, ops alerts (checks, `GET /admin/alerts`, admin banner), Dockerfiles and a production compose file, race and load tests, shared API client and Dhaka formatting in `@bw/shared`, doc fixes. Notes: `milestones/M6-pilot-readiness.md`
+- [x] M2 Pickup engine: create requests, PostGIS matching with radius widening, first accept wins, pickup code, weighing, disputes, confirm, payment, expiry jobs, Socket.IO events, photo uploads (S3-compatible storage; SeaweedFS locally, as MinIO no longer publishes images). Notes: `docs/version-0/milestones/M2-pickup-engine.md`
+- [x] M3 Household app screens, plus summary, notifications feed (`src/modules/notifications`), `Pickup.collectorLocation` and `Pickup.rating`. Maps need `GOOGLE_MAPS_API_KEY` in `apps/mobile/.env.local`. Notes: `docs/version-0/milestones/M3-household-app.md` (phone walk-through still pending)
+- [x] M4 Collector app screens, collector sign-up and approval endpoints (`src/modules/collectors`), ledger, offline weigh draft, items added at weighing. Support line from `EXPO_PUBLIC_SUPPORT_PHONE`. Notes: `docs/version-0/milestones/M4-collector-app.md` (phone walk-through still pending)
+- [x] M5 Admin panel (A1-A5 in `apps/admin`: React Router, TanStack Query, Socket.IO, Leaflet map), admin read models (`src/modules/admin`), `Pickup.updatedAt`, user status. Admin strings in `@bw/shared` `admin-i18n.ts`. Notes: `docs/version-0/milestones/M5-admin-panel.md` (operations walk-through still pending)
+- [x] M6 Pilot readiness, no outside services: collector notification feed, household no-show flow, push notifications behind a sender interface (device tokens, server-side text; console/fake senders), SMS gateway adapter behind the existing interface, structured logs with request ids, ops alerts (checks, `GET /admin/alerts`, admin banner), Dockerfiles and a production compose file, race and load tests, shared API client and Dhaka formatting in `@bw/shared`, doc fixes. Notes: `docs/version-0/milestones/M6-pilot-readiness.md`
 - [ ] M7 Launch, needs outside services or people: Firebase project and FCM keys, a Bangladeshi SMS provider, an alert destination (Slack, email or pager), hosting and domain, EAS builds and Google Play listing, background location (Play approval), Google Maps key, real-device and operations walk-throughs, content (support number, help, terms, privacy policy, collector agreement), map tile provider decision
 
-The product spec, technical blueprint and clickable prototype live in Rafsun's claude.ai account; `docs/product.md`, `docs/design/` and this file are copies of what they decided. If they disagree, ask Rafsun.
+The product spec, technical blueprint and clickable prototype live in Rafsun's claude.ai account; `docs/version-0/product.md`, `docs/version-0/design/` and this file are copies of what they decided. If they disagree, ask Rafsun.

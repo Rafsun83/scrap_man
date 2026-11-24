@@ -18,7 +18,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "gen:api": "openapi-typescript ../../docs/openapi.yaml -o src/generated/api.ts"
+    "gen:api": "openapi-typescript ../../docs/version-0/openapi.yaml -o src/generated/api.ts"
   },
   "devDependencies": {
     "openapi-typescript": "7.13.0",

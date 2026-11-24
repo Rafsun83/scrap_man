@@ -14,7 +14,7 @@ This milestone adds:
 
 ## Checklist
 
-### Contract (`docs/openapi.yaml` first, then `pnpm gen:api`)
+### Contract (`docs/version-0/openapi.yaml` first, then `pnpm gen:api`)
 - [x] `/me/notifications` and `/me/notifications/read` are open to collectors:
   - new types for collectors: `APPLICATION_APPROVED/REJECTED`, `PICKUP_CONFIRMED`, `PICKUP_DISPUTED`, `PAYMENT_REPORTED`, `RATED`
   - new type for households: `PICKUP_NO_SHOW`
@@ -108,7 +108,7 @@ This milestone adds:
 | **Production stack** | `docker compose -f docker-compose.prod.yml` builds both images (about 75 s). Both containers are healthy, and **all 10 smoke checks pass** through nginx |
 | **Load, 20 pairs** | 20/20 complete sales in 1.8 s; every expected live event arrived (220) |
 | **Load, 50 pairs** | 50/50 in 3.1 s (16 sales/s); per-call p95 between 246 ms (photo slot) and 576 ms (create); every expected event arrived (550). One local API process, dev database on the same machine |
-| Live samples | A scripted run against a local API recorded the no-show (and its 409 before the slot), both feeds, alerts and devices for `docs/api.md`. The push log shows the Bangla accept and no-show messages going to the household's phone |
+| Live samples | A scripted run against a local API recorded the no-show (and its 409 before the slot), both feeds, alerts and devices for `docs/version-0/api.md`. The push log shows the Bangla accept and no-show messages going to the household's phone |
 | `npx expo export --platform android` | Bundles (3.3 MB), with and without push enabled |
 | **On a phone** | **Not run** (no Android device or emulator here); a real push also needs Firebase (M7) |
 

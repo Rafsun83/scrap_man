@@ -22,7 +22,7 @@ M3 had two steps:
 ## Checklist
 
 ### Contract and API (step 2)
-- [x] `docs/openapi.yaml` updated first, then `pnpm gen:api`:
+- [x] `docs/version-0/openapi.yaml` updated first, then `pnpm gen:api`:
   - `GET /me/summary` (`MeSummary`)
   - `GET /me/notifications` (`NotificationPage`, `Notification`, `NotificationType`)
   - `POST /me/notifications/read`
@@ -109,7 +109,7 @@ M3 had two steps:
 | Shared tests | 8 pass: same keys in Bangla and English, no empty strings, same placeholders |
 | `pnpm test:e2e` | 11 files, **97 tests** pass (10 new) |
 | Migration | `migration:revert` then `db:migrate` succeed on the dev database; e2e runs it on the test database |
-| Live run on the dev API | A scripted sale (real PostgreSQL, Redis, S3 upload). The samples in `docs/api.md` come from it: feed of paid, weighed and accepted; paging; mark-read sets unread to 0; a collector is refused with 403; `collectorLocation` while ACCEPTED; `rating` after rating |
+| Live run on the dev API | A scripted sale (real PostgreSQL, Redis, S3 upload). The samples in `docs/version-0/api.md` come from it: feed of paid, weighed and accepted; paging; mark-read sets unread to 0; a collector is refused with 403; `collectorLocation` while ACCEPTED; `rating` after rating |
 | `expo config` | Without a key: `mapsEnabled: false`. With `GOOGLE_MAPS_API_KEY`: the key reaches the Android manifest plugin and `mapsEnabled: true` |
 | `npx expo export --platform android` | Bundles with and without a maps key (3 MB Hermes bytecode) |
 | **On a phone** | **Not run.** This machine has no Android SDK or emulator. Before calling M3 done, run `pnpm dev` and `pnpm dev:mobile` and walk a sale on a phone on the same Wi-Fi, with and without a maps key. Note: `react-native-maps` is a native module, so the map needs a development build (`npx expo run:android` or EAS), not Expo Go. |

@@ -95,7 +95,7 @@ export const OUTCOMES_BY_DISPUTE_TYPE: Record<DisputeType, readonly DisputeOutco
   OTHER: ['NO_ACTION', 'SUSPEND_COLLECTOR', 'CANCEL'],
 };
 
-/** Socket.IO event names; payloads are the Event* schemas in docs/openapi.yaml. */
+/** Socket.IO event names; payloads are the Event* schemas in docs/version-0/openapi.yaml. */
 export const SOCKET_EVENTS = [
   'request.created',
   'request.taken',

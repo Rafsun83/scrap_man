@@ -17,7 +17,7 @@ const PUSH: Partial<Record<SocketEvent, { kind: PushKind; to: 'household' | 'col
   'request.expired': { kind: 'EXPIRED', to: 'household' },
 };
 
-/** Builds and sends the live events listed in docs/openapi.yaml (SocketEvents), and the matching pushes. */
+/** Builds and sends the live events listed in docs/version-0/openapi.yaml (SocketEvents), and the matching pushes. */
 @Injectable()
 export class PickupEventsService {
   constructor(

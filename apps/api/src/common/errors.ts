@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
-/** Error codes from docs/openapi.yaml (components.schemas.Error). */
+/** Error codes from docs/version-0/openapi.yaml (components.schemas.Error). */
 export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'UNAUTHORIZED'

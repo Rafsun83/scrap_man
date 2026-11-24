@@ -1,6 +1,6 @@
 # Milestone notes
 
-One note per finished milestone: what was built, how it was checked, and what is left open. The milestone list itself is in [`CLAUDE.md`](../CLAUDE.md).
+One note per finished milestone: what was built, how it was checked, and what is left open. The milestone list itself is in [`CLAUDE.md`](../../../CLAUDE.md).
 
 | Milestone | Note | Finished |
 | --- | --- | --- |
@@ -13,6 +13,6 @@ One note per finished milestone: what was built, how it was checked, and what is
 | M6 Pilot readiness | [M6-pilot-readiness.md](M6-pilot-readiness.md) | 2026-11-17 (outside services are M7) |
 | M7 Push notifications (part of M7 Launch) | [M7-push-notifications.md](M7-push-notifications.md) | 2026-11-21 (phone test pending) |
 
-The endpoints from all milestones so far are documented in [`docs/api.md`](../docs/api.md).
+The endpoints from all milestones so far are documented in [`docs/version-0/api.md`](../api.md).
 
 Each note uses the same layout: summary, checklist of what was built, verification (commands and results), decisions taken, and open items for later milestones.

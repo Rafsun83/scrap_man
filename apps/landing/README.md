@@ -23,7 +23,7 @@ docker build -f docker/landing/Dockerfile .   # nginx image on :8080; also in do
 | `src/api/rates.ts` | The two fetches |
 | `src/lib/` | Pure logic (`rates.ts`: join categories with rates, format, trend) and the language context |
 | `src/styles/` | `tokens.css` (brand tokens from `@bw/shared` theme), `base.css`, `components.css`, `layout.css`, `sections.css` |
-| `public/` | Favicon and the L1/L5 logo art from `docs/design/logos/` |
+| `public/` | Favicon and the L1/L5 logo art from `docs/version-0/design/logos/` |
 
 Strings live in `packages/shared/src/landing-i18n.ts` (`tl(key, lang, vars)`); add every new string in both languages.
 

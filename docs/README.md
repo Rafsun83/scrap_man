@@ -1,23 +1,18 @@
-# Project documents
+# Docs
 
-The originals live in Rafsun's claude.ai account. The links open after signing in to claude.ai, and for other people only once Rafsun shares them. Code tools such as Claude Code cannot open them, so each has a copy in this repo: **read the local copy**.
+The project's documents are grouped by version. Each version folder holds everything decided and built in that round: the product spec, the API contract and reference, the design (split into `household/`, `collector/` and `admin/`), the Postman collection and the milestone notes.
 
-| Document | Original (claude.ai) | Copy in this repo |
-| --- | --- | --- |
-| Product and Technical Spec: v1 scope, users, rules, decisions, requirements | https://claude.ai/artifact/3srj5eZptXZpuAAHwZNEkN | [`docs/product.md`](product.md), rules in [`CLAUDE.md`](../CLAUDE.md) |
-| Technical Blueprint: state machine, database schema, API contract | https://claude.ai/artifact/UgnJZmVSP3AHcj2ENumsex | State machine in [`CLAUDE.md`](../CLAUDE.md); schema in `apps/api/src/database/migrations/`; API in [`docs/openapi.yaml`](openapi.yaml) |
-| Clickable prototype: 30 screens, admin panel, logos | https://claude.ai/artifact/TjyQBmde9ggomc5KSdXhQH | [`docs/design/README.md`](design/README.md) (screen index) and [`docs/design/prototype/`](design/prototype/) (one file per screen) |
-| Logos | Logo page of the prototype | [`docs/design/logos/`](design/logos/) |
-| Prototype Test Guide: tasks and questions for user testing | https://claude.ai/artifact/Rf6d3CbFgY5z7mcqvghCJU | Not copied; not needed for building |
+| Version | Status | What it covers | Index |
+| --- | --- | --- | --- |
+| [`version-0/`](version-0/README.md) | Current | The first build, M0 to M7: backend, household and collector app, admin panel, landing page, pilot readiness | [`version-0/README.md`](version-0/README.md) |
 
-Made in this repo (no claude.ai original):
+## Starting a new version
 
-| Document | What it is |
-| --- | --- |
-| [`docs/api.md`](api.md) | API reference: every endpoint served today, who may call it, rules, errors, and a real request and response for each, plus the Socket.IO events. Samples were recorded from the running API (2026-11-14 to 2026-11-17, M6 included); update this page whenever an endpoint changes |
-| [`docs/postman/bhangariwala.postman_collection.json`](postman/bhangariwala.postman_collection.json) | Postman collection (v2.1) for all 54 routes served today, ordered as a full sale: sign in, publish rates, collector sign-up and approval, request, accept, arrive with the code, weigh, confirm, pay, rate, dispute, then the admin panel views. Requests save tokens and ids for the next step. Setup notes are in its description |
-| [`milestones/`](../milestones/README.md) | One note per finished milestone with its checklist |
+When work starts on a new round (for example a design refresh or a new feature set):
 
-## Which copy wins
+1. Create `docs/version-<n>/` with the same layout as the previous version.
+2. Copy over only the documents that round will change (for a design round, the affected `design/<app>/` screens; for API changes, `openapi.yaml` and `api.md`). Point `gen:api` in `packages/shared/package.json` at the new `openapi.yaml` if it moves.
+3. Write that round's milestone notes in `docs/version-<n>/milestones/`.
+4. Add a row to the table above, mark it Current, and mark the previous version as Done. Leave the previous folder as it is: it is the record of what was shipped.
 
-The repo copies are what the code follows. When a decision changes in claude.ai, update the matching local file in the same commit. If a local copy and a request disagree, ask Rafsun before building.
+A document that a newer version has not copied is still the one in the newest version that has it.

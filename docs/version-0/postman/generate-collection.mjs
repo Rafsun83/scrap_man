@@ -1,4 +1,4 @@
-// Regenerates bhangariwala.postman_collection.json: node docs/postman/generate-collection.mjs docs/postman/bhangariwala.postman_collection.json
+// Regenerates bhangariwala.postman_collection.json: node docs/version-0/postman/generate-collection.mjs docs/version-0/postman/bhangariwala.postman_collection.json
 // Add a req(...) here whenever an endpoint is added to the API.
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -101,7 +101,7 @@ const collection = {
     name: 'BhangariWala API',
     _postman_id: 'b6f1d0a2-6c3e-4a51-9d5e-2f8a1c7e4b90',
     description: [
-      'Every route implemented in `apps/api` up to M3 (all 36 routes, 49 requests). Contract: `docs/openapi.yaml`; prose reference: `docs/api.md`.',
+      'Every route implemented in `apps/api` up to M3 (all 36 routes, 49 requests). Contract: `docs/version-0/openapi.yaml`; prose reference: `docs/version-0/api.md`.',
       '',
       '## Before you start',
       '1. `pnpm db:up && pnpm db:migrate && pnpm db:seed -- --sample-rates`, then `pnpm dev` (API on :3000).',

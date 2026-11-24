@@ -15,7 +15,7 @@ M6 had built device registration, push text in each user's language, and a push 
 - [x] A service-account key for the API, kept outside the repo.
 
 ### Contract
-- [x] No change: `PUT /me/devices`, `DELETE /me/devices/{token}` and the push payloads were already in `docs/openapi.yaml` (M6).
+- [x] No change: `PUT /me/devices`, `DELETE /me/devices/{token}` and the push payloads were already in `docs/version-0/openapi.yaml` (M6).
 
 ### API (`apps/api`, to the backend standard)
 - [x] `firebase-admin` **14.5.0**, pinned exactly (14.5.1 was younger than 14 days).

@@ -19,7 +19,7 @@ import { AppError } from './errors.js';
 const IDEMPOTENT = 'bw:idempotent';
 const TTL_SEC = 24 * 3600;
 
-/** Marks a write that needs an Idempotency-Key header (see docs/openapi.yaml). */
+/** Marks a write that needs an Idempotency-Key header (see docs/version-0/openapi.yaml). */
 export const Idempotent = () => SetMetadata(IDEMPOTENT, true);
 
 interface Stored {

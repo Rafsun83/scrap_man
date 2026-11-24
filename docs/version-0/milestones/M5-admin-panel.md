@@ -15,7 +15,7 @@ The panel is English first with a Bangla toggle, and live events keep it current
 
 ## Checklist
 
-### Contract (`docs/openapi.yaml` first, then `pnpm gen:api`)
+### Contract (`docs/version-0/openapi.yaml` first, then `pnpm gen:api`)
 - [x] `GET /admin/overview` (`AdminOverview`, `AttentionItem`): status counts, completed today, pending applications, open disputes, and the needs-attention list (`CODE_LOCKED`, `DISPUTE_REVIEW`, `WAITING_TOO_LONG`, `RELEASES`).
 - [x] `GET /admin/map` (`AdminMap`): open requests (with an overdue flag) and online collectors (with a busy flag).
 - [x] `GET /admin/pickups`: rules written down. Adds `group` (ACTIVE, WEIGHING, PAST), `q` (BW number, name, phone) and `userId`; `area` matches anywhere in the area, any case.
@@ -100,7 +100,7 @@ The panel is English first with a Bangla toggle, and live events keep it current
 | Admin tests (Vitest, Testing Library, jsdom) | 10 files, **29 tests** pass |
 | API unit, mobile, shared | 30, 89 and 11 pass |
 | Migration | up, down and up on the dev database |
-| Live run through the dev proxy | A scripted run created two weight disputes, a payment report, an accepted pickup, open requests and a pending applicant. Every M5 endpoint answered 200; the samples in `docs/api.md` come from it |
+| Live run through the dev proxy | A scripted run created two weight disputes, a payment report, an accepted pickup, open requests and a pending applicant. Every M5 endpoint answered 200; the samples in `docs/version-0/api.md` come from it |
 | **In a browser** | Headless Chrome against the dev API and proxy. Screenshots of every page in English, and the disputes page in Bangla. A dispute was resolved through the page with "Send a team member": it stayed under Open with the team-weights form. This pass caught two Bangla bugs, both fixed and covered by tests: round numbers in English digits, and times from the browser's `bn-BD` locale |
 | `vite build` | Split by page; the largest chunk is the Live pickups page with Leaflet (160 kB, 47 kB gzipped) |
 

@@ -1,5 +1,5 @@
 /**
- * Compile-time checks that hand-written runtime lists match docs/openapi.yaml.
+ * Compile-time checks that hand-written runtime lists match docs/version-0/openapi.yaml.
  * `pnpm typecheck` fails here after a contract change until enums.ts is updated too.
  */
 import type { components } from './generated/api.js';

@@ -7,7 +7,7 @@ The API now runs the whole pickup: a household requests, nearby collectors are m
 ## Checklist
 
 ### Contract and schema
-- [x] `docs/openapi.yaml` updated first: rules and error codes per endpoint, full `Pickup` shape (weigh rounds, photos, payment, open dispute, timestamps), `Dispute` outcomes, Idempotency-Key rules, Socket.IO event names and payloads (`SocketEvents`, `Event*`)
+- [x] `docs/version-0/openapi.yaml` updated first: rules and error codes per endpoint, full `Pickup` shape (weigh rounds, photos, payment, open dispute, timestamps), `Dispute` outcomes, Idempotency-Key rules, Socket.IO event names and payloads (`SocketEvents`, `Event*`)
 - [x] `itemPhotoIds` removed from `CreatePickup`; item photos are uploaded after the request is created
 - [x] Types regenerated (`pnpm gen:api`); new constants in `@bw/shared` (slot hours, weight-band kg, outcomes per dispute type, event names, code attempts, online timeout)
 - [x] Migration `1763193600000-PickupEngine`: `pickups.area`, `search_started_at`, `wallet_number`; `disputes.photo_ids`; one open dispute per pickup; one scale photo per weigh round; allowed outcomes; sweep indexes. Tested up, down, up

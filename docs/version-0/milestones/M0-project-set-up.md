@@ -39,7 +39,7 @@ The monorepo, its tools, and the connections between the apps, the API, PostgreS
 - [x] Enums as lists: pickup statuses, slots, weight bands, payment methods, roles
 - [x] Matching rules (1 km, 3 km after 5 minutes) and the 2 kg minimum
 - [x] Bangla and English strings; `toBanglaDigits`, `formatTaka`, `formatKg`, `t()`
-- [x] API types generated from `docs/openapi.yaml` (`pnpm gen:api`)
+- [x] API types generated from `docs/version-0/openapi.yaml` (`pnpm gen:api`)
 - [x] Unit tests for the formatting helpers
 
 ## Local services and CI

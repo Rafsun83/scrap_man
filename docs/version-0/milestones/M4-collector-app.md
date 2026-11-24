@@ -17,7 +17,7 @@ It is Bangla first with an English toggle, like the household side.
 
 ## Checklist
 
-### Contract (`docs/openapi.yaml` first, then `pnpm gen:api`)
+### Contract (`docs/version-0/openapi.yaml` first, then `pnpm gen:api`)
 - [x] `POST /collector/selfie`: presigned upload slot for the sign-up selfie (`UploadSlot`).
 - [x] `POST /collector/signup`: errors written down (409 when PENDING or APPROVED; 400 when the selfie isn't this collector's or isn't uploaded). A REJECTED collector may apply again.
 - [x] `GET /collector/profile`: 404 before sign-up. `PATCH /collector/profile`: at least one field.
@@ -143,7 +143,7 @@ It is Bangla first with an English toggle, like the household side.
 | Mobile tests (jest-expo, Testing Library) | 12 files, **89 tests** pass (27 new) |
 | Shared tests | 9 pass. `contract-checks.ts` fails the typecheck if `WORK_AREAS` or `SOCKET_EVENTS` drift from the contract |
 | Migration | `migration:revert` then `migration:run` succeed on the dev database; e2e runs it on the test database |
-| Live run on the dev API | A scripted collector journey on the real stack (PostgreSQL, Redis, SeaweedFS presigned uploads): sign in, 404 profile, selfie upload, sign-up, 403 online while pending, admin queue, approve (Bangla SMS logged), online, nearby, accept, wrong code (422), arrive, scale upload, weights with carton added at the door, bKash confirm, payment, ledger, 400 on a bad range, past pickups, change work details. The M4 samples in `docs/api.md` come from it |
+| Live run on the dev API | A scripted collector journey on the real stack (PostgreSQL, Redis, SeaweedFS presigned uploads): sign in, 404 profile, selfie upload, sign-up, 403 online while pending, admin queue, approve (Bangla SMS logged), online, nearby, accept, wrong code (422), arrive, scale upload, weights with carton added at the door, bKash confirm, payment, ledger, 400 on a bad range, past pickups, change work details. The M4 samples in `docs/version-0/api.md` come from it |
 | `npx expo export --platform android` | Bundles (3.2 MB Hermes bytecode) |
 | **On a phone** | **Not run.** This machine has no Android SDK or emulator. Before calling M4 done, run `pnpm dev` and `pnpm dev:mobile`, sign in as a household on one phone and as a collector on another, and walk a sale: sign-up, approve (Postman or curl until A3 in M5), online, accept, code, weigh with airplane mode on and off, confirm, pay. |
 

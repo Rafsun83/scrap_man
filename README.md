@@ -12,13 +12,14 @@ This repository is the v1 monorepo. Milestones **M0** to **M6** are done: the ba
 | `apps/mobile` | One app for households and collectors | Expo SDK 58, React Native 0.88 |
 | `apps/admin` | Admin panel for the operations team | React 19, Vite 8 |
 | `apps/landing` | Public landing page: how it works, today's live rates, what we buy, safety, collector sign-up, FAQ (Bangla first, English toggle) | React 19, Vite 8 |
-| `packages/shared` | Brand tokens, Bangla/English strings, enums, API types | TypeScript, generated from `docs/openapi.yaml` |
-| `docs/openapi.yaml` | The API contract (OpenAPI 3.1) | |
-| `docs/api.md` | API reference: every endpoint, its purpose, real sample requests and responses, live events | |
-| `docs/product.md` | What v1 is: users, decisions, non-functional requirements | |
-| `docs/design/` | The prototype: every screen (H1-H14, C1-C11, A1-A5) mapped to its source file, plus logos | |
-| `docs/postman/` | Postman collection generated from the contract | |
-| `milestones/` | One note per finished milestone: what was built, how it was checked, what is left | |
+| `packages/shared` | Brand tokens, Bangla/English strings, enums, API types | TypeScript, generated from `docs/version-0/openapi.yaml` |
+| `docs/` | Project documents, one folder per version (`docs/README.md` explains); `version-0/` holds everything up to M7 | |
+| `docs/version-0/openapi.yaml` | The API contract (OpenAPI 3.1) | |
+| `docs/version-0/api.md` | API reference: every endpoint, its purpose, real sample requests and responses, live events | |
+| `docs/version-0/product.md` | What v1 is: users, decisions, non-functional requirements | |
+| `docs/version-0/design/` | The prototype, split into `household/` (H1-H14), `collector/` (C1-C11) and `admin/` (A1-A5), plus logos | |
+| `docs/version-0/postman/` | Postman collection generated from the contract | |
+| `docs/version-0/milestones/` | One note per finished milestone: what was built, how it was checked, what is left | |
 | `docker-compose.prod.yml` | Production stack: API, admin and landing page behind nginx, with the data services | Docker |
 
 ## First run
@@ -83,7 +84,7 @@ Sign in with any new number to become a household. To try the collector side, si
 | `pnpm test` | Unit tests in every package |
 | `pnpm test:e2e` | API end-to-end tests (needs `pnpm db:up`); they use `bhangariwala_test` and Redis db 15, never your data |
 | `pnpm typecheck` / `pnpm lint` / `pnpm build` | Checks across the monorepo |
-| `pnpm gen:api` | Regenerate API types after editing `docs/openapi.yaml` |
+| `pnpm gen:api` | Regenerate API types after editing `docs/version-0/openapi.yaml` |
 | `pnpm db:migrate` | Apply database migrations |
 | `pnpm db:seed` | Load categories and the admin account (add `-- --sample-rates` for test prices) |
 | `pnpm db:down` | Stop the Docker services |
@@ -94,7 +95,7 @@ Before calling a change done, run `pnpm turbo run lint typecheck test build`.
 
 ## Conventions
 
-- The API follows `docs/openapi.yaml`. Change the contract first, run `pnpm gen:api`, then the code.
+- The API follows `docs/version-0/openapi.yaml`. Change the contract first, run `pnpm gen:api`, then the code.
 - The API is ESM: relative imports end in `.js`. Tests use Vitest.
 - Money is `numeric(12,2)` taka and weight `numeric(8,1)` kg; the server computes every amount.
 - The API speaks ASCII digits and English enum values. Bangla digits and words are for display only (`toBanglaDigits`, `formatTaka`, `formatKg` in `@bw/shared`).
@@ -102,7 +103,7 @@ Before calling a change done, run `pnpm turbo run lint typecheck test build`.
 
 ## API
 
-All paths start with `/api/v1`. Errors always come back as `{ code, message, details }`, and every response carries an `X-Request-Id` that matches the log lines. The full reference, with an endpoint index, sample requests and responses, and the Socket.IO live events, is [`docs/api.md`](docs/api.md); the contract is [`docs/openapi.yaml`](docs/openapi.yaml).
+All paths start with `/api/v1`. Errors always come back as `{ code, message, details }`, and every response carries an `X-Request-Id` that matches the log lines. The full reference, with an endpoint index, sample requests and responses, and the Socket.IO live events, is [`docs/version-0/api.md`](docs/version-0/api.md); the contract is [`docs/version-0/openapi.yaml`](docs/version-0/openapi.yaml).
 
 | Area | Endpoints | Who |
 | --- | --- | --- |
@@ -140,4 +141,4 @@ All paths start with `/api/v1`. Errors always come back as `{ code, message, det
   - real-device walk-throughs of both apps and an operations walk-through of the admin panel
   - content: support number, help, terms, privacy policy, collector agreement
 
-Each finished milestone has a note in [`milestones/`](milestones/README.md) with what was built, how it was checked, and what is left open.
+Each finished milestone has a note in [`docs/version-0/milestones/`](docs/version-0/milestones/README.md) with what was built, how it was checked, and what is left open.
