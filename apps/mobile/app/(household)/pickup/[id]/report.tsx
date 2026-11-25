@@ -12,11 +12,12 @@ import { formatDate } from '../../../../src/lib/dhaka';
 import { allowedDisputeTypes } from '../../../../src/lib/pickupView';
 import { BackButton, Button, ErrorView, Field, Icon, LoadingView, Note, RadioRow, Screen } from '../../../../src/ui/components';
 import { errorMessage } from '../../../../src/ui/errors';
-import { body, colors, display, radius, tones } from '../../../../src/ui/theme';
+import { body, borderWidth, colors, display, radius, tones } from '../../../../src/ui/theme';
+import { SectionLabel } from '../../../../src/ui/parts';
 
 const MAX_PHOTOS = 5;
 
-/** H14: weight, payment not received, behaviour, other; details; optional photos. */
+/** H14 (v1 design `household/ReportProblem.dc.html`): weight, payment not received, behaviour, other; details; optional photos. */
 export default function ReportProblem() {
   const { id, type: wanted } = useLocalSearchParams<{ id: string; type?: DisputeType }>();
   const { t, lang } = useT();
@@ -74,7 +75,7 @@ export default function ReportProblem() {
     return (
       <Screen>
         <BackButton />
-        <Text style={display(28)}>{t('reportProblem')}</Text>
+        <Text style={display(24)}>{t('reportProblem')}</Text>
         <Note tone="warn" icon="info" text={t(p.openDispute ? 'disputeAlreadyOpen' : 'disputeNotAllowed')} />
       </Screen>
     );
@@ -84,19 +85,19 @@ export default function ReportProblem() {
     <Screen
       footer={
         <>
-          {error ? <Text style={[body(15, 600), { color: colors.alert }]}>{error}</Text> : null}
+          {error ? <Text style={[body(14, 600), { color: colors.alert }]}>{error}</Text> : null}
           <Button testID="submit-report" label={t('submit')} icon="send" loading={sending} disabled={!type} onPress={submit} />
         </>
       }
     >
       <View style={{ gap: 6 }}>
         <BackButton />
-        <Text style={[display(28), { lineHeight: 34 }]}>{t('reportProblem')}</Text>
-        <Text style={[body(15), { color: colors.muted }]}>{summary}</Text>
+        <Text style={[display(24), { lineHeight: 30 }]}>{t('reportProblem')}</Text>
+        <Text style={[body(13), { color: colors.muted }]}>{summary}</Text>
       </View>
 
       <View style={{ gap: 8 }} accessibilityRole="radiogroup">
-        <Text style={display(19)}>{t('whatProblem')}</Text>
+        <SectionLabel>{t('whatProblem')}</SectionLabel>
         {allowed.map((d) => (
           <RadioRow key={d} testID={`type-${d}`} label={t(`dispute_${d}`)} selected={type === d} onPress={() => setType(d)} />
         ))}
@@ -137,8 +138,10 @@ export default function ReportProblem() {
           }}
           style={s.photoBtn}
         >
-          <Icon name="camera" />
-          <Text style={body(15, 700)}>
+          <View style={s.photoTile}>
+            <Icon name="camera" size={20} />
+          </View>
+          <Text style={body(15, 600)}>
             {photos.length ? t('photosAdded', { count: localDigits(photos.length, lang) }) : t('addPhoto')}
           </Text>
         </Pressable>
@@ -154,12 +157,22 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    minHeight: 56,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 2,
+    minHeight: 64,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    borderWidth,
     borderStyle: 'dashed',
     borderColor: tones.dashed,
+  },
+  photoTile: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   thumbs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   thumb: { width: 72, height: 72, borderRadius: radius.sm },

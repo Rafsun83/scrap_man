@@ -9,11 +9,12 @@ import { trackingSteps, type StepState } from '../../lib/pickupView';
 import { useCollectorLocation } from '../../realtime/socket';
 import { Button, Icon, Note } from '../../ui/components';
 import { mapsEnabled, TrackingMap } from '../../ui/maps';
-import { body, colors, display, minTouch, radius, tones } from '../../ui/theme';
+import { Badge } from '../../ui/parts';
+import { body, cardShadow, colors, display, minTouch, radius, tones } from '../../ui/theme';
 import { collectorName } from './shared';
 
 /**
- * H6: collector on the way (ACCEPTED) and at the door (ARRIVED). The collector's position starts from the
+ * H6 (v1 design `household/Tracking.dc.html`): collector on the way (ACCEPTED) and at the door (ARRIVED). The collector's position starts from the
  * pickup's collectorLocation and follows live `collector.location` events. With a maps key the top panel is a
  * map; without one it shows distance and a rough ETA.
  */
@@ -47,13 +48,13 @@ export function TrackingView({ pickup }: { pickup: Pickup }) {
           />
         ) : null}
         <Pressable accessibilityRole="button" accessibilityLabel={t('goHome')} onPress={() => router.dismissTo('/home')} style={s.homeBtn}>
-          <Icon name="arrow-left" />
+          <Icon name="chevron-left" />
           <Text style={body(14, 600)}>{t('goHome')}</Text>
         </Pressable>
         {showMap ? null : (
           <View style={s.panelBody}>
             <View style={s.truck}>
-              <Icon name={arrived ? 'home' : 'truck'} size={26} color={colors.signal} />
+              <Icon name={arrived ? 'home' : 'truck'} size={26} color={colors.surface} />
             </View>
             {arrived ? null : metres !== null ? (
               <Text style={display(22)}>{t('distanceAway', { km: formatKm(metres, lang) })}</Text>
@@ -66,14 +67,12 @@ export function TrackingView({ pickup }: { pickup: Pickup }) {
 
       <ScrollView style={s.sheet} contentContainerStyle={s.sheetContent}>
         <View style={s.titleRow}>
-          <Text style={[display(26), { flex: 1, lineHeight: 32 }]}>
+          <Text style={[display(24), { flex: 1, lineHeight: 30 }]}>
             {t(arrived ? 'collectorArrived' : 'collectorComing', { name: firstName })}
           </Text>
           {metres !== null ? (
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={[body(16, 700), { color: colors.money }]}>
-                {t('aboutMinutes', { minutes: localDigits(etaMinutes(metres), lang) })}
-              </Text>
+              <Badge label={t('aboutMinutes', { minutes: localDigits(etaMinutes(metres), lang) })} tone="done" />
               {showMap ? (
                 <Text style={[body(13), { color: colors.muted }]}>{t('distanceAway', { km: formatKm(metres, lang) })}</Text>
               ) : null}
@@ -83,13 +82,13 @@ export function TrackingView({ pickup }: { pickup: Pickup }) {
 
         <View style={s.collector}>
           <View style={s.avatar}>
-            <Text style={[display(22), { color: colors.signal }]}>{initials(name)}</Text>
+            <Text style={[display(18), { color: colors.surface }]}>{initials(name)}</Text>
           </View>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={body(17, 700)}>{name}</Text>
+            <Text style={body(16, 600)}>{name}</Text>
             <View style={s.verified}>
-              <Icon name="check-circle" size={16} color={colors.money} />
-              <Text style={[body(14, 600), { color: colors.money }]}>
+              <Icon name="shield" size={14} color={colors.money} />
+              <Text style={[body(13, 500), { color: colors.money }]}>
                 {t('verifiedCollector')}
                 {pickup.collector?.rating ? ` · ★ ${localDigits(pickup.collector.rating.toFixed(1), lang)}` : ''}
               </Text>
@@ -99,7 +98,7 @@ export function TrackingView({ pickup }: { pickup: Pickup }) {
             <Button
               label={t('call')}
               icon="phone"
-              variant="primary"
+              variant="outline"
               onPress={() => Linking.openURL(`tel:${pickup.collector!.phone}`)}
               style={s.callBtn}
             />
@@ -111,23 +110,28 @@ export function TrackingView({ pickup }: { pickup: Pickup }) {
         ) : pickup.status === 'ACCEPTED' && pickup.pickupCode ? (
           <View style={s.code}>
             <View style={s.codeRow}>
-              <Text style={[body(15, 600), { color: colors.surface }]}>{t('pickupCode')}</Text>
-              <Text
+              <Text style={body(14, 600)}>{t('pickupCode')}</Text>
+              <View
                 testID="pickup-code"
+                accessible
                 accessibilityLabel={t('pickupCodeLabel', { code: pickup.pickupCode.split('').join(' ') })}
-                style={[display(38, 800), { color: colors.signal, letterSpacing: 8 }]}
+                style={s.codeBoxes}
               >
-                {localDigits(pickup.pickupCode, lang)}
-              </Text>
+                {pickup.pickupCode.split('').map((d, i) => (
+                  <View key={i} style={s.codeBox}>
+                    <Text style={display(26)}>{localDigits(d, lang)}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-            <Text style={[body(14), { color: tones.ink200, lineHeight: 21 }]}>{t('pickupCodeHelp')}</Text>
+            <Text style={[body(13), { color: colors.muted, lineHeight: 20 }]}>{t('pickupCodeHelp')}</Text>
           </View>
         ) : null}
 
         {arrived ? <Note icon="activity" text={t('weighingNow')} /> : null}
 
         <View style={{ gap: 4 }}>
-          <Text style={[display(18), { marginBottom: 6 }]}>{t('progress')}</Text>
+          <Text style={[body(14, 500), { color: colors.muted, marginBottom: 4 }]}>{t('progress')}</Text>
           {stepLabels.map((label, i) => (
             <Step key={label} n={i + 1} label={label} state={steps[i]} />
           ))}
@@ -153,54 +157,48 @@ function Step({ n, label, state }: { n: number; label: string; state: StepState 
         style={[
           s.stepDot,
           state === 'done' && { backgroundColor: colors.money },
-          state === 'current' && { backgroundColor: colors.signal, borderWidth: 2, borderColor: colors.ink },
-          state === 'todo' && { borderWidth: 2, borderColor: tones.dashed },
+          state === 'current' && { borderWidth: 2, borderColor: colors.ink },
+          state === 'todo' && { borderWidth: 1.5, borderColor: tones.ring },
         ]}
       >
         {state === 'done' ? (
           <Icon name="check" size={14} color={colors.surface} />
         ) : (
-          <Text style={body(13, 700)}>{localDigits(n, lang)}</Text>
+          <Text style={[body(12, 600), state === 'todo' && { color: colors.muted }]}>{localDigits(n, lang)}</Text>
         )}
       </View>
-      <Text style={[body(16, state === 'current' ? 700 : 400), state === 'todo' && { color: colors.muted }]}>{label}</Text>
+      <Text style={[body(15, state === 'current' ? 600 : 400), state === 'todo' && { color: colors.muted }]}>{label}</Text>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.surface },
-  panel: { height: 220, backgroundColor: tones.mapGround, padding: 12, overflow: 'hidden' },
+  screen: { flex: 1, backgroundColor: colors.ground },
+  panel: { height: 250, backgroundColor: tones.mapGround, padding: 12, overflow: 'hidden' },
   homeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     alignSelf: 'flex-start',
     minHeight: minTouch,
-    paddingHorizontal: 10,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderRadius: radius.md,
     backgroundColor: colors.surface,
+    ...cardShadow,
   },
   panelBody: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingBottom: 16 },
-  truck: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.ink,
-    borderWidth: 3,
-    borderColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sheet: { flex: 1, marginTop: -20, backgroundColor: colors.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22 },
-  sheetContent: { padding: 20, gap: 18 },
-  titleRow: { flexDirection: 'row', alignItems: 'baseline', gap: 12 },
-  collector: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  truck: { width: 52, height: 52, borderRadius: radius.md, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  sheet: { flex: 1, marginTop: -12, backgroundColor: colors.ground, borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md },
+  sheetContent: { padding: 20, gap: 16 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  collector: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.md, backgroundColor: colors.surface, ...cardShadow },
+  avatar: { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
   verified: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   callBtn: { minHeight: minTouch, paddingHorizontal: 14 },
-  code: { backgroundColor: colors.ink, borderRadius: radius.lg, paddingHorizontal: 18, paddingVertical: 16, gap: 10 },
+  code: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.ink, borderRadius: radius.md, padding: 16, gap: 10 },
   codeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  step: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 40 },
-  stepDot: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  codeBoxes: { flexDirection: 'row', gap: 6 },
+  codeBox: { width: 40, height: 48, borderRadius: radius.sm, backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center' },
+  step: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 36 },
+  stepDot: { width: 24, height: 24, borderRadius: radius.round, alignItems: 'center', justifyContent: 'center' },
 });

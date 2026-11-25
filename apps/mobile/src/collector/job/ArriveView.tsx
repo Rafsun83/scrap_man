@@ -1,5 +1,6 @@
+import { localDigits } from '@bw/shared';
 import { useState } from 'react';
-import { Linking, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Category, Pickup } from '../../api/types';
 import { SUPPORT_PHONE } from '../../config';
@@ -7,9 +8,9 @@ import { useT } from '../../i18n/lang';
 import { formatTime } from '../../lib/dhaka';
 import { categoryName } from '../../lib/format';
 import { slotStart } from '../slot';
-import { Button, Field, Icon, Note, Screen } from '../../ui/components';
-import { body, colors, display, radius } from '../../ui/theme';
-import { NavyHeader, Tag } from '../ui';
+import { Button, CodeBoxes, Field, Icon, Note, Screen } from '../../ui/components';
+import { body, cardShadow, colors, display, radius } from '../../ui/theme';
+import { PageHeader, Tag } from '../ui';
 
 const toAscii = (s: string) => s.replace(/[০-৯]/g, (d) => String('০১২৩৪৫৬৭৮৯'.indexOf(d))).replace(/[^0-9]/g, '');
 
@@ -19,7 +20,7 @@ export function directionsUrl(lat: number, lng: number) {
 }
 
 /**
- * C3: after accept, the exact address, note and phone; call, directions, and the household's 4-digit code
+ * C3 (v1 design `collector/CActive.dc.html`): after accept, the exact address, note and phone; call, directions, and the household's 4-digit code
  * that moves the pickup to ARRIVED. "Can't find the customer" offers a call, support, or giving it back.
  */
 export function ArriveView({
@@ -69,7 +70,7 @@ export function ArriveView({
         footer={
           pickup.codeLocked ? undefined : (
             <>
-              {arriveError ? <Text style={[body(15, 600), { color: colors.alert }]}>{arriveError}</Text> : null}
+              {arriveError ? <Text style={[body(14, 600), { color: colors.alert }]}>{arriveError}</Text> : null}
               <Button
                 testID="verify-code"
                 label={t('verifyAndWeigh')}
@@ -82,14 +83,14 @@ export function ArriveView({
           )
         }
       >
-        <SafeAreaView edges={['top']} style={{ backgroundColor: colors.ink }}>
-          <NavyHeader back title={t('currentPickup')} sub={t('headingToCustomer')} />
+        <SafeAreaView edges={['top']} style={{ backgroundColor: colors.ground }}>
+          <PageHeader back title={t('currentPickup')} sub={t('headingToCustomer')} />
         </SafeAreaView>
         <View style={s.body}>
           <View style={s.card}>
-            <Text style={display(21)}>{pickup.household.name || t('customerFallback')}</Text>
-            {address ? <Text style={[body(16), { lineHeight: 23 }]}>{address.text}</Text> : null}
-            {address?.note ? <Text style={[body(15), { color: colors.muted }]}>{t('noteValue', { note: address.note })}</Text> : null}
+            <Text style={display(19)}>{pickup.household.name || t('customerFallback')}</Text>
+            {address ? <Text style={[body(15), { lineHeight: 22 }]}>{address.text}</Text> : null}
+            {address?.note ? <Text style={[body(13), { color: colors.muted, lineHeight: 19 }]}>{t('noteValue', { note: address.note })}</Text> : null}
             <View style={s.tags}>
               {pickup.categoryCodes.map((c) => (
                 <Tag key={c} label={categoryName(categories, c, lang)} />
@@ -114,20 +115,17 @@ export function ArriveView({
           {pickup.codeLocked ? (
             <Note tone="alert" icon="lock" text={t('errCodeLocked')} />
           ) : (
-            <View style={s.card}>
-              <Text style={display(20)}>{t('arriveTitle')}</Text>
-              <Text style={[body(15), { color: colors.muted }]}>{t('arriveHint')}</Text>
-              <TextInput
+            <View style={[s.card, s.codeCard]}>
+              <Text style={body(16, 600)}>{t('arriveTitle')}</Text>
+              <Text style={[body(13), { color: colors.muted, lineHeight: 19 }]}>{t('arriveHint')}</Text>
+              <CodeBoxes
                 testID="code-input"
-                accessibilityLabel={t('codeInput')}
-                value={code}
-                onChangeText={(v) => setCode(toAscii(v).slice(0, 4))}
-                keyboardType="number-pad"
-                maxLength={4}
-                textContentType="oneTimeCode"
-                style={s.code}
-                placeholder="• • • •"
-                placeholderTextColor={colors.muted}
+                label={t('codeInput')}
+                length={4}
+                value={digits}
+                onChange={(v) => setCode(toAscii(v).slice(0, 4))}
+                error={!!arriveError}
+                renderDigit={(d) => localDigits(d, lang)}
               />
             </View>
           )}
@@ -136,12 +134,12 @@ export function ArriveView({
         </View>
       </Screen>
 
-      <Modal visible={sheet !== 'closed'} transparent animationType="slide" onRequestClose={() => setSheet('closed')}>
+      <Modal visible={sheet !== 'closed'} transparent animationType="none" onRequestClose={() => setSheet('closed')}>
         <Pressable style={s.backdrop} onPress={() => setSheet('closed')} accessibilityRole="button" accessibilityLabel={t('close')} />
         <SafeAreaView edges={['bottom']} style={s.sheet}>
           {sheet === 'help' ? (
             <>
-              <Text style={display(21)}>{t('cantFindCustomer')}</Text>
+              <Text style={display(20)}>{t('cantFindCustomer')}</Text>
               <Text style={[body(15), { color: colors.muted, lineHeight: 22 }]}>{t('cantFindBody')}</Text>
               {phone ? <Button label={t('callCustomer')} icon="phone" onPress={() => Linking.openURL(`tel:${phone}`)} /> : null}
               {SUPPORT_PHONE ? (
@@ -152,12 +150,12 @@ export function ArriveView({
             </>
           ) : sheet === 'noShow' ? (
             <>
-              <Text style={display(21)}>{t('noShowButton')}</Text>
+              <Text style={display(20)}>{t('noShowButton')}</Text>
               {slotStarted ? (
                 <>
                   <Text style={[body(15), { color: colors.muted, lineHeight: 22 }]}>{t('noShowHint')}</Text>
                   <Field label={t('noShowNote')} value={note} onChangeText={setNote} maxLength={200} />
-                  {noShowError ? <Text style={[body(15, 600), { color: colors.alert }]}>{noShowError}</Text> : null}
+                  {noShowError ? <Text style={[body(14, 600), { color: colors.alert }]}>{noShowError}</Text> : null}
                   <Button
                     testID="noshow-confirm"
                     label={t('noShowConfirm')}
@@ -173,10 +171,10 @@ export function ArriveView({
             </>
           ) : (
             <>
-              <Text style={display(21)}>{t('releaseRequest')}</Text>
+              <Text style={display(20)}>{t('releaseRequest')}</Text>
               <Text style={[body(15), { color: colors.muted, lineHeight: 22 }]}>{t('releaseConfirm')}</Text>
               <Field label={t('releaseReason')} value={reason} onChangeText={setReason} maxLength={200} />
-              {releaseError ? <Text style={[body(15, 600), { color: colors.alert }]}>{releaseError}</Text> : null}
+              {releaseError ? <Text style={[body(14, 600), { color: colors.alert }]}>{releaseError}</Text> : null}
               <Button
                 testID="release-confirm"
                 label={t('releaseYes')}
@@ -196,18 +194,10 @@ export function ArriveView({
 
 const s = StyleSheet.create({
   body: { padding: 20, gap: 16 },
-  card: { backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, gap: 10 },
+  card: { backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, gap: 10, ...cardShadow },
+  codeCard: { borderWidth: 1.5, borderColor: colors.line, shadowOpacity: 0, elevation: 0 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   row: { flexDirection: 'row', gap: 10 },
-  code: {
-    minHeight: 64,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    borderRadius: 12,
-    textAlign: 'center',
-    letterSpacing: 16,
-    ...display(32, 800),
-  },
   backdrop: { flex: 1, backgroundColor: 'rgba(19,48,74,0.4)' },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 20, gap: 12 },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md, padding: 20, gap: 12 },
 });

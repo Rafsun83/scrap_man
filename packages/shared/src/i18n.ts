@@ -71,6 +71,9 @@ export const strings = {
     phoneInvalid: 'সঠিক মোবাইল নম্বর লিখুন, যেমন ০১৭১২৩৪৫৬৭৮।',
     sendCode: 'কোড পাঠান',
     otpRateLimit: 'অনেকবার কোড চাওয়া হয়েছে। {minutes} মিনিট পরে আবার চেষ্টা করুন।',
+    signInWelcome: 'স্বাগতম',
+    roleHouseholdSub: 'বাসার ভাঙ্গারি বিক্রি',
+    roleCollectorSub: 'বাসা থেকে মাল কিনব',
 
     // H9 verify
     otpTitle: 'কোড লিখুন',
@@ -112,6 +115,9 @@ export const strings = {
     noRecentSales: 'এখনো কোনো বিক্রি হয়নি। প্রথম অনুরোধটি পাঠান।',
     activePickup: 'চলতি পিকআপ',
     activePickupOpen: 'দেখুন',
+    homeHeroTitle: 'আপনার ভাঙ্গারি,\nআজকের ন্যায্য দামে',
+    seeAll: 'সব দেখুন',
+    perKgSuffix: '/কেজি',
 
     // H12 rates
     ratesUpdated: '{date}। {time}-এ হালনাগাদ।',
@@ -650,6 +656,9 @@ export const strings = {
     phoneInvalid: 'Enter a valid mobile number, like 01712345678.',
     sendCode: 'Send code',
     otpRateLimit: 'Too many codes requested. Try again in {minutes} minutes.',
+    signInWelcome: 'Welcome',
+    roleHouseholdSub: 'Sell scrap from home',
+    roleCollectorSub: 'Buy scrap from homes',
 
     otpTitle: 'Enter the code',
     otpSentTo: 'We sent a 6-digit code to {phone}.',
@@ -688,6 +697,9 @@ export const strings = {
     noRecentSales: 'No sales yet. Send your first request.',
     activePickup: 'Pickup in progress',
     activePickupOpen: 'Open',
+    homeHeroTitle: "Your scrap,\nat today's fair price",
+    seeAll: 'See all',
+    perKgSuffix: '/kg',
 
     ratesUpdated: '{date}. Updated at {time}.',
     rateUp: '{amount} more than yesterday',

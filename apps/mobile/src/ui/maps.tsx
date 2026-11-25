@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import type { ComponentType } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Icon } from './components';
-import { colors } from './theme';
+import { colors, radius } from './theme';
 
 type LatLng = { lat: number; lng: number };
 
@@ -113,5 +113,5 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  picker: { height: 220, borderRadius: 14, overflow: 'hidden' },
+  picker: { height: 220, borderRadius: radius.md, overflow: 'hidden' },
 });

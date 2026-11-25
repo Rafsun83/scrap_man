@@ -53,7 +53,7 @@ function Gate() {
 
   if (!ready) return null;
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ground } }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'none', contentStyle: { backgroundColor: colors.ground } }}>
       <Stack.Protected guard={status === 'signedOut'}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>

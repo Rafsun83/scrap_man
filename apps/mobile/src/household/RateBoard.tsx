@@ -39,3 +39,11 @@ export function rateRows(
 export function ratesPublished(rows: RateRow[]): boolean {
   return rows.some((r) => !r.onInspection && r.ratePerKg !== null);
 }
+
+/** Short change-from-yesterday tag for a rate tile: "▲ ৳২", "▼ ৳১" or "—". Null when there is nothing to compare. */
+export function rateChangeTag(row: RateRow, lang: Lang): { label: string; tone: 'done' | 'alert' | 'neutral' } | null {
+  if (row.onInspection || row.ratePerKg === null || row.change === null) return null;
+  if (row.change > 0) return { label: `▲ ${formatTaka(row.change, lang)}`, tone: 'done' };
+  if (row.change < 0) return { label: `▼ ${formatTaka(-row.change, lang)}`, tone: 'alert' };
+  return { label: '—', tone: 'neutral' };
+}

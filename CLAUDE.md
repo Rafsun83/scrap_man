@@ -99,9 +99,9 @@ When a milestone is complete, add `<id>-<name>.md` to the current version's `mil
 Version 1 (`docs/version-1/`):
 
 - [x] V1-M1 UI design: style guide and all 30 screens (H1-H14, C1-C11, A1-A5) in the v1 style (no animation, grey border for selected or focused, 4-6 px corners). Designs only, not built yet. Notes: `docs/version-1/milestones/V1-M1-ui-design.md`; screen index and style rules: `docs/version-1/design/README.md`
-- [ ] V1-M2 Shared style and components: update tokens in `@bw/shared` (ground `#F5F6F2`, 4-6 px radius, grey `#8A97A3` selected/focus border) and rebuild the reusable pieces in `apps/mobile/src/ui` (buttons, inputs, cards, chips, tab bar, code boxes, weight steppers) with no animation
-- [ ] V1-M3 Household screens: rebuild H1-H14 from `docs/version-1/design/household/`, with loading, empty and error states; checked on a phone
-- [ ] V1-M4 Collector screens: rebuild C1-C11 from `docs/version-1/design/collector/`, with loading, empty and error states; checked on a phone
+- [x] V1-M2 Shared style and components: update tokens in `@bw/shared` (ground `#F5F6F2`, 4-6 px radius, grey `#8A97A3` selected/focus border) and rebuild the reusable pieces in `apps/mobile/src/ui` (buttons, inputs, cards, chips, tab bar, code boxes, weight steppers) with no animation. Notes: `docs/version-1/milestones/V1-M2-shared-style-components.md`
+- [x] V1-M3 Household screens: rebuild H1-H14 from `docs/version-1/design/household/`, with loading, empty and error states; no animation anywhere (stack, modals, radar, switch). Notes: `docs/version-1/milestones/V1-M3-household-screens.md` (phone walk-through pending)
+- [x] V1-M4 Collector screens: rebuild C1-C11 from `docs/version-1/design/collector/`, with loading, empty and error states; light `PageHeader` replaces the navy header. Notes: `docs/version-1/milestones/V1-M4-collector-screens.md` (phone walk-through pending)
 - [ ] V1-M5 Admin panel: restyle A1-A5 in `apps/admin` from `docs/version-1/design/admin/` (side menu, status cards, tables, forms); operations walk-through
 - [ ] V1-M6 Polish and sign-off: final pass on both apps (Bangla/English strings, 48 px touch targets, low-end Android check) and fixes from Rafsun's review; done when Rafsun approves version 1
 

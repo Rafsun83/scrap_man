@@ -8,6 +8,7 @@ import { useT } from '../../src/i18n/lang';
 import { BackButton, Button, ErrorView, LoadingView, Screen } from '../../src/ui/components';
 import { errorMessage } from '../../src/ui/errors';
 import { body, colors, display } from '../../src/ui/theme';
+import { SectionLabel } from '../../src/ui/parts';
 
 /** C11 "বদলান": work areas, vehicle and scale. Saving does not change the verification. */
 export default function WorkDetails() {
@@ -30,7 +31,7 @@ export default function WorkDetails() {
     <Screen
       footer={
         <>
-          {update.error ? <Text style={[body(15, 600), { color: colors.alert }]}>{errorMessage(update.error, lang)}</Text> : null}
+          {update.error ? <Text style={[body(14, 600), { color: colors.alert }]}>{errorMessage(update.error, lang)}</Text> : null}
           <Button
             testID="save-work"
             label={t('save')}
@@ -49,14 +50,14 @@ export default function WorkDetails() {
     >
       <View style={{ gap: 6 }}>
         <BackButton />
-        <Text style={[display(28), { lineHeight: 34 }]}>{t('editWorkTitle')}</Text>
+        <Text style={[display(24), { lineHeight: 30 }]}>{t('editWorkTitle')}</Text>
       </View>
       <View style={{ gap: 8 }}>
-        <Text style={display(19)}>{t('workAreasLabel')}</Text>
+        <SectionLabel>{t('workAreasLabel')}</SectionLabel>
         <WorkAreaPicker value={currentAreas} onChange={setAreas} />
       </View>
       <View style={{ gap: 8 }}>
-        <Text style={display(19)}>{t('vehicleLabel')}</Text>
+        <SectionLabel>{t('vehicleLabel')}</SectionLabel>
         <VehiclePicker value={currentVehicle} onChange={setVehicle} />
       </View>
       <CheckRow label={t('hasScaleLabel')} checked={currentScale} onPress={() => setScale(!currentScale)} />

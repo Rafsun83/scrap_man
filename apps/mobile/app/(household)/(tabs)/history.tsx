@@ -11,7 +11,8 @@ import { categoryNames } from '../../../src/lib/format';
 import { badgeTone } from '../../../src/lib/pickupView';
 import { Button, Chip, EmptyView, ErrorView, LoadingView } from '../../../src/ui/components';
 import { errorMessage } from '../../../src/ui/errors';
-import { body, colors, display, radius, tones } from '../../../src/ui/theme';
+import { body, cardShadow, colors, display, radius } from '../../../src/ui/theme';
+import { Badge, StatCard, type BadgeTone } from '../../../src/ui/parts';
 
 type Filter = PickupFilter | 'ALL';
 
@@ -22,13 +23,9 @@ const FILTERS: { key: Filter; label: 'filterAll' | 'filterActive' | 'filterDone'
   { key: 'CANCELLED', label: 'filterCancelled', empty: 'emptyCancelled' },
 ];
 
-const BADGE = {
-  done: { bg: tones.doneBg, fg: tones.doneFg },
-  cancelled: { bg: tones.cancelledBg, fg: tones.cancelledFg },
-  active: { bg: colors.selectedTint, fg: colors.ink },
-};
+const BADGE: Record<'done' | 'cancelled' | 'active', BadgeTone> = { done: 'done', cancelled: 'neutral', active: 'warn' };
 
-/** H11: totals (GET /me/summary), filters and past pickups with cursor paging. */
+/** H11 (v1 design `household/History.dc.html`): totals (GET /me/summary), filters and past pickups with cursor paging. */
 export default function History() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -48,14 +45,16 @@ export default function History() {
     return (
       <Pressable accessibilityRole="button" onPress={() => router.push(`/pickup/${p.id}`)} style={s.row}>
         <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
-          <Text style={body(16, 700)}>{categoryNames(categories.data, p.categoryCodes, lang)}</Text>
-          <Text style={[body(14), { color: colors.muted }]}>{meta}</Text>
+          <Text style={body(15, 600)} numberOfLines={1}>
+            {categoryNames(categories.data, p.categoryCodes, lang)}
+          </Text>
+          <Text style={[body(13), { color: colors.muted }]}>{meta}</Text>
         </View>
         <View style={{ alignItems: 'flex-end', gap: 6 }}>
           {p.status === 'COMPLETED' && p.totalAmount != null ? (
-            <Text style={[display(19), { color: colors.money }]}>{formatTaka(p.totalAmount, lang)}</Text>
+            <Text style={[display(17), { color: colors.money }]}>{formatTaka(p.totalAmount, lang)}</Text>
           ) : null}
-          <Text style={[body(13, 600), s.badge, { backgroundColor: tone.bg, color: tone.fg }]}>{t(`status_${p.status}`)}</Text>
+          <Badge label={t(`status_${p.status}`)} tone={tone} />
         </View>
       </Pressable>
     );
@@ -64,17 +63,11 @@ export default function History() {
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <View style={s.header}>
-        <Text style={[display(28), { lineHeight: 34 }]}>{t('mySales')}</Text>
+        <Text style={[display(24), { lineHeight: 30 }]}>{t('mySales')}</Text>
         {summary.data ? (
           <View style={s.totals}>
-            <View style={s.total}>
-              <Text style={[body(13), { color: tones.ink200 }]}>{t('earnedSoFar')}</Text>
-              <Text testID="earned" style={[display(26, 800), { color: colors.signal }]}>{formatTaka(summary.data.totalAmount, lang)}</Text>
-            </View>
-            <View style={s.total}>
-              <Text style={[body(13), { color: tones.ink200 }]}>{t('totalSold')}</Text>
-              <Text testID="sold" style={[display(26, 800), { color: colors.signal }]}>{formatKg(summary.data.totalKg, lang)}</Text>
-            </View>
+            <StatCard label={t('earnedSoFar')} value={formatTaka(summary.data.totalAmount, lang)} tone="money" testID="earned" />
+            <StatCard label={t('totalSold')} value={formatKg(summary.data.totalKg, lang)} testID="sold" />
           </View>
         ) : null}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} accessibilityLabel={t('filters')}>
@@ -101,7 +94,7 @@ export default function History() {
             <EmptyView
               title={t(current.empty)}
               hint={t('emptyHint')}
-              action={<Button label={t('sellScrap')} icon="tag" onPress={() => router.push('/sell/items')} />}
+              action={<Button label={t('sellScrap')} icon="plus" variant="key" onPress={() => router.push('/sell/items')} />}
             />
           }
           ListFooterComponent={
@@ -115,9 +108,8 @@ export default function History() {
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ground },
-  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, gap: 14 },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8, gap: 16 },
   totals: { flexDirection: 'row', gap: 10 },
-  total: { flex: 1, gap: 2, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: colors.ink },
   list: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, gap: 10, flexGrow: 1 },
   row: {
     flexDirection: 'row',
@@ -128,6 +120,6 @@ const s = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.surface,
     minHeight: 64,
+    ...cardShadow,
   },
-  badge: { paddingHorizontal: 10, paddingVertical: 2, borderRadius: radius.pill, overflow: 'hidden' },
 });

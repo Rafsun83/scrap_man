@@ -1,15 +1,17 @@
 import { localDigits, MATCHING } from '@bw/shared';
-import { useEffect, useRef } from 'react';
-import { Alert, Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import type { Category, NearbyCollectors, Pickup } from '../../api/types';
 import { useT } from '../../i18n/lang';
 import { categoryNames, formatKm } from '../../lib/format';
 import { BackButton, Button, Card, Icon, Screen } from '../../ui/components';
-import { body, colors, display, tones } from '../../ui/theme';
+import { body, colors, display, radius, tones } from '../../ui/theme';
 import { RADAR, radarDots } from './radar';
 import { InfoRow, useSlotLabel } from './shared';
 
-/** H5: waiting while nearby collectors see the request, with the online ones on the radar; cancel. */
+/**
+ * H5 (v1 design `household/Searching.dc.html`): waiting while nearby collectors see the request, with the online
+ * ones on still rings (no animation); cancel.
+ */
 export function SearchingView({
   pickup,
   categories,
@@ -28,16 +30,6 @@ export function SearchingView({
 }) {
   const { t, lang } = useT();
   const slotLabel = useSlotLabel();
-  const ping = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(ping, { toValue: 1, duration: 1800, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [ping]);
-
   // The radar's answer is fresher than the pickup after the radius widens (that change sends no event).
   const radiusM = nearby?.radiusM || pickup.searchRadiusM || MATCHING.initialRadiusM;
   const dots = nearby ? radarDots(nearby.collectors, radiusM) : [];
@@ -59,7 +51,7 @@ export function SearchingView({
     <Screen
       footer={
         <>
-          {cancelError ? <Text style={[body(15, 600), { color: colors.alert }]}>{cancelError}</Text> : null}
+          {cancelError ? <Text style={[body(14, 600), { color: colors.alert }]}>{cancelError}</Text> : null}
           <Button testID="cancel-request" label={t('cancelRequest')} icon="x-circle" variant="danger" loading={cancelling} onPress={confirmCancel} />
         </>
       }
@@ -69,17 +61,8 @@ export function SearchingView({
         <View style={[s.ring, { margin: 0 }]} />
         <View style={[s.ring, { margin: 45 }]} />
         <View style={[s.ring, { margin: 90 }]} />
-        <Animated.View
-          style={[
-            s.ping,
-            {
-              opacity: ping.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0] }),
-              transform: [{ scale: ping.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }],
-            },
-          ]}
-        />
         <View style={s.home}>
-          <Icon name="home" size={24} color={colors.signal} />
+          <Icon name="home" size={24} />
         </View>
         {dots.map((d, i) => (
           <View key={i} testID="radar-collector" style={[s.dot, d]}>
@@ -88,9 +71,9 @@ export function SearchingView({
         ))}
       </View>
       <View style={{ gap: 8 }}>
-        <Text style={[display(27), { textAlign: 'center', lineHeight: 34 }]}>{t('searchingTitle')}</Text>
-        <Text style={[body(16), { textAlign: 'center', color: colors.muted, lineHeight: 24 }]}>{t('searchingBody')}</Text>
-        <Text style={[body(14, 600), { textAlign: 'center' }]}>
+        <Text style={[display(24), { textAlign: 'center', lineHeight: 30 }]}>{t('searchingTitle')}</Text>
+        <Text style={[body(15), { textAlign: 'center', color: colors.muted, lineHeight: 23 }]}>{t('searchingBody')}</Text>
+        <Text style={[body(13, 500), { textAlign: 'center', color: colors.muted }]}>
           {t('searchRadius', { km: formatKm(radiusM, lang) })}
         </Text>
         {onlineText ? (
@@ -111,16 +94,17 @@ export function SearchingView({
 
 const s = StyleSheet.create({
   radar: { width: RADAR.size, height: RADAR.size, alignSelf: 'center' },
-  ring: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 999, borderWidth: 2, borderColor: tones.ring },
-  ping: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 999, backgroundColor: colors.signal },
+  ring: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: radius.round, borderWidth: 1, borderColor: colors.line },
   home: {
     position: 'absolute',
     left: (RADAR.size - RADAR.home) / 2,
     top: (RADAR.size - RADAR.home) / 2,
     width: RADAR.home,
     height: RADAR.home,
-    borderRadius: RADAR.home / 2,
-    backgroundColor: colors.ink,
+    borderRadius: radius.round,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: tones.ring,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -128,9 +112,9 @@ const s = StyleSheet.create({
     position: 'absolute',
     width: RADAR.dot,
     height: RADAR.dot,
-    borderRadius: RADAR.dot / 2,
-    borderWidth: 2,
-    borderColor: colors.ink,
+    borderRadius: radius.round,
+    borderWidth: 1.5,
+    borderColor: colors.selected,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',

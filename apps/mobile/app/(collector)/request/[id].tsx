@@ -9,16 +9,17 @@ import { useSession } from '../../../src/auth/session';
 import { useAccept } from '../../../src/collector/api';
 import { currentPosition } from '../../../src/collector/location';
 import { skipRequest } from '../../../src/collector/skipped';
-import { KeyValue, cs } from '../../../src/collector/ui';
+import { cs } from '../../../src/collector/ui';
 import { useSlotLabel } from '../../../src/household/pickup/shared';
 import { useT } from '../../../src/i18n/lang';
 import { categoryName, formatKm } from '../../../src/lib/format';
 import { BackButton, Button, Divider, EmptyView, Note, Screen } from '../../../src/ui/components';
 import { errorMessage } from '../../../src/ui/errors';
-import { body, colors, display } from '../../../src/ui/theme';
+import { body, colors, display, tones } from '../../../src/ui/theme';
+import { StatCard } from '../../../src/ui/parts';
 
 /**
- * C2: a nearby request before accepting: approximate area and distance only, the items at today's rates and
+ * C2 (v1 design `collector/CRequest.dc.html`): a nearby request before accepting: approximate area and distance only, the items at today's rates and
  * the payout estimate. Built from the nearby list (the API keeps the pickup itself private until accept).
  */
 export default function RequestDetail() {
@@ -76,7 +77,7 @@ export default function RequestDetail() {
     <Screen
       footer={
         <>
-          {error ? <Text style={[body(15, 600), { color: colors.alert }]}>{error}</Text> : null}
+          {error ? <Text style={[body(14, 600), { color: colors.alert }]}>{error}</Text> : null}
           {gone ? (
             <Button label={t('backToRequests')} icon="arrow-left" variant="outline" onPress={() => router.replace('/requests')} />
           ) : (
@@ -91,7 +92,7 @@ export default function RequestDetail() {
                 }}
                 style={{ flex: 1 }}
               />
-              <Button testID="accept" label={t('acceptRequest')} icon="check" loading={locating || accept.isPending} onPress={onAccept} style={{ flex: 2 }} />
+              <Button testID="accept" label={t('acceptRequest')} icon="check" variant="key" loading={locating || accept.isPending} onPress={onAccept} style={{ flex: 2 }} />
             </View>
           )}
         </>
@@ -99,37 +100,35 @@ export default function RequestDetail() {
     >
       <View style={{ gap: 4 }}>
         <BackButton />
-        <Text style={[display(28), { lineHeight: 34 }]}>{request.area}</Text>
-        <Text style={[body(15, 600), { color: colors.money }]}>{t('distanceFromYou', { km: formatKm(request.distanceM, lang) })}</Text>
+        <Text style={[display(24), { lineHeight: 30 }]}>{request.area}</Text>
+        <Text style={[body(14), { color: colors.muted }]}>{t('distanceFromYou', { km: formatKm(request.distanceM, lang) })}</Text>
       </View>
       <Note icon="lock" text={t('addressAfterAccept')} />
 
-      <Text style={cs.sectionTitle}>{t('timeAndWeight')}</Text>
-      <View style={cs.section}>
-        <KeyValue label={t('time')} value={slotLabel(request)} />
-        <KeyValue label={t('estWeight')} value={t(`band_${request.weightBand}`)} last />
+      <View style={s.facts} accessibilityLabel={t('timeAndWeight')}>
+        <StatCard label={t('time')} value={slotLabel(request)} />
+        <StatCard label={t('estWeight')} value={t(`band_${request.weightBand}`)} />
       </View>
 
       <Text style={cs.sectionTitle}>{t('itemsAndRates')}</Text>
-      <View style={cs.section}>
+      <View style={[cs.section, { paddingHorizontal: 0, paddingVertical: 0 }]}>
         {request.categoryCodes.map((code, i) => (
           <View key={code}>
             {i > 0 ? <Divider /> : null}
             <View style={s.item}>
-              <Text style={[body(16, 700), { flex: 1 }]}>{categoryName(categories.data, code, lang)}</Text>
-              <Text style={[body(15), { color: colors.muted }]}>{rateLabel(code)}</Text>
+              <Text style={[body(15, 600), { flex: 1 }]}>{categoryName(categories.data, code, lang)}</Text>
+              <Text style={body(14, 600)}>{rateLabel(code)}</Text>
             </View>
           </View>
         ))}
-      </View>
-
-      <View style={s.estimate}>
-        <Text style={[body(15), { color: '#D3DCE5' }]}>{t('estToPay')}</Text>
-        <Text testID="estimate" style={[display(28, 800), { color: colors.signal }]}>
-          {request.estimate?.min != null && request.estimate.max != null
-            ? `${formatTaka(request.estimate.min, lang)}–${formatTaka(request.estimate.max, lang).replace('৳', '')}`
-            : t('onInspection')}
-        </Text>
+        <View style={s.estimate}>
+          <Text style={[body(14), { color: colors.muted }]}>{t('estToPay')}</Text>
+          <Text testID="estimate" style={[display(20), { color: colors.money }]}>
+            {request.estimate?.min != null && request.estimate.max != null
+              ? `${formatTaka(request.estimate.min, lang)}–${formatTaka(request.estimate.max, lang).replace('৳', '')}`
+              : t('onInspection')}
+          </Text>
+        </View>
       </View>
       <Note icon="zap" text={t('firstAcceptWins')} />
     </Screen>
@@ -138,6 +137,17 @@ export default function RequestDetail() {
 
 const s = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 10 },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52 },
-  estimate: { backgroundColor: colors.ink, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 16, gap: 4 },
+  facts: { flexDirection: 'row', gap: 10 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 16 },
+  estimate: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+    borderTopColor: tones.ring,
+  },
 });

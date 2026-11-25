@@ -10,9 +10,10 @@ import { formatPhone, initials } from '../../../src/lib/format';
 import { Button, Divider, ErrorView, Icon, LoadingView, Screen } from '../../../src/ui/components';
 import { errorMessage } from '../../../src/ui/errors';
 import { LanguageSwitch } from '../../../src/ui/LanguageSwitch';
-import { body, colors, display, radius, tones } from '../../../src/ui/theme';
+import { body, colors, display, radius } from '../../../src/ui/theme';
+import { StatCard } from '../../../src/ui/parts';
 
-/** C11: rating, 30-day activity, work details (changeable), verification status, settings, log out. */
+/** C11 (v1 design `collector/CProfile.dc.html`): rating, 30-day activity, work details (changeable), verification status, settings, log out. */
 export default function Account() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -32,33 +33,26 @@ export default function Account() {
         {p.selfieUrl ? (
           <Image source={{ uri: p.selfieUrl }} style={s.avatar} accessibilityLabel={t('selfie')} />
         ) : (
-          <View style={[s.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.signal }]}>
-            <Text style={display(28, 800)}>{initials(p.name)}</Text>
+          <View style={[s.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.ink }]}>
+            <Text style={[display(22), { color: colors.surface }]}>{initials(p.name)}</Text>
           </View>
         )}
         <View style={{ flex: 1, gap: 2 }}>
-          <Text style={display(24)}>{p.name}</Text>
-          <Text style={[body(15), { color: colors.muted }]}>{formatPhone(p.phone, lang)}</Text>
+          <Text style={display(22)}>{p.name}</Text>
+          <Text style={[body(14), { color: colors.muted }]}>{formatPhone(p.phone, lang)}</Text>
           <View style={s.verified}>
-            <Icon name="check-circle" size={16} color={colors.money} />
-            <Text style={[body(14, 600), { color: colors.money }]}>{t('verifiedCollector')}</Text>
+            <Icon name="shield" size={14} color={colors.money} />
+            <Text style={[body(13, 500), { color: colors.money }]}>{t('verifiedCollector')}</Text>
           </View>
         </View>
       </View>
 
       <View style={s.stats}>
-        <View style={s.stat}>
-          <Text style={[display(24, 800), { color: colors.signal }]}>
-            {p.ratingAvg != null ? t('ratingOutOf5', { rating: localDigits(p.ratingAvg.toFixed(1), lang) }) : t('noRatingYet')}
-          </Text>
-          <Text style={[body(13), { color: tones.ink200 }]}>{t('ratingFromCustomers')}</Text>
-        </View>
-        <View style={s.stat}>
-          <Text testID="pickups-30d" style={[display(24, 800), { color: colors.signal }]}>
-            {t('countPickups', { count: localDigits(p.pickups30d, lang) })}
-          </Text>
-          <Text style={[body(13), { color: tones.ink200 }]}>{t('pickups30d')}</Text>
-        </View>
+        <StatCard
+          label={t('ratingFromCustomers')}
+          value={p.ratingAvg != null ? `★ ${t('ratingOutOf5', { rating: localDigits(p.ratingAvg.toFixed(1), lang) })}` : t('noRatingYet')}
+        />
+        <StatCard label={t('pickups30d')} value={t('countPickups', { count: localDigits(p.pickups30d, lang) })} testID="pickups-30d" />
       </View>
       {p.releases30d > 0 ? (
         <Text style={[body(14), { color: colors.muted }]}>{t('releases30d', { count: localDigits(p.releases30d, lang) })}</Text>
@@ -81,7 +75,7 @@ export default function Account() {
       <Text style={cs.sectionTitle}>{t('settings')}</Text>
       <View style={cs.section}>
         <View style={s.setting}>
-          <Text style={body(16, 600)}>{t('language')}</Text>
+          <Text style={body(15)}>{t('language')}</Text>
           <LanguageSwitch />
         </View>
         {SUPPORT_PHONE ? (
@@ -105,9 +99,8 @@ export default function Account() {
 
 const s = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  avatar: { width: 72, height: 72, borderRadius: 36 },
+  avatar: { width: 64, height: 64, borderRadius: radius.md },
   verified: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   stats: { flexDirection: 'row', gap: 10 },
-  stat: { flex: 1, gap: 2, paddingVertical: 12, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: colors.ink },
   setting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 56 },
 });

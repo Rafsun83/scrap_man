@@ -10,19 +10,20 @@ import { useCollectorProfile, useLedger, useNearby, useSetOnline } from '../../.
 import { currentJob } from '../../../src/collector/collectorView';
 import { currentPosition, useLastPosition } from '../../../src/collector/location';
 import { useSkipped } from '../../../src/collector/skipped';
-import { NavyHeader, StatTile, Tag } from '../../../src/collector/ui';
+import { PageHeader, StatTile, Tag } from '../../../src/collector/ui';
 import { useSlotLabel } from '../../../src/household/pickup/shared';
 import { useT } from '../../../src/i18n/lang';
 import { dhakaToday, greetingKey } from '../../../src/lib/dhaka';
 import { categoryName, formatKm } from '../../../src/lib/format';
 import { Button, EmptyView, ErrorView, Icon, LoadingView, Note } from '../../../src/ui/components';
+import { Badge, IconTile } from '../../../src/ui/parts';
 import { errorMessage } from '../../../src/ui/errors';
-import { body, colors, display, minTouch, radius, tones } from '../../../src/ui/theme';
+import { body, cardShadow, colors, display, minTouch, radius, tones } from '../../../src/ui/theme';
 
 /** A request is "new" for this long after it was made. */
 const NEW_FOR_MS = 10 * 60 * 1000;
 
-/** C1: online switch, today's totals, the current pickup, and nearby requests kept live by socket events. */
+/** C1 (v1 design `collector/CHome.dc.html`): online switch, today's totals, the current pickup, and nearby requests kept live by socket events. */
 export default function Requests() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -67,7 +68,7 @@ export default function Requests() {
 
   const header = (
     <>
-      <NavyHeader
+      <PageHeader
         title={name ? t('greetName', { greeting: t(greetingKey()), name }) : t(greetingKey())}
         right={
           <View style={s.headRight}>
@@ -78,12 +79,8 @@ export default function Requests() {
             onPress={() => router.push('/inbox')}
             style={s.bell}
           >
-            <Icon name="bell" size={22} color={colors.surface} />
-            {unread > 0 ? (
-              <View style={s.badge}>
-                <Text style={[body(12, 700), { color: colors.surface }]}>{localDigits(unread > 9 ? '9+' : unread, lang)}</Text>
-              </View>
-            ) : null}
+            <Icon name="bell" size={22} />
+            {unread > 0 ? <View style={s.dot} /> : null}
           </Pressable>
           <Pressable
             testID="online-switch"
@@ -92,12 +89,10 @@ export default function Requests() {
             accessibilityState={{ checked: online, busy: setOnline.isPending }}
             disabled={setOnline.isPending}
             onPress={toggle}
-            style={[s.pill, { borderColor: online ? colors.signal : tones.dashed }]}
+            style={[s.pill, { borderColor: online ? colors.selected : colors.line }]}
           >
-            <Text style={[body(15, 700), { color: colors.surface }]}>{online ? t('online') : t('offline')}</Text>
-            <View style={[s.track, { backgroundColor: online ? colors.money : tones.dashed, justifyContent: online ? 'flex-end' : 'flex-start' }]}>
-              <View style={s.knob} />
-            </View>
+            <View style={[s.onlineDot, { backgroundColor: online ? colors.money : tones.ring }]} />
+            <Text style={body(15, 600)}>{online ? t('online') : t('offline')}</Text>
           </Pressable>
           </View>
         }
@@ -105,22 +100,23 @@ export default function Requests() {
         <View style={s.stats}>
           <StatTile testID="today-count" value={t('countPickups', { count: localDigits(ledger.data?.pickupCount ?? 0, lang) })} label={t('todayPickups')} />
           <StatTile value={formatKg(ledger.data?.totalKg ?? 0, lang)} label={t('collected')} />
-          <StatTile value={formatTaka(ledger.data?.totalPaid ?? 0, lang)} label={t('paidOut')} />
+          <StatTile value={formatTaka(ledger.data?.totalPaid ?? 0, lang)} label={t('paidOut')} tone="money" />
         </View>
-      </NavyHeader>
+      </PageHeader>
       <View style={s.body}>
         {locationProblem ? <Note tone="alert" icon="map-pin" text={locationProblem} /> : null}
         {setOnline.error ? <Note tone="alert" text={errorMessage(setOnline.error, lang)} /> : null}
         {job ? (
           <Pressable accessibilityRole="button" onPress={() => router.push(`/job/${job.id}`)} style={s.job}>
-            <Icon name="truck" color={colors.ink} />
-            <Text style={[body(16, 700), { flex: 1 }]}>{t('activeJob', { area: job.area })}</Text>
-            <Text style={[body(15, 700), { color: colors.money }]}>{t('openJob')}</Text>
+            <IconTile icon="truck" tint="#FFF4D6" />
+            <Text style={[body(15, 600), { flex: 1 }]}>{t('activeJob', { area: job.area })}</Text>
+            <Text style={body(14, 600)}>{t('openJob')}</Text>
+            <Icon name="chevron-right" size={18} />
           </Pressable>
         ) : null}
         <View style={s.titleRow}>
-          <Text style={display(21)}>{t('nearbyRequests')}</Text>
-          <Text style={[body(14), { color: colors.muted }]}>
+          <Text style={display(18)}>{t('nearbyRequests')}</Text>
+          <Text style={[body(13), { color: colors.muted }]}>
             {t('withinKm', { km: localDigits(MATCHING.widenedRadiusM / 1000, lang) })}
           </Text>
         </View>
@@ -131,14 +127,16 @@ export default function Requests() {
   const renderItem = ({ item: r, index }: { item: NearbyRequest; index: number }) => {
     const isNew = Date.now() - Date.parse(r.requestedAt) < NEW_FOR_MS;
     return (
-      <View style={[s.card, { borderColor: index === 0 ? colors.ink : colors.line }]}>
+      <View style={s.card}>
         <View style={s.cardTop}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={body(17, 700)}>{r.area}</Text>
-            {isNew ? <Text style={[body(14, 700), { color: colors.money }]}>{t('newBadge')}</Text> : null}
+          <View style={s.areaRow}>
+            <Text style={body(16, 600)} numberOfLines={1}>
+              {r.area}
+            </Text>
+            {isNew ? <Badge label={t('newBadge')} tone="warn" /> : null}
+            {r.hasPhoto ? <Badge label={t('hasPhoto')} tone="ink" /> : null}
           </View>
-          {r.hasPhoto ? <Tag label={t('hasPhoto')} /> : null}
-          <Tag label={t('kmShort', { km: formatKm(r.distanceM, lang) })} tone={index === 0 ? 'signal' : 'plain'} />
+          <Text style={[body(14, 600), index === 0 && { color: colors.money }]}>{t('kmShort', { km: formatKm(r.distanceM, lang) })}</Text>
         </View>
         <View style={s.tags}>
           {r.categoryCodes.map((code) => (
@@ -147,10 +145,10 @@ export default function Requests() {
         </View>
         <View style={s.cardBottom}>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={[body(14), { color: colors.muted }]}>{slotLabel(r)}</Text>
-            <Text style={[body(14), { color: colors.muted }]}>{t('aboutWeight', { band: t(`band_${r.weightBand}`) })}</Text>
+            <Text style={[body(13), { color: colors.muted }]}>{slotLabel(r)}</Text>
+            <Text style={[body(13), { color: colors.muted }]}>{t('aboutWeight', { band: t(`band_${r.weightBand}`) })}</Text>
           </View>
-          <Button testID={`view-${r.id}`} label={t('view')} icon="chevron-right" variant="dark" onPress={() => router.push(`/request/${r.id}`)} style={s.view} />
+          <Button testID={`view-${r.id}`} label={t('view')} icon="chevron-right" variant="outline" onPress={() => router.push(`/request/${r.id}`)} style={s.view} />
         </View>
       </View>
     );
@@ -163,7 +161,7 @@ export default function Requests() {
   else empty = <EmptyView title={t('noRequests')} hint={t('noRequestsHint')} />;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.ink }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.ground }} edges={['top']}>
       <FlatList
         style={{ backgroundColor: colors.ground }}
         data={online ? requests : []}
@@ -186,17 +184,17 @@ export default function Requests() {
 
 const s = StyleSheet.create({
   headRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bell: { width: minTouch, height: minTouch, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: tones.dashed },
-  badge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: colors.gamcha, alignItems: 'center', justifyContent: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: minTouch, paddingLeft: 14, paddingRight: 6, borderRadius: radius.pill, borderWidth: 2 },
-  track: { width: 44, height: 26, borderRadius: 13, padding: 3, flexDirection: 'row' },
-  knob: { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.surface },
+  bell: { width: minTouch, height: minTouch, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, ...cardShadow },
+  dot: { position: 'absolute', top: 12, right: 13, width: 10, height: 10, borderRadius: radius.round, backgroundColor: colors.signal, borderWidth: 2, borderColor: colors.surface },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: minTouch, paddingHorizontal: 14, borderRadius: radius.md, borderWidth: 1.5, backgroundColor: colors.surface },
+  onlineDot: { width: 10, height: 10, borderRadius: radius.round },
   stats: { flexDirection: 'row', gap: 8 },
-  body: { paddingHorizontal: 20, paddingTop: 18, gap: 12 },
-  job: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 56, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: colors.signal, borderWidth: 2, borderColor: colors.ink },
+  body: { paddingHorizontal: 20, paddingTop: 14, gap: 12 },
+  job: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 64, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.selected },
   titleRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
-  card: { marginHorizontal: 20, backgroundColor: colors.surface, borderWidth: 2, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  card: { marginHorizontal: 20, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 14, gap: 10 },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  areaRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   cardBottom: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   view: { minHeight: 48, paddingHorizontal: 16 },

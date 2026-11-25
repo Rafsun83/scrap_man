@@ -1,7 +1,7 @@
 import { formatTaka, type TimeSlot } from '@bw/shared';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import {
   useAddresses,
   useCategories,
@@ -17,11 +17,12 @@ import { useT } from '../../../src/i18n/lang';
 import { bookableDays, firstOpenSlot, formatShortDay, relativeDay } from '../../../src/lib/dhaka';
 import { previewEstimate } from '../../../src/lib/estimate';
 import { categoryName } from '../../../src/lib/format';
-import { Button, Card, ErrorView, Field, Icon, LoadingView, Note, RadioRow, Screen } from '../../../src/ui/components';
+import { Button, ErrorView, Field, LoadingView, Note, RadioRow, Screen } from '../../../src/ui/components';
+import { IconTile, SectionLabel, SelectCard } from '../../../src/ui/parts';
 import { errorMessage } from '../../../src/ui/errors';
-import { body, colors, display, minTouch, radius } from '../../../src/ui/theme';
+import { body, borderWidth, colors, display, radius } from '../../../src/ui/theme';
 
-/** H4: address, note, day and slot, estimated payout; sends the request. */
+/** H4 (v1 design `household/Schedule.dc.html`): address, day and slot, note, estimated payout; sends the request. */
 export default function Schedule() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -121,7 +122,13 @@ export default function Schedule() {
     <Screen
       footer={
         <>
-          {create.error ? <Text style={[body(15, 600), { color: colors.alert }]}>{errorMessage(create.error, lang)}</Text> : null}
+          <View style={s.estimateRow}>
+            <Text style={[body(14), { color: colors.muted }]}>{t('estimatedPayout')}</Text>
+            <Text style={[display(21), { color: colors.money, flexShrink: 1, textAlign: 'right' }]}>
+              {estimate ? `${formatTaka(estimate.min, lang)}–${formatTaka(estimate.max, lang).slice(1)}` : t('estimateNone')}
+            </Text>
+          </View>
+          {create.error ? <Text style={[body(14, 600), { color: colors.alert }]}>{errorMessage(create.error, lang)}</Text> : null}
           <Button
             testID="send-request"
             label={t('sendRequest')}
@@ -134,22 +141,21 @@ export default function Schedule() {
       }
     >
       <StepHeader step={2} />
-      <Text style={[display(28), { lineHeight: 34 }]}>{t('whenToCome')}</Text>
+      <Text style={[display(24), { lineHeight: 30 }]}>{t('whenToCome')}</Text>
 
-      <Card style={{ paddingVertical: 14, gap: 12 }}>
+      <View style={{ gap: 8 }}>
+        <SectionLabel>{t('address')}</SectionLabel>
         {address ? (
-          <View style={s.addrRow}>
-            <Icon name="map-pin" />
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={[body(14), { color: colors.muted }]}>{t('address')}</Text>
-              <Text style={[body(16, 600), { lineHeight: 22 }]}>
+          <SelectCard selected={false} onPress={() => (addresses.data.length > 1 ? setChoosingAddress((v) => !v) : router.push('/address'))} style={s.addrCard}>
+            <IconTile icon="map-pin" tint="#FFF4D6" />
+            <View style={{ flex: 1, gap: 1 }}>
+              <Text style={body(15, 600)}>{address.label}</Text>
+              <Text style={[body(13), { color: colors.muted }]} numberOfLines={2}>
                 {address.line}, {address.area}
               </Text>
             </View>
-            {addresses.data.length > 1 ? (
-              <Button label={t('change')} icon="repeat" variant="link" onPress={() => setChoosingAddress((v) => !v)} />
-            ) : null}
-          </View>
+            {addresses.data.length > 1 ? <Text style={body(14, 600)}>{t('change')}</Text> : null}
+          </SelectCard>
         ) : (
           <View style={{ gap: 8 }}>
             <Note tone="warn" icon="map-pin" text={t('needAddress')} />
@@ -173,49 +179,37 @@ export default function Schedule() {
             <Button label={t('addAddress')} icon="plus" variant="link" onPress={() => router.push('/address')} />
           </View>
         ) : null}
-        <Field
-          label={t('noteForCollector')}
-          value={note}
-          onChangeText={setNote}
-          placeholder={t('notePlaceholder')}
-          multiline
-          maxLength={200}
-        />
-      </Card>
+      </View>
 
       <View style={{ gap: 10 }}>
-        <Text style={display(19)}>{t('day')}</Text>
+        <SectionLabel>{t('day')}</SectionLabel>
         <View style={s.days}>
           {days.map((d) => {
             const on = d.date === date;
             const anyOpen = d.slots.some((x) => x.open);
             return (
-              <Pressable
+              <SelectCard
                 key={d.date}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: on, disabled: !anyOpen }}
+                role="radio"
+                selected={on}
                 disabled={!anyOpen}
                 onPress={() => {
                   setDate(d.date);
                   const keep = d.slots.find((x) => x.slot === slot)?.open;
                   setSlot(keep ? slot : (d.slots.find((x) => x.open)?.slot ?? null));
                 }}
-                style={[
-                  s.day,
-                  { borderColor: on ? colors.ink : colors.line, backgroundColor: on ? colors.ink : colors.surface },
-                  !anyOpen && { opacity: 0.45 },
-                ]}
+                style={s.day}
               >
-                <Text style={[body(16, 700), { color: on ? colors.surface : colors.ink }]}>{dayLabel(d.date)}</Text>
-                <Text style={[body(13), { color: on ? colors.surface : colors.ink }]}>{formatShortDay(d.date, lang)}</Text>
-              </Pressable>
+                <Text style={body(15, on ? 600 : 500)}>{dayLabel(d.date)}</Text>
+                <Text style={[body(12), { color: colors.muted }]}>{formatShortDay(d.date, lang)}</Text>
+              </SelectCard>
             );
           })}
         </View>
       </View>
 
       <View style={{ gap: 10 }}>
-        <Text style={display(19)}>{t('time')}</Text>
+        <SectionLabel>{t('time')}</SectionLabel>
         {day.slots.every((x) => !x.open) ? <Note tone="warn" text={t('noSlotsLeft')} /> : null}
         {day.slots.map((x) => (
           <RadioRow
@@ -230,33 +224,35 @@ export default function Schedule() {
         ))}
       </View>
 
-      <View style={s.summary}>
-        <Text style={display(18)}>{t('yourSale')}</Text>
+      <Field
+        label={t('noteForCollector')}
+        value={note}
+        onChangeText={setNote}
+        placeholder={t('notePlaceholder')}
+        multiline
+        maxLength={200}
+      />
+
+      <View style={{ gap: 8 }}>
+        <SectionLabel>{t('yourSale')}</SectionLabel>
         <View style={s.pills}>
           {draft.categoryCodes.map((code) => (
-            <Text key={code} style={[body(14, 600), s.pill]}>
+            <Text key={code} style={[body(13, 500), s.pill]}>
               {categoryName(categories.data, code, lang)}
             </Text>
           ))}
         </View>
-        <View style={s.estimateRow}>
-          <Text style={body(15)}>{t('estimatedPayout')}</Text>
-          <Text style={[display(22), { color: colors.money, flexShrink: 1, textAlign: 'right' }]}>
-            {estimate ? `${formatTaka(estimate.min, lang)}–${formatTaka(estimate.max, lang).slice(1)}` : t('estimateNone')}
-          </Text>
-        </View>
-        <Text style={[body(14), { color: colors.muted }]}>{t('finalAfterWeigh')}</Text>
+        <Text style={[body(13), { color: colors.muted }]}>{t('finalAfterWeigh')}</Text>
       </View>
     </Screen>
   );
 }
 
 const s = StyleSheet.create({
-  addrRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  addrCard: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 12 },
   days: { flexDirection: 'row', gap: 8 },
-  day: { flex: 1, minHeight: 64, borderRadius: 12, borderWidth: 2, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  summary: { borderWidth: 2, borderColor: colors.ink, borderRadius: radius.md, padding: 16, gap: 10 },
+  day: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 1 },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  pill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: colors.surface, overflow: 'hidden' },
-  estimateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, minHeight: minTouch / 2 },
+  pill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.sm, borderWidth, borderColor: colors.line, backgroundColor: colors.surface, overflow: 'hidden' },
+  estimateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 },
 });

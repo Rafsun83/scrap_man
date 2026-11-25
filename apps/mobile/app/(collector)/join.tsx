@@ -11,12 +11,13 @@ import { useT } from '../../src/i18n/lang';
 import { formatPhone } from '../../src/lib/format';
 import { Button, Field, Icon, Screen } from '../../src/ui/components';
 import { errorMessage } from '../../src/ui/errors';
-import { body, colors, display, radius, tones } from '../../src/ui/theme';
+import { body, borderWidth, colors, display, radius, tones } from '../../src/ui/theme';
+import { Badge, SectionLabel } from '../../src/ui/parts';
 
 const NID_RE = /^([0-9]{10}|[0-9]{13}|[0-9]{17})$/;
 const asciiDigits = (s: string) => s.replace(/[০-৯]/g, (d) => String('০১২৩৪৫৬৭৮৯'.indexOf(d))).replace(/[^0-9]/g, '');
 
-/** C6: the collector application. After a rejection it opens again with the earlier answers filled in. */
+/** C6 (v1 design `collector/CSignup.dc.html`): the collector application. After a rejection it opens again with the earlier answers filled in. */
 export default function Join() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -67,24 +68,23 @@ export default function Join() {
     <Screen
       footer={
         <>
-          {error ? <Text style={[body(15, 600), { color: colors.alert }]}>{error}</Text> : null}
+          {error ? <Text style={[body(14, 600), { color: colors.alert }]}>{error}</Text> : null}
           <Button testID="submit-application" label={t('submitApplication')} icon="send" loading={uploading || signUp.isPending} onPress={submit} />
         </>
       }
     >
       <View style={{ gap: 4 }}>
-        <Text style={[display(28), { lineHeight: 34 }]}>{t('joinTitle')}</Text>
-        <Text style={[body(15), { color: colors.muted }]}>{t('joinSub')}</Text>
+        <Text style={[display(24), { lineHeight: 30 }]}>{t('joinTitle')}</Text>
+        <Text style={[body(14), { color: colors.muted }]}>{t('joinSub')}</Text>
       </View>
 
       <Field label={t('nameLabel')} value={name} onChangeText={setName} maxLength={80} autoComplete="name" testID="name-input" />
 
       <View style={{ gap: 6 }}>
-        <Text style={body(14, 600)}>{t('phoneLabel')}</Text>
+        <SectionLabel>{t('phoneLabel')}</SectionLabel>
         <View style={s.phone}>
-          <Text style={[body(16, 700), { flex: 1 }]}>{user?.phone ? formatPhone(user.phone, lang) : ''}</Text>
-          <Icon name="check-circle" size={18} color={colors.money} />
-          <Text style={[body(14, 600), { color: colors.money }]}>{t('phoneVerified')}</Text>
+          <Text style={[body(16), { flex: 1 }]}>{user?.phone ? formatPhone(user.phone, lang) : ''}</Text>
+          <Badge label={t('phoneVerified')} tone="done" />
         </View>
       </View>
 
@@ -102,7 +102,7 @@ export default function Join() {
       </View>
 
       <View style={{ gap: 8 }}>
-        <Text style={body(14, 600)}>{t('selfieLabel')}</Text>
+        <SectionLabel>{t('selfieLabel')}</SectionLabel>
         <Pressable
           testID="take-selfie"
           accessibilityRole="button"
@@ -116,23 +116,23 @@ export default function Join() {
             <Image source={{ uri: selfie.uri }} style={s.selfieImg} accessibilityLabel={t('selfieTaken')} />
           ) : (
             <View style={s.selfieIcon}>
-              <Icon name="camera" size={28} />
+              <Icon name="user" size={22} />
             </View>
           )}
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={body(16, 700)}>{selfie ? t('retake') : t('takeSelfie')}</Text>
+            <Text style={body(15, 600)}>{selfie ? t('retake') : t('takeSelfie')}</Text>
             <Text style={[body(13), { color: colors.muted }]}>{selfie ? t('selfieTaken') : t('selfieHint')}</Text>
           </View>
         </Pressable>
       </View>
 
       <View style={{ gap: 8 }}>
-        <Text style={display(19)}>{t('workAreasLabel')}</Text>
+        <SectionLabel>{t('workAreasLabel')}</SectionLabel>
         <WorkAreaPicker value={areas} onChange={setAreas} />
       </View>
 
       <View style={{ gap: 8 }}>
-        <Text style={display(19)}>{t('vehicleLabel')}</Text>
+        <SectionLabel>{t('vehicleLabel')}</SectionLabel>
         <VehiclePicker value={vehicle} onChange={setVehicle} />
       </View>
 
@@ -150,26 +150,35 @@ const s = StyleSheet.create({
   phone: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    minHeight: 52,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 2,
+    gap: 8,
+    minHeight: 56,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    backgroundColor: tones.cancelledBg,
+    borderWidth,
     borderColor: colors.line,
   },
   selfie: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    minHeight: 80,
-    padding: 12,
+    gap: 12,
+    minHeight: 72,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderRadius: radius.md,
-    borderWidth: 2,
+    borderWidth,
     borderStyle: 'dashed',
     borderColor: tones.dashed,
-    backgroundColor: colors.surface,
   },
-  selfieIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center' },
-  selfieImg: { width: 56, height: 56, borderRadius: 28 },
+  selfieIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selfieImg: { width: 44, height: 44, borderRadius: radius.sm },
 });

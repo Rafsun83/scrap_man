@@ -8,7 +8,7 @@ export default function HouseholdLayout() {
   if (user && user.role !== 'HOUSEHOLD') return <Redirect href="/collector" />;
   return (
     <SellDraftProvider>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ground } }} />
+      <Stack screenOptions={{ headerShown: false, animation: 'none', contentStyle: { backgroundColor: colors.ground } }} />
     </SellDraftProvider>
   );
 }

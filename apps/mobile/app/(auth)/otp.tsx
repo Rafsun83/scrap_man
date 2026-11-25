@@ -1,14 +1,14 @@
 import { localDigits } from '@bw/shared';
 import { useMutation } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { ApiError } from '../../src/api/client';
 import type { Session } from '../../src/api/types';
 import { useSession } from '../../src/auth/session';
 import { useT } from '../../src/i18n/lang';
 import { formatPhone } from '../../src/lib/format';
-import { BackButton, Button, Icon, Note, Screen } from '../../src/ui/components';
+import { BackButton, Button, CodeBoxes, Note, Screen } from '../../src/ui/components';
 import { errorMessage } from '../../src/ui/errors';
 import { body, colors, display } from '../../src/ui/theme';
 
@@ -25,7 +25,6 @@ export default function Otp() {
   const [code, setCode] = useState('');
   const [left, setLeft] = useState(RESEND_AFTER_SEC);
   const [info, setInfo] = useState<string | null>(null);
-  const input = useRef<ComponentRef<typeof TextInput>>(null);
 
   useEffect(() => {
     if (left <= 0) return;
@@ -86,35 +85,23 @@ export default function Otp() {
       }
     >
       <BackButton />
-      <View style={s.badge}>
-        <Icon name="smartphone" size={30} />
-      </View>
       <View style={{ gap: 8 }}>
-        <Text style={[display(32, 800), { lineHeight: 38 }]}>{t('otpTitle')}</Text>
-        <Text style={[body(17), { lineHeight: 26 }]}>{t('otpSentTo', { phone: formatPhone(phone, lang) })}</Text>
+        <Text style={[display(30), { lineHeight: 36 }]}>{t('otpTitle')}</Text>
+        <Text style={[body(16), { lineHeight: 25, color: colors.muted }]}>{t('otpSentTo', { phone: formatPhone(phone, lang) })}</Text>
         <Button label={t('changeNumber')} icon="edit-2" variant="link" onPress={() => router.back()} style={{ alignSelf: 'flex-start' }} />
       </View>
 
-      <Pressable accessibilityLabel={t('otpDigits')} onPress={() => input.current?.focus()} style={s.boxes}>
-        {Array.from({ length: 6 }, (_, i) => (
-          <View key={i} style={[s.box, i === code.length && s.boxActive, error ? { borderColor: colors.alert } : null]}>
-            <Text style={display(26)}>{code[i] ? localDigits(code[i], lang) : '–'}</Text>
-          </View>
-        ))}
-        <TextInput
-          ref={input}
-          testID="otp-input"
-          value={code}
-          onChangeText={onChange}
-          keyboardType="number-pad"
-          autoComplete="sms-otp"
-          textContentType="oneTimeCode"
-          autoFocus
-          maxLength={6}
-          caretHidden
-          style={s.hiddenInput}
-        />
-      </Pressable>
+      <CodeBoxes
+        testID="otp-input"
+        label={t('otpDigits')}
+        length={6}
+        value={code}
+        onChange={onChange}
+        error={!!error}
+        autoFocus
+        oneTimeCode
+        renderDigit={(d) => localDigits(d, lang)}
+      />
       {error ? <Text style={[body(15, 600), { color: colors.alert }]}>{error}</Text> : null}
       {info ? <Text style={[body(15, 600), { color: colors.money }]}>{info}</Text> : null}
 
@@ -126,34 +113,11 @@ export default function Otp() {
           <Button label={t('resend')} icon="refresh-cw" variant="link" loading={resend.isPending} onPress={() => resend.mutate()} />
         )}
       </View>
-      <Note icon="shield" text={t('otpNeverShare')} />
+      <Note tone="warn" icon="shield" text={t('otpNeverShare')} />
     </Screen>
   );
 }
 
 const s = StyleSheet.create({
-  badge: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: colors.signal,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  boxes: { flexDirection: 'row', gap: 8 },
-  box: {
-    flex: 1,
-    height: 60,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  boxActive: { borderColor: colors.money, borderWidth: 3 },
-  hiddenInput: { position: 'absolute', opacity: 0, width: '100%', height: '100%' },
   resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
 });

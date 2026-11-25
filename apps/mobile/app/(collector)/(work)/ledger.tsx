@@ -11,7 +11,7 @@ import { formatTime } from '../../../src/lib/dhaka';
 import { categoryName } from '../../../src/lib/format';
 import { Chip, Divider, EmptyView, ErrorView, LoadingView } from '../../../src/ui/components';
 import { errorMessage } from '../../../src/ui/errors';
-import { body, colors, display } from '../../../src/ui/theme';
+import { body, borderWidth, colors, display, radius } from '../../../src/ui/theme';
 
 const RANGES: { key: LedgerRange; label: 'today' | 'rangeWeek' | 'rangeMonth' }[] = [
   { key: 'TODAY', label: 'today' },
@@ -19,7 +19,7 @@ const RANGES: { key: LedgerRange; label: 'today' | 'rangeWeek' | 'rangeMonth' }[
   { key: 'MONTH', label: 'rangeMonth' },
 ];
 
-/** C9: paid out, kg collected and pickups for today, this week or this month, by item and by method, and each payment. */
+/** C9 (v1 design `collector/CLedger.dc.html`): paid out, kg collected and pickups for today, this week or this month, by item and by method, and each payment. */
 export default function LedgerScreen() {
   const { t, lang } = useT();
   const [range, setRange] = useState<LedgerRange>('TODAY');
@@ -29,21 +29,21 @@ export default function LedgerScreen() {
   const data = ledger.data;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.ink }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.ground }} edges={['top']}>
       <ScrollView
         style={{ backgroundColor: colors.ground }}
         contentContainerStyle={{ flexGrow: 1 }}
         refreshControl={<RefreshControl refreshing={ledger.isRefetching} onRefresh={() => void ledger.refetch()} />}
       >
         <View style={s.header}>
-          <Text style={[display(28), { color: colors.surface }]}>{t('cTabLedger')}</Text>
+          <Text style={[display(24), { lineHeight: 30 }]}>{t('cTabLedger')}</Text>
           <View style={s.chips}>
             {RANGES.map((r) => (
               <Chip key={r.key} label={t(r.label)} selected={range === r.key} onPress={() => setRange(r.key)} />
             ))}
           </View>
           <View style={s.stats}>
-            <StatTile testID="ledger-paid" value={formatTaka(data?.totalPaid ?? 0, lang)} label={t('totalPaid')} />
+            <StatTile testID="ledger-paid" value={formatTaka(data?.totalPaid ?? 0, lang)} label={t('totalPaid')} tone="money" />
             <StatTile value={formatKg(data?.totalKg ?? 0, lang)} label={t('collected')} />
             <StatTile value={localDigits(data?.pickupCount ?? 0, lang)} label={t('pickupsLabel')} />
           </View>
@@ -60,19 +60,24 @@ export default function LedgerScreen() {
             <>
               <Text style={cs.sectionTitle}>{t('collectedByItem')}</Text>
               <View style={cs.section}>
-                {data.byCategory.map((c, i) => (
-                  <View key={c.categoryCode}>
-                    {i > 0 ? <Divider /> : null}
-                    <View style={s.row}>
-                      <Text style={[body(16, 600), { flex: 1 }]}>{categoryName(categories.data, c.categoryCode, lang)}</Text>
-                      <Text style={body(16, 700)}>{formatKg(c.kg, lang)}</Text>
+                {data.byCategory.map((c) => {
+                  const max = Math.max(...data.byCategory.map((x) => x.kg), 1);
+                  return (
+                    <View key={c.categoryCode} style={s.barRow}>
+                      <Text style={[body(14), s.barName]} numberOfLines={1}>
+                        {categoryName(categories.data, c.categoryCode, lang)}
+                      </Text>
+                      <View style={s.track}>
+                        <View style={[s.fill, { width: `${Math.round((c.kg / max) * 100)}%` }]} />
+                      </View>
+                      <Text style={[body(14, 600), s.barKg]}>{formatKg(c.kg, lang)}</Text>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
               <View style={s.methods}>
                 {PAYMENT_METHODS.filter((m) => (data.byMethod[m] ?? 0) > 0).map((m) => (
-                  <Text key={m} style={[body(14, 700), s.method]}>
+                  <Text key={m} style={[body(13, 600), s.method]}>
                     {t(`byMethod_${m}`, { amount: formatTaka(data.byMethod[m] ?? 0, lang) })}
                   </Text>
                 ))}
@@ -87,12 +92,12 @@ export default function LedgerScreen() {
                       {i > 0 ? <Divider /> : null}
                       <View style={s.row}>
                         <View style={{ flex: 1, gap: 2 }}>
-                          <Text style={body(16, 700)}>{p.householdName || t('customerFallback')}</Text>
+                          <Text style={body(15, 600)}>{p.householdName || t('customerFallback')}</Text>
                           <Text style={[body(13), { color: colors.muted }]}>
                             {p.trxId ? t('paymentMetaTrx', { ...vars, trx: p.trxId }) : t('paymentMeta', vars)}
                           </Text>
                         </View>
-                        <Text style={[display(19), { color: colors.money }]}>{formatTaka(p.amount, lang)}</Text>
+                        <Text style={display(16)}>{formatTaka(p.amount, lang)}</Text>
                       </View>
                     </View>
                   );
@@ -107,11 +112,16 @@ export default function LedgerScreen() {
 }
 
 const s = StyleSheet.create({
-  header: { backgroundColor: colors.ink, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 18, gap: 14 },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 4, gap: 14 },
   chips: { flexDirection: 'row', gap: 8 },
   stats: { flexDirection: 'row', gap: 8 },
   body: { padding: 20, gap: 16, flexGrow: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingVertical: 8 },
+  barRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 },
+  barName: { width: 110 },
+  barKg: { width: 72, textAlign: 'right' },
+  track: { flex: 1, height: 8, borderRadius: radius.sm, backgroundColor: colors.divider, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: radius.sm, backgroundColor: colors.ink },
   methods: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  method: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.surface, overflow: 'hidden' },
+  method: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.sm, borderWidth, borderColor: colors.line, backgroundColor: colors.surface, overflow: 'hidden' },
 });

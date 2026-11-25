@@ -1,11 +1,12 @@
 import { formatKg, formatTaka, localDigits } from '@bw/shared';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text } from 'react-native';
 import type { Category, Pickup } from '../../api/types';
 import { WeighLines } from '../../household/pickup/shared';
 import { useT } from '../../i18n/lang';
-import { BackButton, Button, Card, Icon, Note, Screen, type IconName } from '../../ui/components';
-import { body, colors, display } from '../../ui/theme';
+import { BackButton, Button, Card, Note, Screen, type IconName } from '../../ui/components';
+import { IconTile } from '../../ui/parts';
+import { body, colors, display, tones } from '../../ui/theme';
 
 function StatusScreen({
   icon,
@@ -22,16 +23,14 @@ function StatusScreen({
 }) {
   const { t } = useT();
   const router = useRouter();
-  const bg = tone === 'done' ? '#DCEFE7' : tone === 'alert' ? '#F6E3DA' : colors.selectedTint;
-  const fg = tone === 'done' ? colors.money : tone === 'alert' ? colors.alert : colors.ink;
+  const bg = tone === 'done' ? tones.doneBg : tone === 'alert' ? tones.alertBg : '#FFF4D6';
+  const fg = tone === 'done' ? colors.money : tone === 'alert' ? colors.alert : '#8A5A00';
   return (
     <Screen footer={<Button label={t('backToRequests')} icon="map-pin" variant="outline" onPress={() => router.dismissTo('/requests')} />}>
       <BackButton />
-      <View style={[s.badge, { backgroundColor: bg }]}>
-        <Icon name={icon} size={34} color={fg} />
-      </View>
-      <Text style={[display(26), { lineHeight: 32 }]}>{title}</Text>
-      {text ? <Text style={[body(16), { color: colors.muted, lineHeight: 24 }]}>{text}</Text> : null}
+      <IconTile icon={icon} tint={bg} color={fg} size={64} />
+      <Text style={[display(24), { lineHeight: 30 }]}>{title}</Text>
+      {text ? <Text style={[body(15), { color: colors.muted, lineHeight: 23 }]}>{text}</Text> : null}
       {children}
     </Screen>
   );
@@ -78,6 +77,3 @@ export function EndedView() {
   return <StatusScreen icon="x-circle" tone="alert" title={t('jobCancelledTitle')} text={t('jobCancelledBody')} />;
 }
 
-const s = StyleSheet.create({
-  badge: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
-});

@@ -1,26 +1,18 @@
 import { localDigits, WEIGHT_BANDS } from '@bw/shared';
 import { useRouter } from 'expo-router';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { useCategories, useTodayRates } from '../../../src/api/hooks';
 import { StepHeader } from '../../../src/household/StepHeader';
 import { choosePhoto } from '../../../src/household/photoPicker';
 import { rateRows } from '../../../src/household/RateBoard';
 import { useSellDraft } from '../../../src/household/sellDraft';
 import { useT } from '../../../src/i18n/lang';
-import { Button, Chip, ErrorView, Icon, LoadingView, Screen, type IconName } from '../../../src/ui/components';
+import { Button, Chip, ErrorView, LoadingView, Screen } from '../../../src/ui/components';
+import { categoryLook, DashedButton, IconTile, SectionLabel, SelectCard } from '../../../src/ui/parts';
 import { errorMessage } from '../../../src/ui/errors';
-import { body, colors, display, radius, tones } from '../../../src/ui/theme';
+import { body, colors, display, radius } from '../../../src/ui/theme';
 
-const CATEGORY_ICONS: Record<string, IconName> = {
-  iron: 'tool',
-  newspaper: 'file-text',
-  bottle: 'droplet',
-  carton: 'package',
-  can: 'archive',
-  device: 'monitor',
-};
-
-/** H3: category cards (multi-select), weight band, optional photo. */
+/** H3 (v1 design `household/SelectItems.dc.html`): category cards (multi-select), weight band, optional photo. */
 export default function SelectItems() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -65,46 +57,41 @@ export default function SelectItems() {
     >
       <StepHeader step={1} />
       <View style={{ gap: 4 }}>
-        <Text style={[display(28), { lineHeight: 34 }]}>{t('whatToSell')}</Text>
-        <Text style={[body(16), { color: colors.muted }]}>{t('pickOneOrMore')}</Text>
+        <Text style={[display(24), { lineHeight: 30 }]}>{t('whatToSell')}</Text>
+        <Text style={[body(14), { color: colors.muted }]}>{t('pickOneOrMore')}</Text>
       </View>
 
       <View style={s.grid}>
         {rows.map((r) => {
           const on = selected.has(r.code);
           const unavailable = !r.onInspection && r.ratePerKg === null;
-          const icon = CATEGORY_ICONS[categories.data.find((c) => c.code === r.code)?.icon ?? ''] ?? 'box';
+          const look = categoryLook(categories.data, r.code);
           return (
-            <Pressable
+            <SelectCard
               key={r.code}
               testID={`category-${r.code}`}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: on, disabled: unavailable }}
+              role="checkbox"
+              selected={on}
               disabled={unavailable}
               onPress={() => toggle(r.code)}
-              style={[
-                s.card,
-                { borderColor: on ? colors.ink : colors.line, backgroundColor: on ? colors.selectedTint : colors.surface },
-                unavailable && { opacity: 0.5 },
-              ]}
+              style={s.card}
             >
-              <Icon name={icon} size={28} />
-              <Text style={body(17, 700)}>{r.name}</Text>
-              <Text style={[body(14), { color: colors.muted }]}>
-                {r.onInspection ? r.price : unavailable ? t('noRate') : t('perKgPrice', { price: r.price })}
-              </Text>
-              {on ? (
-                <View style={s.check}>
-                  <Icon name="check" size={16} color={colors.signal} />
-                </View>
-              ) : null}
-            </Pressable>
+              <IconTile icon={look.icon} tint={look.tint} />
+              <View style={{ flex: 1, gap: 1 }}>
+                <Text style={body(15, 600)} numberOfLines={2}>
+                  {r.name}
+                </Text>
+                <Text style={[body(13), { color: colors.muted }]}>
+                  {r.onInspection ? r.price : unavailable ? t('noRate') : t('perKgPrice', { price: r.price })}
+                </Text>
+              </View>
+            </SelectCard>
           );
         })}
       </View>
 
       <View style={{ gap: 10 }}>
-        <Text style={display(19)}>{t('weightQuestion')}</Text>
+        <SectionLabel>{t('weightQuestion')}</SectionLabel>
         <View style={s.chips}>
           {WEIGHT_BANDS.map((band) => (
             <Chip
@@ -115,71 +102,35 @@ export default function SelectItems() {
             />
           ))}
         </View>
-        <Text style={[body(14), { color: colors.muted }]}>{t('minimumNote')}</Text>
+        <Text style={[body(13), { color: colors.muted }]}>{t('minimumNote')}</Text>
       </View>
 
       {draft.photo ? (
         <View style={s.photoRow}>
           <Image source={{ uri: draft.photo.uri }} style={s.thumb} accessibilityLabel={t('photoAdded')} />
-          <Text style={[body(16, 700), { flex: 1 }]}>{t('photoAdded')}</Text>
+          <Text style={[body(15, 600), { flex: 1 }]}>{t('photoAdded')}</Text>
           <Button label={t('removePhoto')} icon="trash-2" variant="dangerLink" onPress={() => update({ photo: null })} />
         </View>
       ) : (
-        <Pressable
-          accessibilityRole="button"
+        <DashedButton
+          icon="camera"
+          title={t('takePhoto')}
+          sub={t('takePhotoSub')}
           onPress={async () => {
             const photo = await choosePhoto(lang);
             if (photo) update({ photo });
           }}
-          style={s.photoBtn}
-        >
-          <Icon name="camera" size={26} />
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={body(16, 700)}>{t('takePhoto')}</Text>
-            <Text style={[body(14), { color: colors.muted }]}>{t('takePhotoSub')}</Text>
-          </View>
-        </Pressable>
+        />
       )}
     </Screen>
   );
 }
 
 const s = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: {
-    width: '47.5%',
-    flexGrow: 1,
-    minHeight: 112,
-    padding: 14,
-    gap: 8,
-    borderRadius: radius.md,
-    borderWidth: 2,
-  },
-  check: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  card: { width: '47%', flexGrow: 1, minHeight: 76, paddingHorizontal: 12, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  photoBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    minHeight: 72,
-    padding: 12,
-    paddingHorizontal: 16,
-    borderRadius: radius.md,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: tones.dashed,
-  },
-  photoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.md, backgroundColor: colors.surface },
-  thumb: { width: 56, height: 56, borderRadius: 10 },
+  photoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.surface },
+  thumb: { width: 56, height: 56, borderRadius: radius.sm },
   footerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

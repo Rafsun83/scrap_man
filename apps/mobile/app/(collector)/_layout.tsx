@@ -16,5 +16,5 @@ export default function CollectorLayout() {
   useLocationPings(approved && (profile.data?.isOnline === true || onTheWay), api);
 
   if (user && !isCollector) return <Redirect href="/home" />;
-  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ground } }} />;
+  return <Stack screenOptions={{ headerShown: false, animation: 'none', contentStyle: { backgroundColor: colors.ground } }} />;
 }

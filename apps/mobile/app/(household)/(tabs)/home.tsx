@@ -1,17 +1,18 @@
 import { formatKg, formatTaka, localDigits } from '@bw/shared';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useCategories, useDefaultAddress, useMyPickups, useNotifications, useTodayRates } from '../../../src/api/hooks';
 import { useSession } from '../../../src/auth/session';
-import { rateRows, ratesPublished } from '../../../src/household/RateBoard';
+import { rateChangeTag, rateRows, ratesPublished } from '../../../src/household/RateBoard';
 import { useT } from '../../../src/i18n/lang';
-import { formatDate, greetingKey } from '../../../src/lib/dhaka';
+import { formatDate, formatLongDate, greetingKey } from '../../../src/lib/dhaka';
 import { categoryNames } from '../../../src/lib/format';
 import { Button, Card, Divider, ErrorView, Icon, LoadingView, Screen } from '../../../src/ui/components';
 import { errorMessage } from '../../../src/ui/errors';
-import { body, colors, display, minTouch, radius, tones } from '../../../src/ui/theme';
+import { Badge, categoryLook, IconTile } from '../../../src/ui/parts';
+import { body, cardShadow, colors, display, minTouch, radius, tones } from '../../../src/ui/theme';
 
-/** H2: greeting, today's rate board, the big "sell scrap" action, active pickup, recent sales. */
+/** H2 (v1 design `household/Home.dc.html`): greeting, the sell card, today's rate tiles, active pickup, recent sales. */
 export default function Home() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -23,9 +24,6 @@ export default function Home() {
   const recent = useMyPickups('COMPLETED', 3);
   const feed = useNotifications();
   const unread = feed.data?.pages[0]?.unreadCount ?? 0;
-
-  const greeting = t(greetingKey());
-  const title = user?.name ? t('greetName', { greeting, name: user.name }) : greeting;
 
   if (categories.isPending || rates.isPending) return <LoadingView />;
   if (categories.isError || rates.isError) {
@@ -42,18 +40,19 @@ export default function Home() {
 
   const rows = rateRows(categories.data, rates.data.rates, lang, t('onInspection'));
   const published = ratesPublished(rows);
-  const boardRows = rows.filter((r) => !r.onInspection && r.ratePerKg !== null).slice(0, 5);
+  const tiles = rows.filter((r) => !r.onInspection && r.ratePerKg !== null).slice(0, 4);
   const activePickup = active.data?.items?.[0];
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top']} style={{ gap: 22 }}>
       <View style={s.header}>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={[display(26), { lineHeight: 32 }]}>{title}</Text>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={[body(14), { color: colors.muted }]}>{user?.name ? `${t(greetingKey())},` : t(greetingKey())}</Text>
+          {user?.name ? <Text style={[display(24), { lineHeight: 30 }]}>{user.name}</Text> : null}
           <Pressable accessibilityRole="button" onPress={() => router.push(address ? '/profile' : '/address')} style={s.place}>
-            <Icon name="map-pin" size={18} />
-            <Text style={body(16)}>{address ? address.area : t('noAddressYet')}</Text>
-            <Icon name="chevron-down" size={16} />
+            <Icon name="map-pin" size={16} color={colors.muted} />
+            <Text style={[body(14), { color: colors.muted }]}>{address ? address.area : t('noAddressYet')}</Text>
+            <Icon name="chevron-down" size={14} color={colors.muted} />
           </Pressable>
         </View>
         <Pressable
@@ -64,100 +63,102 @@ export default function Home() {
           style={s.bell}
         >
           <Icon name="bell" size={22} />
-          {unread > 0 ? (
-            <View style={s.badge}>
-              <Text style={[body(12, 700), { color: colors.surface }]}>{localDigits(unread > 9 ? '9+' : unread, lang)}</Text>
-            </View>
-          ) : null}
+          {unread > 0 ? <View style={s.dot} /> : null}
         </Pressable>
+      </View>
+
+      <View style={s.hero}>
+        <View style={{ gap: 6 }}>
+          <Text style={[body(13), { color: '#B9C6D2' }]}>{formatLongDate(rates.data.effectiveDate ?? new Date(), lang)}</Text>
+          <Text style={[display(22), { color: colors.surface, lineHeight: 30 }]}>{t('homeHeroTitle')}</Text>
+        </View>
+        <Button
+          testID="sell-scrap"
+          label={t('sellScrap')}
+          icon="plus"
+          variant="key"
+          disabled={!published}
+          onPress={() => router.push('/sell/items')}
+        />
       </View>
 
       {activePickup ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push(`/pickup/${activePickup.id}`)}
-          style={s.activeBanner}
-        >
-          <Icon name="truck" size={24} />
-          <View style={{ flex: 1 }}>
-            <Text style={body(16, 700)}>{t('activePickup')}</Text>
-            <Text style={body(14)}>
+        <Pressable accessibilityRole="button" onPress={() => router.push(`/pickup/${activePickup.id}`)} style={s.active}>
+          <IconTile icon="truck" tint="#FFF4D6" />
+          <View style={{ flex: 1, gap: 1 }}>
+            <Text style={body(15, 600)}>{t('activePickup')}</Text>
+            <Text style={[body(13), { color: colors.muted }]} numberOfLines={1}>
               {categoryNames(categories.data, activePickup.categoryCodes, lang)} · {t(`status_${activePickup.status}`)}
             </Text>
           </View>
-          <Text style={body(15, 700)}>{t('activePickupOpen')}</Text>
-          <Icon name="chevron-right" size={20} />
+          <Text style={body(14, 600)}>{t('activePickupOpen')}</Text>
+          <Icon name="chevron-right" size={18} />
         </Pressable>
       ) : null}
 
-      <View style={s.board} accessibilityLabel={t('todaysRates')}>
-        <View style={s.boardHead}>
-          <Text style={[display(30, 800), { lineHeight: 34 }]}>{t('todaysRates')}</Text>
-          {rates.data.effectiveDate ? <Text style={body(15, 600)}>{formatDate(rates.data.effectiveDate, lang)}</Text> : null}
+      <View style={{ gap: 12 }} accessibilityLabel={t('todaysRates')}>
+        <View style={s.sectionHead}>
+          <Text style={display(18)}>{t('todaysRates')}</Text>
+          <Pressable accessibilityRole="link" onPress={() => router.push('/rates')} style={s.seeAll}>
+            <Text style={body(14, 600)}>{t('seeAll')}</Text>
+          </Pressable>
         </View>
         {published ? (
-          <>
-            <Text style={[body(14), { marginTop: -6 }]}>{t('perKgTaka')}</Text>
-            <View style={{ gap: 8, marginTop: 4 }}>
-              {boardRows.map((r) => (
-                <View key={r.code} style={s.rateRow}>
-                  <Text style={body(18, 500)}>{r.name}</Text>
-                  <View style={s.dots} />
-                  <Text style={display(21)}>{r.price}</Text>
+          <View style={s.grid}>
+            {tiles.map((r) => {
+              const look = categoryLook(categories.data, r.code);
+              const tag = rateChangeTag(r, lang);
+              return (
+                <View key={r.code} style={s.tile}>
+                  <View style={s.tileTop}>
+                    <IconTile icon={look.icon} tint={look.tint} size={36} />
+                    {tag ? <Badge label={tag.label} tone={tag.tone} /> : null}
+                  </View>
+                  <View style={{ gap: 1 }}>
+                    <Text style={[body(14), { color: colors.muted }]} numberOfLines={1}>
+                      {r.name}
+                    </Text>
+                    <Text>
+                      <Text style={display(22)}>{r.price}</Text>
+                      <Text style={[body(13), { color: colors.muted }]}> {t('perKgSuffix')}</Text>
+                    </Text>
+                  </View>
                 </View>
-              ))}
-            </View>
-          </>
+              );
+            })}
+          </View>
         ) : (
-          <Text style={[body(16), { lineHeight: 24 }]}>{t('ratesNotPublished')}</Text>
+          <Card style={{ padding: 16 }}>
+            <Text style={[body(15), { color: colors.muted, lineHeight: 22 }]}>{t('ratesNotPublished')}</Text>
+          </Card>
         )}
-        <Link href="/rates" asChild>
-          <Pressable accessibilityRole="link" style={s.allRates}>
-            <Icon name="list" size={18} />
-            <Text style={[body(16, 600), { textDecorationLine: 'underline' }]}>{t('seeAllRates')}</Text>
-          </Pressable>
-        </Link>
       </View>
 
-      <Pressable
-        testID="sell-scrap"
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !published }}
-        disabled={!published}
-        onPress={() => router.push('/sell/items')}
-        style={[s.sell, !published && { opacity: 0.55 }]}
-      >
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={[display(23), { color: colors.surface }]}>{t('sellScrap')}</Text>
-          <Text style={[body(15), { color: tones.ink200 }]}>{t('sellScrapSub')}</Text>
-        </View>
-        <View style={s.sellArrow}>
-          <Icon name="arrow-right" size={24} />
-        </View>
-      </Pressable>
-
-      <View style={{ gap: 6 }}>
-        <Text style={display(20)}>{t('recentSales')}</Text>
+      <View style={{ gap: 12 }}>
+        <Text style={display(18)}>{t('recentSales')}</Text>
         {recent.isPending ? (
           <LoadingView />
         ) : recent.isError ? (
           <Button label={t('retry')} icon="refresh-cw" variant="outline" onPress={() => recent.refetch()} />
         ) : recent.data.items?.length ? (
-          <Card>
+          <Card style={{ paddingVertical: 0 }}>
             {recent.data.items.map((p, i) => (
               <View key={p.id}>
                 {i > 0 ? <Divider /> : null}
                 <Pressable accessibilityRole="button" onPress={() => router.push(`/pickup/${p.id}`)} style={s.saleRow}>
+                  <IconTile icon="check" tint={tones.doneBg} color={colors.money} size={44} />
                   <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={body(16, 600)}>{categoryNames(categories.data, p.categoryCodes, lang)}</Text>
-                    <Text style={[body(14), { color: colors.muted }]}>
+                    <Text style={body(15, 600)} numberOfLines={1}>
+                      {categoryNames(categories.data, p.categoryCodes, lang)}
+                    </Text>
+                    <Text style={[body(13), { color: colors.muted }]}>
                       {t('historyMeta', {
                         date: formatDate(p.completedAt ?? p.requestedAt, lang),
                         kg: p.totalKg != null ? formatKg(p.totalKg, lang) : '–',
                       })}
                     </Text>
                   </View>
-                  <Text style={[display(19), { color: colors.money }]}>
+                  <Text style={[display(18), { color: colors.money }]}>
                     {p.totalAmount != null ? formatTaka(p.totalAmount, lang) : ''}
                   </Text>
                 </Pressable>
@@ -176,6 +177,7 @@ export default function Home() {
 
 const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  place: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36, alignSelf: 'flex-start' },
   bell: {
     width: minTouch,
     height: minTouch,
@@ -183,62 +185,35 @@ const s = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    ...cardShadow,
   },
-  badge: {
+  dot: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 20,
-    height: 20,
-    paddingHorizontal: 4,
-    borderRadius: 10,
-    backgroundColor: colors.gamcha,
-    alignItems: 'center',
-    justifyContent: 'center',
+    top: 12,
+    right: 13,
+    width: 10,
+    height: 10,
+    borderRadius: radius.round,
+    backgroundColor: colors.signal,
+    borderWidth: 2,
+    borderColor: colors.surface,
   },
-  place: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: minTouch, alignSelf: 'flex-start' },
-  activeBanner: {
+  hero: { backgroundColor: colors.ink, borderRadius: radius.md, padding: 20, gap: 18 },
+  active: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     padding: 14,
     minHeight: 64,
     borderRadius: radius.md,
-    backgroundColor: colors.selectedTint,
-    borderWidth: 2,
-    borderColor: colors.ink,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.selected,
   },
-  board: {
-    backgroundColor: colors.signal,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    borderRadius: radius.lg,
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 8,
-    gap: 10,
-  },
-  boardHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
-  rateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  dots: { flex: 1, borderBottomWidth: 2, borderStyle: 'dotted', borderColor: colors.ink, transform: [{ translateY: -5 }] },
-  allRates: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: minTouch, alignSelf: 'flex-start' },
-  sell: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    minHeight: 84,
-    paddingLeft: 20,
-    paddingRight: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.ink,
-  },
-  sellArrow: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.signal,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  seeAll: { minHeight: minTouch, justifyContent: 'center', paddingLeft: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  tile: { width: '47%', flexGrow: 1, gap: 10, padding: 14, borderRadius: radius.md, backgroundColor: colors.surface, ...cardShadow },
+  tileTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   saleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, minHeight: minTouch },
 });

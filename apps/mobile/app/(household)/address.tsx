@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useState } from 'react';
-import { Alert, Switch, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { useAddresses, useDeleteAddress, useSaveAddress } from '../../src/api/hooks';
 import type { AddressInput } from '../../src/api/types';
 import { useT } from '../../src/i18n/lang';
@@ -10,6 +10,7 @@ import { BackButton, Button, Card, Field, LoadingView, Note, Screen } from '../.
 import { mapsEnabled, PinPicker } from '../../src/ui/maps';
 import { errorMessage } from '../../src/ui/errors';
 import { body, colors, display, minTouch } from '../../src/ui/theme';
+import { SectionLabel, Toggle } from '../../src/ui/parts';
 
 /**
  * Add or edit a saved address (opened from H10 and H4). The location starts from the phone's GPS; with a maps
@@ -94,7 +95,7 @@ export default function AddressForm() {
     <Screen
       footer={
         <>
-          {error ? <Text style={[body(15, 600), { color: colors.alert }]}>{errorMessage(error, lang)}</Text> : null}
+          {error ? <Text style={[body(14, 600), { color: colors.alert }]}>{errorMessage(error, lang)}</Text> : null}
           <Button testID="save-address" label={t('save')} icon="check" loading={save.isPending} onPress={submit} />
           {existing ? (
             <Button label={t('delete')} icon="trash-2" variant="dangerLink" loading={remove.isPending} onPress={confirmDelete} />
@@ -103,14 +104,14 @@ export default function AddressForm() {
       }
     >
       <BackButton />
-      <Text style={display(28)}>{t(existing ? 'editAddress' : 'newAddress')}</Text>
+      <Text style={display(24)}>{t(existing ? 'editAddress' : 'newAddress')}</Text>
       <Field label={t('addressLabel')} value={v.label} onChangeText={setLabel} maxLength={40} error={missing(v.label)} />
       <Field label={t('addressLine')} value={v.line} onChangeText={setLine} maxLength={200} error={missing(v.line)} />
       <Field label={t('addressArea')} value={v.area} onChangeText={setArea} maxLength={80} error={missing(v.area)} />
       <Field label={t('addressNote')} value={v.note} onChangeText={setNote} maxLength={200} multiline />
 
       <Card style={{ paddingVertical: 14, gap: 10 }}>
-        <Text style={body(15, 600)}>{t('location')}</Text>
+        <SectionLabel>{t('location')}</SectionLabel>
         {v.location ? (
           <Note icon="check-circle" text={t('locationSet')} />
         ) : (
@@ -127,13 +128,8 @@ export default function AddressForm() {
       </Card>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: minTouch }}>
-        <Text style={body(16, 600)}>{t('makeDefault')}</Text>
-        <Switch
-          value={v.isDefault}
-          onValueChange={setIsDefault}
-          accessibilityLabel={t('makeDefault')}
-          trackColor={{ true: colors.money, false: colors.line }}
-        />
+        <Text style={body(15)}>{t('makeDefault')}</Text>
+        <Toggle value={v.isDefault} onChange={setIsDefault} label={t('makeDefault')} />
       </View>
     </Screen>
   );

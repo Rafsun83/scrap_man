@@ -8,9 +8,10 @@ import { useT } from '../i18n/lang';
 import { dhakaToday, formatDate, formatTime } from '../lib/dhaka';
 import { BackButton, Button, EmptyView, ErrorView, Icon, LoadingView } from '../ui/components';
 import { errorMessage } from '../ui/errors';
-import { body, colors, display, minTouch, radius } from '../ui/theme';
+import { body, cardShadow, colors, display, minTouch, radius, tones } from '../ui/theme';
 
 const TONE = { money: colors.money, ink: colors.ink, alert: colors.alert };
+const TINT = { money: tones.doneBg, ink: tones.inkTint, alert: tones.alertBg };
 
 /**
  * H13 for households and the collector's inbox (bell on C1): newest first, grouped today / earlier, unread
@@ -42,15 +43,15 @@ export function NotificationsScreen({ role }: { role: 'HOUSEHOLD' | 'COLLECTOR' 
         testID={`notification-${n.id}`}
         accessibilityRole="button"
         onPress={() => router.push(v.href as never)}
-        style={[s.row, !n.read && s.unread]}
+        style={[s.row, n.read ? s.read : s.unread]}
       >
-        <View style={[s.icon, { backgroundColor: n.read ? colors.ground : colors.selectedTint }]}>
-          <Icon name={v.icon} size={22} color={TONE[v.tone]} />
+        <View style={[s.icon, { backgroundColor: n.read ? colors.ground : TINT[v.tone] }]}>
+          <Icon name={v.icon} size={20} color={n.read ? colors.muted : TONE[v.tone]} />
         </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={body(16, n.read ? 600 : 700)}>{v.title}</Text>
+        <View style={{ flex: 1, gap: 3 }}>
+          <Text style={body(15, n.read ? 500 : 600)}>{v.title}</Text>
           {v.body ? <Text style={[body(14), { color: colors.muted, lineHeight: 20 }]}>{v.body}</Text> : null}
-          <Text style={[body(13), { color: colors.muted }]}>{when}</Text>
+          <Text style={[body(12), { color: colors.muted }]}>{when}</Text>
         </View>
         {!n.read ? <View style={s.dot} accessibilityElementsHidden importantForAccessibility="no" /> : null}
       </Pressable>
@@ -62,7 +63,7 @@ export function NotificationsScreen({ role }: { role: 'HOUSEHOLD' | 'COLLECTOR' 
       <View style={s.header}>
         <BackButton />
         <View style={s.titleRow}>
-          <Text style={[display(28), { flex: 1 }]}>{t('notifications')}</Text>
+          <Text style={[display(24), { flex: 1 }]}>{t('notifications')}</Text>
           {unread > 0 ? (
             <Button
               testID="mark-all-read"
@@ -79,7 +80,7 @@ export function NotificationsScreen({ role }: { role: 'HOUSEHOLD' | 'COLLECTOR' 
         sections={sections}
         keyExtractor={(n) => n.id}
         renderItem={renderItem}
-        renderSectionHeader={({ section }) => <Text style={[body(14, 700), s.section]}>{section.title}</Text>}
+        renderSectionHeader={({ section }) => <Text style={[body(13, 600), s.section]}>{section.title}</Text>}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={s.list}
         onRefresh={() => feed.refetch()}
@@ -106,9 +107,9 @@ const s = StyleSheet.create({
     padding: 14,
     minHeight: minTouch + 16,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
   },
-  unread: { borderLeftWidth: 4, borderLeftColor: colors.signal },
-  icon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.gamcha, marginTop: 6 },
+  unread: { backgroundColor: colors.surface, ...cardShadow },
+  read: { borderWidth: 1, borderColor: colors.line },
+  icon: { width: 40, height: 40, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  dot: { width: 8, height: 8, borderRadius: radius.round, backgroundColor: colors.signal, marginTop: 7 },
 });

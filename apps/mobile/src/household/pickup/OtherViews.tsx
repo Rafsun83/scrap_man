@@ -8,7 +8,8 @@ import { useT } from '../../i18n/lang';
 import { formatDate, formatTime } from '../../lib/dhaka';
 import { categoryName, localPhone } from '../../lib/format';
 import { BackButton, Button, Card, Icon, Note, Screen } from '../../ui/components';
-import { body, colors, display, minTouch } from '../../ui/theme';
+import { IconTile, SectionLabel } from '../../ui/parts';
+import { body, cardShadow, colors, display, minTouch, radius, tones } from '../../ui/theme';
 import { collectorName, TotalsCard, WeighLines } from './shared';
 
 /** DISPUTED: the household's weight objection is with the collector (REWEIGH) or our team (ADMIN_REVIEW). */
@@ -19,12 +20,12 @@ export function DisputedView({ pickup, categories }: { pickup: Pickup; categorie
     <Screen>
       <BackButton label={t('goHome')} />
       <View style={{ gap: 8 }}>
-        <Text style={[display(28), { lineHeight: 34 }]}>{t(reweigh ? 'disputeReweighTitle' : 'disputeReviewTitle')}</Text>
+        <Text style={[display(24), { lineHeight: 30 }]}>{t(reweigh ? 'disputeReweighTitle' : 'disputeReviewTitle')}</Text>
         <Note tone="warn" icon={reweigh ? 'refresh-cw' : 'users'} text={t(reweigh ? 'disputeReweighBody' : 'disputeReviewBody')} />
       </View>
       {pickup.lines.length ? (
         <View style={{ gap: 8 }}>
-          <Text style={display(19)}>{t('previousWeights')}</Text>
+          <SectionLabel>{t('previousWeights')}</SectionLabel>
           <TotalsCard totalKg={pickup.totalKg ?? 0} totalAmount={pickup.totalAmount ?? 0} />
           <Card>
             <WeighLines lines={pickup.lines} categories={categories} />
@@ -44,11 +45,9 @@ export function PaymentWaitView({ pickup, categories }: { pickup: Pickup; catego
     <Screen>
       <BackButton label={t('goHome')} />
       <View style={s.hero}>
-        <View style={[s.badge, { backgroundColor: colors.signal }]}>
-          <Icon name="clock" size={34} />
-        </View>
-        <Text style={[display(30), { textAlign: 'center' }]}>{t('waitingPaymentTitle')}</Text>
-        <Text style={[body(16), { textAlign: 'center', lineHeight: 24 }]}>
+        <IconTile icon="clock" tint="#FFF4D6" color="#8A5A00" size={64} />
+        <Text style={[display(24), { textAlign: 'center' }]}>{t('waitingPaymentTitle')}</Text>
+        <Text style={[body(15), { textAlign: 'center', lineHeight: 23, color: colors.muted }]}>
           {method === 'CASH'
             ? t('waitingPaymentCash', { amount })
             : t('waitingPaymentWallet', {
@@ -66,7 +65,7 @@ export function PaymentWaitView({ pickup, categories }: { pickup: Pickup; catego
   );
 }
 
-/** H8: amount received, receipt lines, star rating, "not paid" report. */
+/** H8 (v1 design `household/Receipt.dc.html`): amount received, receipt lines, star rating, "not paid" report. */
 export function ReceiptView({
   pickup,
   categories,
@@ -124,19 +123,17 @@ export function ReceiptView({
       }
     >
       <View style={s.hero}>
-        <View style={[s.badge, { backgroundColor: colors.money }]}>
-          <Icon name="check" size={38} color={colors.surface} />
-        </View>
-        <Text testID="received" style={[display(44, 800), { textAlign: 'center', lineHeight: 50 }]}>
+        <IconTile icon="check" tint={tones.doneBg} color={colors.money} size={64} />
+        <Text testID="received" style={[display(32), { textAlign: 'center', lineHeight: 40, color: colors.money }]}>
           {t('receivedAmount', { amount })}
         </Text>
-        <Text style={[body(16), { textAlign: 'center' }]}>
+        <Text style={[body(15), { textAlign: 'center' }]}>
           {pay?.method && pay.method !== 'CASH'
             ? t('paidToWallet', { method: t(`pay_${pay.method}`), number: pay.walletNumber ? localPhone(pay.walletNumber, lang) : '' })
             : t('paidByCash')}
         </Text>
-        {pay?.trxId ? <Text style={[body(14), { color: colors.muted }]}>{t('trxId', { trxId: pay.trxId })}</Text> : null}
-        {when ? <Text style={[body(14), { color: colors.muted }]}>{when}</Text> : null}
+        {pay?.trxId ? <Text style={[body(13), { color: colors.muted }]}>{t('trxId', { trxId: pay.trxId })}</Text> : null}
+        {when ? <Text style={[body(13), { color: colors.muted }]}>{when}</Text> : null}
       </View>
 
       {pay?.status === 'REPORTED' || pickup.openDispute?.type === 'PAYMENT' ? (
@@ -144,7 +141,7 @@ export function ReceiptView({
       ) : null}
 
       <Card style={{ paddingVertical: 14, gap: 10 }}>
-        <Text style={display(18)}>{t('receipt')}</Text>
+        <Text style={body(14, 600)}>{t('receipt')}</Text>
         {pickup.lines.map((l) => (
           <View key={l.categoryCode} style={s.rcptRow}>
             <Text style={body(15)}>{t('receiptLine', { name: categoryName(categories, l.categoryCode, lang), kg: formatKg(l.kg, lang) })}</Text>
@@ -152,14 +149,14 @@ export function ReceiptView({
           </View>
         ))}
         <View style={[s.rcptRow, s.rcptTotal]}>
-          <Text style={body(17, 700)}>{t('receiptTotal', { kg: formatKg(pickup.totalKg ?? 0, lang) })}</Text>
-          <Text style={[body(17, 700), { color: colors.money }]}>{amount}</Text>
+          <Text style={body(15, 600)}>{t('receiptTotal', { kg: formatKg(pickup.totalKg ?? 0, lang) })}</Text>
+          <Text style={[display(19), { color: colors.money }]}>{amount}</Text>
         </View>
-        <Text style={[body(14), { color: colors.muted }]}>{t('collectorLabel', { name })}</Text>
+        <Text style={[body(13), { color: colors.muted }]}>{t('collectorLabel', { name })}</Text>
       </Card>
 
-      <View style={{ alignItems: 'center', gap: 8 }}>
-        <Text style={display(19)}>{t('rateCollector', { name: firstName })}</Text>
+      <View style={s.rating}>
+        <Text style={body(15, 600)}>{t('rateCollector', { name: firstName })}</Text>
         <View style={{ flexDirection: 'row', gap: 4 }}>
           {[1, 2, 3, 4, 5].map((n) => (
             <Pressable
@@ -172,11 +169,11 @@ export function ReceiptView({
               onPress={() => rate(n)}
               style={s.star}
             >
-              <Icon name="star" size={32} color={n <= stars ? '#E0A800' : colors.ink} />
+              <Icon name="star" size={30} color={n <= stars ? '#E0A800' : tones.ring} />
             </Pressable>
           ))}
         </View>
-        {ratingNote ? <Text style={[body(15, 600), { color: colors.money }]}>{ratingNote}</Text> : null}
+        {ratingNote ? <Text style={[body(14, 600), { color: colors.money }]}>{ratingNote}</Text> : null}
       </View>
 
       {pay?.status === 'PAID' && !pickup.openDispute ? (
@@ -197,14 +194,12 @@ export function EndedView({ pickup, categories }: { pickup: Pickup; categories: 
     >
       <BackButton label={t('goHome')} />
       <View style={s.hero}>
-        <View style={[s.badge, { backgroundColor: colors.line }]}>
-          <Icon name={expired ? 'clock' : 'x'} size={34} />
-        </View>
-        <Text style={[display(28), { textAlign: 'center' }]}>{t(expired ? 'expiredTitle' : 'cancelledTitle')}</Text>
-        <Text style={[body(16), { textAlign: 'center', color: colors.muted }]}>{t(expired ? 'expiredBody' : 'cancelledBody')}</Text>
+        <IconTile icon={expired ? 'clock' : 'x'} tint={tones.cancelledBg} color={colors.muted} size={64} />
+        <Text style={[display(24), { textAlign: 'center' }]}>{t(expired ? 'expiredTitle' : 'cancelledTitle')}</Text>
+        <Text style={[body(15), { textAlign: 'center', color: colors.muted, lineHeight: 23 }]}>{t(expired ? 'expiredBody' : 'cancelledBody')}</Text>
       </View>
       <Card style={{ padding: 16, gap: 4 }}>
-        <Text style={body(16, 700)}>{pickup.categoryCodes.map((c) => categoryName(categories, c, lang)).join(', ')}</Text>
+        <Text style={body(15, 600)}>{pickup.categoryCodes.map((c) => categoryName(categories, c, lang)).join(', ')}</Text>
         <Text style={[body(14), { color: colors.muted }]}>
           {pickup.displayNo} · {formatDate(pickup.slotDate, lang)}
         </Text>
@@ -215,8 +210,8 @@ export function EndedView({ pickup, categories }: { pickup: Pickup; categories: 
 
 const s = StyleSheet.create({
   hero: { alignItems: 'center', gap: 10, paddingTop: 12 },
-  badge: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
   rcptRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-  rcptTotal: { paddingTop: 10, borderTopWidth: 2, borderTopColor: colors.ink },
+  rcptTotal: { paddingTop: 10, borderTopWidth: 1, borderStyle: 'dashed', borderTopColor: tones.ring },
+  rating: { alignItems: 'center', gap: 8, padding: 14, borderRadius: radius.md, backgroundColor: colors.surface, ...cardShadow },
   star: { width: minTouch, height: minTouch, alignItems: 'center', justifyContent: 'center' },
 });

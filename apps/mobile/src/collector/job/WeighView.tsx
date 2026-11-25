@@ -6,16 +6,16 @@ import type { Category, Pickup, Rate } from '../../api/types';
 import { useT } from '../../i18n/lang';
 import { categoryName } from '../../lib/format';
 import { TotalsLabelCard } from './parts';
-import { Button, Icon, Note, Screen } from '../../ui/components';
+import { Button, Icon, Note, Screen, Stepper } from '../../ui/components';
 import { errorMessage } from '../../ui/errors';
-import { body, colors, display, radius, tones } from '../../ui/theme';
+import { body, cardShadow, colors, display, radius, tones } from '../../ui/theme';
 import { takePhoto } from '../camera';
-import { NavyHeader } from '../ui';
+import { PageHeader } from '../ui';
 import { initialLines, parseKg, previewTotals, rateLookup, stepKg, toWeightLines, type DraftLine } from '../weigh';
 import { PhotoUploadError, useWeighDraft } from '../weighDraft';
 
 /**
- * C4 (first weigh, ARRIVED) and C10 (re-weigh after the household's first dispute). Kg steppers in 0.5 kg steps
+ * C4 (v1 design `collector/CWeigh.dc.html`, first weigh, ARRIVED) and C10 (`collector/CReweigh.dc.html`) (re-weigh after the household's first dispute). Kg steppers in 0.5 kg steps
  * with typed entry to 0.1 kg, a quote for inspection items, items found at the door, an optional scale photo,
  * and a live total that previews the server's sum. The round is kept on the phone and retried when offline.
  */
@@ -70,7 +70,7 @@ export function WeighView({
         <>
           {draft.queued ? <Note tone="warn" icon="wifi-off" text={t('weighQueued')} /> : null}
           {error ? (
-            <Text style={[body(15, 600), { color: colors.alert }]}>
+            <Text style={[body(14, 600), { color: colors.alert }]}>
               {error instanceof PhotoUploadError ? t('scalePhotoUploadFailed') : errorMessage(error, lang)}
             </Text>
           ) : null}
@@ -86,16 +86,16 @@ export function WeighView({
         </>
       }
     >
-      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.ink }}>
-        <NavyHeader back title={reweigh ? t('reweighTitle') : t('weighTitle')} sub={reweigh ? t('reweighSub') : t('weighSub')} />
+      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.ground }}>
+        <PageHeader back title={reweigh ? t('reweighTitle') : t('weighTitle')} sub={reweigh ? t('reweighSub') : t('weighSub')} />
       </SafeAreaView>
       <View style={s.body}>
         {reweigh && pickup.openDispute ? (
           <View style={s.dispute}>
             <Icon name="alert-circle" color={colors.alert} />
             <View style={{ flex: 1, gap: 4 }}>
-              <Text style={body(16, 700)}>{t('disputedBy', { name: pickup.household.name || t('customerFallback') })}</Text>
-              {pickup.openDispute.reason ? <Text style={[body(15), { color: colors.muted }]}>“{pickup.openDispute.reason}”</Text> : null}
+              <Text style={[body(14, 600), { color: colors.alert }]}>{t('disputedBy', { name: pickup.household.name || t('customerFallback') })}</Text>
+              {pickup.openDispute.reason ? <Text style={[body(14), { color: '#5C3A2A' }]}>“{pickup.openDispute.reason}”</Text> : null}
             </View>
           </View>
         ) : null}
@@ -108,38 +108,26 @@ export function WeighView({
           return (
             <View key={l.categoryCode} style={s.line} testID={`line-${l.categoryCode}`}>
               <View style={s.lineTop}>
-                <Text style={[body(17, 700), { flex: 1 }]}>{name}</Text>
-                <Text style={[body(14), { color: colors.muted }]}>{rateText(l.categoryCode)}</Text>
+                <Text style={[body(16, 600), { flex: 1 }]}>{name}</Text>
+                <Text style={[body(13), { color: colors.muted }]}>{rateText(l.categoryCode)}</Text>
                 {!listed ? (
                   <Pressable accessibilityRole="button" accessibilityLabel={t('removeItem', { item: name })} onPress={() => remove(i)} hitSlop={12} style={s.remove}>
                     <Icon name="trash-2" size={20} color={colors.alert} />
                   </Pressable>
                 ) : null}
               </View>
-              {reweigh && before ? <Text style={[body(14), { color: colors.muted }]}>{t('beforeKg', { kg: formatKg(before.kg, lang) })}</Text> : null}
+              {reweigh && before ? <Text style={[body(13), { color: colors.muted }]}>{t('beforeKg', { kg: formatKg(before.kg, lang) })}</Text> : null}
               <View style={s.lineBottom}>
-                <View style={s.stepper}>
-                  <Pressable
-                    testID={`dec-${l.categoryCode}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('kgDecrease', { item: name })}
-                    onPress={() => change(i, { kg: stepKg(l.kg, -1) })}
-                    style={[s.step, { backgroundColor: colors.surface }]}
-                  >
-                    <Icon name="minus" size={20} />
-                  </Pressable>
+                <Stepper
+                  onDecrease={() => change(i, { kg: stepKg(l.kg, -1) })}
+                  onIncrease={() => change(i, { kg: stepKg(l.kg, 1) })}
+                  decreaseLabel={t('kgDecrease', { item: name })}
+                  increaseLabel={t('kgIncrease', { item: name })}
+                  testIDs={{ decrease: `dec-${l.categoryCode}`, increase: `inc-${l.categoryCode}` }}
+                >
                   <KgInput kg={l.kg} label={t('kgInput', { item: name })} onChange={(kg) => change(i, { kg })} testID={`kg-${l.categoryCode}`} />
-                  <Pressable
-                    testID={`inc-${l.categoryCode}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('kgIncrease', { item: name })}
-                    onPress={() => change(i, { kg: stepKg(l.kg, 1) })}
-                    style={[s.step, { backgroundColor: colors.ink }]}
-                  >
-                    <Icon name="plus" size={20} color={colors.signal} />
-                  </Pressable>
-                </View>
-                <Text testID={`amount-${l.categoryCode}`} style={[display(20), { color: colors.money }]}>
+                </Stepper>
+                <Text testID={`amount-${l.categoryCode}`} style={display(17)}>
                   {formatTaka(preview.amounts[i], lang)}
                 </Text>
               </View>
@@ -165,7 +153,7 @@ export function WeighView({
         {addable.length > 0 ? (
           <Pressable testID="add-item" accessibilityRole="button" onPress={() => setPicking(true)} style={s.add}>
             <Icon name="plus" size={18} />
-            <Text style={body(15, 700)}>{t('addOtherItem')}</Text>
+            <Text style={body(15, 600)}>{t('addOtherItem')}</Text>
           </Pressable>
         ) : null}
 
@@ -181,10 +169,10 @@ export function WeighView({
           {draft.photo ? (
             <Image source={{ uri: draft.photo.uri }} style={s.thumb} accessibilityLabel={t('scalePhotoTaken')} />
           ) : (
-            <Icon name="camera" size={26} />
+            <Icon name="camera" size={22} />
           )}
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={body(16, 700)}>
+            <Text style={body(15, 600)}>
               {draft.photo ? t('scalePhotoTaken') : reweigh ? t('newScalePhoto') : t('takeScalePhoto')}
             </Text>
             <Text style={[body(13), { color: colors.muted }]}>
@@ -213,10 +201,10 @@ export function WeighView({
         {reweigh ? <Note tone="warn" icon="alert-triangle" text={t('reweighWarning')} /> : null}
       </View>
 
-      <Modal visible={picking} transparent animationType="slide" onRequestClose={() => setPicking(false)}>
+      <Modal visible={picking} transparent animationType="none" onRequestClose={() => setPicking(false)}>
         <Pressable style={s.backdrop} onPress={() => setPicking(false)} accessibilityRole="button" accessibilityLabel={t('close')} />
         <SafeAreaView edges={['bottom']} style={s.sheet}>
-          <Text style={display(21)}>{t('chooseItem')}</Text>
+          <Text style={display(20)}>{t('chooseItem')}</Text>
           {addable.map((code) => (
             <Button
               key={code}
@@ -263,23 +251,21 @@ function KgInput({ kg, label, onChange, testID }: { kg: number; label: string; o
 
 const s = StyleSheet.create({
   body: { padding: 20, gap: 12 },
-  dispute: { flexDirection: 'row', gap: 12, padding: 14, borderRadius: radius.md, backgroundColor: '#F6E3DA' },
-  line: { backgroundColor: colors.surface, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
+  dispute: { flexDirection: 'row', gap: 12, padding: 14, borderRadius: radius.md, backgroundColor: tones.alertBg, borderWidth: 1, borderColor: tones.alertLine },
+  line: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, gap: 10, ...cardShadow },
   lineTop: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
   remove: { minWidth: 32, alignItems: 'center' },
   lineBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  step: { width: 48, height: 48, borderRadius: 12, borderWidth: 2, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  kg: { minWidth: 96, minHeight: 48, textAlign: 'center', ...display(24) },
-  quote: { minHeight: 52, borderWidth: 2, borderColor: colors.line, borderRadius: 12, paddingHorizontal: 12, ...body(16) },
+  kg: { minWidth: 96, minHeight: 48, textAlign: 'center', ...display(22) },
+  quote: { minHeight: 52, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.md, paddingHorizontal: 14, backgroundColor: colors.surface, ...body(16) },
   add: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     minHeight: 52,
-    borderRadius: 14,
-    borderWidth: 2,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
     borderColor: tones.dashed,
   },
@@ -290,12 +276,12 @@ const s = StyleSheet.create({
     minHeight: 64,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: tones.dashed,
   },
-  thumb: { width: 48, height: 48, borderRadius: 8 },
+  thumb: { width: 48, height: 48, borderRadius: radius.sm },
   backdrop: { flex: 1, backgroundColor: 'rgba(19,48,74,0.4)' },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 20, gap: 10 },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md, padding: 20, gap: 10 },
 });

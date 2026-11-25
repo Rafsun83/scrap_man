@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { ApiError } from '../../api/client';
 import { setCollectorLocation } from '../../realtime/socket';
@@ -72,7 +72,7 @@ describe('H6 tracking', () => {
   it('shows the pickup code in Bangla digits while ACCEPTED', async () => {
     await renderScreen(<TrackingView pickup={accepted} />);
     expect(screen.getByText('জসিম আসছেন')).toBeTruthy();
-    expect(screen.getByTestId('pickup-code').props.children).toBe('৪৮২১');
+    for (const d of ['৪', '৮', '২', '১']) expect(within(screen.getByTestId('pickup-code')).getByText(d)).toBeTruthy();
     expect(screen.getByText('কল করুন')).toBeTruthy();
   });
 

@@ -5,6 +5,7 @@ import { useT } from '../../i18n/lang';
 import { formatDate, relativeDay } from '../../lib/dhaka';
 import { categoryName } from '../../lib/format';
 import { Divider, Icon } from '../../ui/components';
+import { StatCard } from '../../ui/parts';
 import { body, colors, display } from '../../ui/theme';
 
 /** "আজ, সকাল ৯টা–১২টা" for a pickup's booked slot. */
@@ -31,10 +32,10 @@ export function WeighLines({ lines, categories }: { lines: PickupLine[]; categor
           {i > 0 ? <Divider /> : null}
           <View style={s.line}>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text style={body(16, 700)}>{categoryName(categories, l.categoryCode, lang)}</Text>
-              <Text style={[body(14), { color: colors.muted }]}>{lineDetail(l, lang, t)}</Text>
+              <Text style={body(15, 600)}>{categoryName(categories, l.categoryCode, lang)}</Text>
+              <Text style={[body(13), { color: colors.muted }]}>{lineDetail(l, lang, t)}</Text>
             </View>
-            <Text style={display(19)}>{formatTaka(l.amount, lang)}</Text>
+            <Text style={display(17)}>{formatTaka(l.amount, lang)}</Text>
           </View>
         </View>
       ))}
@@ -52,21 +53,13 @@ export function lineDetail(
     : t('lineKgRate', { kg: formatKg(l.kg, lang), rate: formatTaka(l.rate, lang) });
 }
 
-/** Big navy totals card: total kg and amount. */
+/** Two white totals cards: total kg, and the amount in money green. */
 export function TotalsCard({ totalKg, totalAmount }: { totalKg: number; totalAmount: number }) {
   const { t, lang } = useT();
   return (
     <View style={s.totals} accessibilityLabel={t('totals')}>
-      <View style={{ flex: 1, gap: 4 }}>
-        <Text style={[body(14), { color: '#D3DCE5' }]}>{t('totalWeight')}</Text>
-        <Text style={[display(32, 800), { color: colors.signal }]}>{formatKg(totalKg, lang)}</Text>
-      </View>
-      <View style={{ flex: 1, gap: 4, alignItems: 'flex-end' }}>
-        <Text style={[body(14), { color: '#D3DCE5' }]}>{t('youGet')}</Text>
-        <Text testID="total-amount" style={[display(32, 800), { color: colors.signal }]}>
-          {formatTaka(totalAmount, lang)}
-        </Text>
-      </View>
+      <StatCard label={t('totalWeight')} value={formatKg(totalKg, lang)} />
+      <StatCard label={t('youGet')} value={formatTaka(totalAmount, lang)} tone="money" testID="total-amount" />
     </View>
   );
 }
@@ -74,9 +67,9 @@ export function TotalsCard({ totalKg, totalAmount }: { totalKg: number; totalAmo
 /** A row with an icon and text (request summary on H5). */
 export function InfoRow({ icon, text, last }: { icon: 'package' | 'clock' | 'map-pin'; text: string; last?: boolean }) {
   return (
-    <View style={[s.info, !last && { borderBottomWidth: 1, borderBottomColor: colors.line }]}>
-      <Icon name={icon} size={20} />
-      <Text style={[body(15, 600), { flex: 1 }]}>{text}</Text>
+    <View style={[s.info, !last && { borderBottomWidth: 1, borderBottomColor: colors.divider }]}>
+      <Icon name={icon} size={20} color={colors.muted} />
+      <Text style={[body(15), { flex: 1 }]}>{text}</Text>
     </View>
   );
 }
@@ -87,6 +80,6 @@ export function digits(n: number, lang: Lang) {
 
 const s = StyleSheet.create({
   line: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  totals: { flexDirection: 'row', gap: 12, backgroundColor: colors.ink, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 16 },
-  info: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  totals: { flexDirection: 'row', gap: 10 },
+  info: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
 });
