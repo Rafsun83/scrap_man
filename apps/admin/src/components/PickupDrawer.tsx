@@ -4,7 +4,7 @@ import { useCancelPickup, useCategories, usePickup, usePickupEvents } from '../a
 import { categoryName, formatDate, formatPhone, formatWhen, kg, localDigits, money } from '../lib/format'
 import { useT } from '../lib/i18n'
 import { eventLabel } from '../lib/timeline'
-import { Button, Drawer, ErrorBox, Loading, StatusBadge } from './ui'
+import { Banner, Button, Drawer, ErrorBox, Loading, StatusBadge } from './ui'
 import { errorMessage } from '../lib/errors'
 
 const ACTIVE = new Set(['REQUESTED', 'ACCEPTED', 'ARRIVED', 'WEIGHED', 'DISPUTED', 'CONFIRMED'])
@@ -36,16 +36,17 @@ export function PickupDrawer({ pickupId, onClose }: { pickupId: string; onClose:
             {t('cancelReason')}
             <textarea value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} />
           </label>
-          {cancel.error ? <p className="alert" role="alert">{errorMessage(cancel.error, lang)}</p> : null}
+          {cancel.error ? <Banner tone="alert" role="alert">{errorMessage(cancel.error, lang)}</Banner> : null}
           <Button
             variant="danger"
+            icon="x"
             busy={cancel.isPending}
             disabled={reason.trim().length === 0}
             onClick={() => {
               if (window.confirm(t('cancelConfirm', { no: pickup.data!.displayNo }))) cancel.mutate({ id: pickupId, reason: reason.trim() })
             }}
           >
-            ✕ {t('cancelPickup')}
+            {t('cancelPickup')}
           </Button>
         </section>
       ) : null}
@@ -78,7 +79,7 @@ function PickupDetail({ p, categories: cats }: { p: Pickup; categories: Category
   const items = p.categoryCodes.map((c) => categoryName(cats, c, lang)).join(', ')
   return (
     <>
-      {p.codeLocked ? <div className="banner alert">{t('codeLockedNote')}</div> : null}
+      {p.codeLocked ? <Banner tone="alert">{t('codeLockedNote')}</Banner> : null}
       <section className="panel">
         <dl className="kv">
           <dt>{t('colStatus')}</dt>
@@ -86,14 +87,14 @@ function PickupDetail({ p, categories: cats }: { p: Pickup; categories: Category
           <dt>{t('colHousehold')}</dt>
           <dd>
             {p.household.name ?? t('unnamed')} · {formatPhone(p.household.phone, lang)}{' '}
-            {p.household.phone ? <a href={`tel:${p.household.phone}`}>☎ {t('call')}</a> : null}
+            {p.household.phone ? <a href={`tel:${p.household.phone}`}>{t('call')}</a> : null}
           </dd>
           <dt>{t('colCollector')}</dt>
           <dd>
             {p.collector ? (
               <>
                 {p.collector.name ?? t('unnamed')} · {formatPhone(p.collector.phone, lang)}{' '}
-                {p.collector.phone ? <a href={`tel:${p.collector.phone}`}>☎ {t('call')}</a> : null}
+                {p.collector.phone ? <a href={`tel:${p.collector.phone}`}>{t('call')}</a> : null}
               </>
             ) : (
               t('notYet')
@@ -167,8 +168,8 @@ export function WeighRoundsTable({ p, categories }: { p: Pickup; categories: Cat
   const { t, lang } = useT()
   const codes = [...new Set(p.weighRounds.flatMap((r) => r.lines.map((l) => l.categoryCode)))]
   return (
-    <div className="table-wrap">
-      <table>
+    <div className="framed">
+      <table style={{ minWidth: 420 }}>
         <thead>
           <tr>
             <th>{t('colItem')}</th>
@@ -193,11 +194,11 @@ export function WeighRoundsTable({ p, categories }: { p: Pickup; categories: Cat
               })}
             </tr>
           ))}
-          <tr>
-            <td><strong>{t('total')}</strong></td>
-            {p.weighRounds.map((r) => (
-              <td key={r.version} className="num">
-                <strong>{`${kg(r.totalKg, lang)}, ${money(r.totalAmount, lang)}`}</strong>
+          <tr className="total">
+            <td>{t('total')}</td>
+            {p.weighRounds.map((r, i) => (
+              <td key={r.version} className={`num ${i === p.weighRounds.length - 1 ? 'money' : ''}`}>
+                {`${kg(r.totalKg, lang)}, ${money(r.totalAmount, lang)}`}
               </td>
             ))}
           </tr>

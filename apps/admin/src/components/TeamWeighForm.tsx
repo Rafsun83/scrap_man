@@ -7,7 +7,7 @@ import { useT } from '../lib/i18n'
 import { categoryName } from '../lib/format'
 import { errorMessage } from '../lib/errors'
 import { teamLines } from '../lib/weights'
-import { Button } from './ui'
+import { Banner, Button } from './ui'
 
 /** After TEAM_REWEIGH: the team's weights, with an optional scale photo (POST /pickups/{id}/weights as admin). */
 export function TeamWeighForm({ pickup, categories }: { pickup: Pickup; categories: Category[] | undefined }) {
@@ -43,7 +43,7 @@ export function TeamWeighForm({ pickup, categories }: { pickup: Pickup; categori
       <p className="muted" style={{ margin: 0 }}>{t('teamWeighHint')}</p>
       {rows.map((r, i) => (
         <div key={r.code} className="row">
-          <span style={{ minWidth: 160 }}>{categoryName(categories, r.code, lang)}</span>
+          <span style={{ minWidth: 160, fontWeight: 600 }}>{categoryName(categories, r.code, lang)}</span>
           <input
             type="text"
             inputMode="decimal"
@@ -71,9 +71,9 @@ export function TeamWeighForm({ pickup, categories }: { pickup: Pickup; categori
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
       </label>
       {!lines ? <p className="muted" style={{ margin: 0 }}>{t('weightsIncomplete')}</p> : null}
-      {error ? <p className="alert" role="alert">{errorMessage(error, lang)}</p> : null}
-      <Button variant="primary" busy={uploading || save.isPending} disabled={!lines} onClick={() => void submit()}>
-        ✓ {t('saveWeights')}
+      {error ? <Banner tone="alert" role="alert">{errorMessage(error, lang)}</Banner> : null}
+      <Button variant="primary" icon="check" busy={uploading || save.isPending} disabled={!lines} onClick={() => void submit()}>
+        {t('saveWeights')}
       </Button>
     </section>
   )

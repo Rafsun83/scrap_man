@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import type { Category } from '../api/types';
 import { Icon, type IconName } from './components';
-import { body, borderWidth, cardShadow, colors, display, radius, tones } from './theme';
+import { body, borderWidth, cardShadow, colors, display, minTouch, radius, tones } from './theme';
 
 /*
  * Small v1 pieces shared by the household and collector screens (docs/version-1/design/README.md).
@@ -123,10 +123,11 @@ export function Toggle({ value, onChange, label, testID }: { value: boolean; onC
       accessibilityLabel={label}
       accessibilityState={{ checked: value }}
       onPress={() => onChange(!value)}
-      hitSlop={10}
-      style={[s.toggle, { backgroundColor: value ? colors.money : tones.ring, justifyContent: value ? 'flex-end' : 'flex-start' }]}
+      style={s.toggleTarget}
     >
-      <View style={s.knob} />
+      <View testID={testID ? `${testID}-track` : undefined} style={[s.toggle, { backgroundColor: value ? colors.money : tones.ring, justifyContent: value ? 'flex-end' : 'flex-start' }]}>
+        <View style={s.knob} />
+      </View>
     </Pressable>
   );
 }
@@ -153,6 +154,7 @@ const s = StyleSheet.create({
   fill: { height: '100%', borderRadius: radius.sm, backgroundColor: colors.ink },
   select: { borderRadius: radius.md, borderWidth, backgroundColor: colors.surface },
   stat: { flex: 1, gap: 2, padding: 14, borderRadius: radius.md, backgroundColor: colors.surface, ...cardShadow },
+  toggleTarget: { minWidth: minTouch, minHeight: minTouch, alignItems: 'center', justifyContent: 'center' },
   toggle: { width: 50, height: 30, borderRadius: radius.md, padding: 4, flexDirection: 'row' },
   knob: { width: 22, height: 22, borderRadius: radius.sm, backgroundColor: colors.surface },
   dashed: {

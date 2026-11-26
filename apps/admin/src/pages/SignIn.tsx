@@ -59,7 +59,7 @@ export function SignIn() {
       <div className="panel">
         <div className="row">
           <BrandMark />
-          <h1 style={{ fontSize: 24 }}>{t('signInTitle')}</h1>
+          <h1 style={{ fontSize: 22 }}>{t('signInTitle')}</h1>
         </div>
         {phone === null ? (
           <form className="stack" onSubmit={sendCode}>
@@ -67,8 +67,8 @@ export function SignIn() {
               {t('phoneLabel')}
               <input type="tel" value={phoneText} onChange={(e) => setPhoneText(e.target.value)} autoComplete="tel" placeholder="01700000000" autoFocus />
             </label>
-            <Button variant="primary" type="submit" busy={busy}>
-              ✉ {t('sendCode')}
+            <Button variant="primary" type="submit" icon="send" busy={busy}>
+              {t('sendCode')}
             </Button>
           </form>
         ) : (
@@ -78,17 +78,17 @@ export function SignIn() {
               {t('codeLabel')}
               <input type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} autoFocus />
             </label>
-            <Button variant="primary" type="submit" busy={busy} disabled={code.length !== 6}>
-              → {t('verify')}
+            <Button variant="primary" type="submit" icon="arrowRight" busy={busy} disabled={code.length !== 6}>
+              {t('verify')}
             </Button>
-            <Button variant="link" onClick={() => { setPhone(null); setCode(''); setError(null) }}>
-              ← {t('changeNumber')}
+            <Button variant="link" icon="arrowLeft" onClick={() => { setPhone(null); setCode(''); setError(null) }}>
+              {t('changeNumber')}
             </Button>
           </form>
         )}
-        {error ? <p className="alert" role="alert" style={{ margin: 0 }}>{error}</p> : null}
-        <Button small onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}>
-          ⇄ {t('langToggle')}
+        {error ? <p className="alert" role="alert" style={{ margin: 0, fontSize: 14 }}>{error}</p> : null}
+        <Button small icon="globe" onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}>
+          {t('langToggle')}
         </Button>
       </div>
     </div>

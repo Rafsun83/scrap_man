@@ -34,9 +34,6 @@ export const strings = {
   bn: {
     appName: 'ভাঙ্গারিওয়ালা',
     tagline: 'ন্যায্য দর, সঠিক ওজন',
-    serverOk: 'সার্ভারের সাথে সংযোগ আছে',
-    serverDown: 'সার্ভারে সংযোগ হচ্ছে না',
-    checking: 'যাচাই করা হচ্ছে…',
 
     // Common
     back: 'পেছনে যান',
@@ -50,18 +47,13 @@ export const strings = {
     close: 'বন্ধ করুন',
     next: 'পরবর্তী',
     submit: 'জমা দিন',
-    edit: 'সম্পাদনা',
     delete: 'মুছে ফেলুন',
-    optional: '(ঐচ্ছিক)',
     langBn: 'বাংলা',
     langEn: 'English',
     langSwitch: 'English',
 
     // H1 sign in
     signInPitch: 'পুরোনো লোহা, কাগজ, প্লাস্টিক বিক্রি করুন বাসায় বসেই।',
-    signInPoint1: 'আজকের ন্যায্য দর আগেই জানুন',
-    signInPoint2: 'আপনার সামনে ওজন, অ্যাপে হিসাব',
-    signInPoint3: 'ক্যাশ, বিকাশ বা নগদে সাথে সাথে টাকা',
     roleQuestion: 'আপনি কীভাবে ব্যবহার করবেন?',
     roleHousehold: 'জিনিস বিক্রি করব',
     roleCollector: 'আমি সংগ্রাহক',
@@ -94,7 +86,6 @@ export const strings = {
     tabSell: 'বিক্রি',
     tabHistory: 'ইতিহাস',
     tabProfile: 'প্রোফাইল',
-    mainMenu: 'প্রধান মেনু',
 
     // H2 home
     greetMorning: 'শুভ সকাল',
@@ -106,11 +97,9 @@ export const strings = {
     noAddressYet: 'ঠিকানা যোগ করুন',
     todaysRates: 'আজকের দর',
     perKgTaka: 'প্রতি কেজি, টাকায়',
-    seeAllRates: 'সব দর দেখুন',
     ratesNotPublished: 'আজকের দর এখনো প্রকাশ হয়নি। একটু পরে আবার দেখুন।',
     onInspection: 'দেখে দর',
     sellScrap: 'ভাঙ্গারি বিক্রি করুন',
-    sellScrapSub: 'সংগ্রাহক বাসায় এসে নিয়ে যাবেন',
     recentSales: 'সাম্প্রতিক বিক্রি',
     noRecentSales: 'এখনো কোনো বিক্রি হয়নি। প্রথম অনুরোধটি পাঠান।',
     activePickup: 'চলতি পিকআপ',
@@ -297,7 +286,6 @@ export const strings = {
     emptyDone: 'এখনো কোনো বিক্রি সম্পন্ন হয়নি',
     emptyCancelled: 'কোনো বাতিল অনুরোধ নেই',
     emptyHint: 'বাসায় পুরোনো জিনিস জমলে একটি অনুরোধ পাঠান।',
-    loadMore: 'আরও দেখুন',
     status_REQUESTED: 'খোঁজা হচ্ছে',
     status_ACCEPTED: 'আসছেন',
     status_ARRIVED: 'পৌঁছেছেন',
@@ -548,6 +536,7 @@ export const strings = {
     byMethod_NAGAD: 'নগদে {amount}',
     paymentsTitle: 'পরিশোধের তালিকা',
     paymentMeta: '{time}, {method}',
+    loadMore: 'আরও দেখুন',
     paymentMetaTrx: '{time}, {method}, TrxID {trx}',
     ledgerEmpty: 'এই সময়ে কোনো পরিশোধ নেই',
     ratingFromCustomers: 'গ্রাহকদের রেটিং',
@@ -570,7 +559,6 @@ export const strings = {
     collectorAgreement: 'সংগ্রাহক চুক্তি ও নিয়ম',
     releases30d: 'ছেড়ে দেওয়া অনুরোধ, গত ৩০ দিন: {count}',
     editWorkTitle: 'কাজের তথ্য বদলান',
-    saved: 'সংরক্ষণ হয়েছে',
 
     // Push notifications (M6; written on the server)
     push_title: 'ভাঙ্গারিওয়ালা',
@@ -621,9 +609,6 @@ export const strings = {
   en: {
     appName: 'BhangariWala',
     tagline: 'Fair rates, honest weight',
-    serverOk: 'Connected to the server',
-    serverDown: 'Cannot reach the server',
-    checking: 'Checking…',
 
     back: 'Go back',
     goHome: 'Back to home',
@@ -636,17 +621,12 @@ export const strings = {
     close: 'Close',
     next: 'Next',
     submit: 'Submit',
-    edit: 'Edit',
     delete: 'Delete',
-    optional: '(optional)',
     langBn: 'বাংলা',
     langEn: 'English',
     langSwitch: 'বাংলা',
 
     signInPitch: 'Sell old iron, paper and plastic without leaving home.',
-    signInPoint1: "Know today's fair rate up front",
-    signInPoint2: 'Weighed in front of you, totalled in the app',
-    signInPoint3: 'Paid on the spot by cash, bKash or Nagad',
     roleQuestion: 'How will you use the app?',
     roleHousehold: 'I want to sell',
     roleCollector: "I'm a collector",
@@ -677,7 +657,6 @@ export const strings = {
     tabSell: 'Sell',
     tabHistory: 'History',
     tabProfile: 'Profile',
-    mainMenu: 'Main menu',
 
     greetMorning: 'Good morning',
     greetNoon: 'Good afternoon',
@@ -688,11 +667,9 @@ export const strings = {
     noAddressYet: 'Add an address',
     todaysRates: "Today's rates",
     perKgTaka: 'Per kg, in taka',
-    seeAllRates: 'See all rates',
     ratesNotPublished: "Today's rates aren't published yet. Check again a little later.",
     onInspection: 'On inspection',
     sellScrap: 'Sell scrap',
-    sellScrapSub: 'A collector comes to your door',
     recentSales: 'Recent sales',
     noRecentSales: 'No sales yet. Send your first request.',
     activePickup: 'Pickup in progress',
@@ -870,7 +847,6 @@ export const strings = {
     emptyDone: 'No completed sales yet',
     emptyCancelled: 'No cancelled requests',
     emptyHint: 'When scrap piles up at home, send a request.',
-    loadMore: 'Load more',
     status_REQUESTED: 'Searching',
     status_ACCEPTED: 'On the way',
     status_ARRIVED: 'Arrived',
@@ -1116,6 +1092,7 @@ export const strings = {
     byMethod_NAGAD: 'Nagad {amount}',
     paymentsTitle: 'Payments',
     paymentMeta: '{time}, {method}',
+    loadMore: 'Load more',
     paymentMetaTrx: '{time}, {method}, TrxID {trx}',
     ledgerEmpty: 'No payments in this period',
     ratingFromCustomers: 'Rating from customers',
@@ -1138,7 +1115,6 @@ export const strings = {
     collectorAgreement: 'Collector agreement and rules',
     releases30d: 'Requests given back, last 30 days: {count}',
     editWorkTitle: 'Change work details',
-    saved: 'Saved',
 
     // Push notifications (M6; written on the server)
     push_title: 'BhangariWala',

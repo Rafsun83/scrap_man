@@ -1,9 +1,11 @@
+import { PageHead } from '../components/PageHead'
 import { ADMIN_ATTENTION, localDigits, USER_STATUSES, type AdminUserRow } from '@bw/shared'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { usePickups, useSetUserStatus, useUsers, type UserStatus } from '../api/hooks'
 import { PickupDrawer } from '../components/PickupDrawer'
-import { Button, Drawer, Empty, ErrorBox, Loading, StatusBadge } from '../components/ui'
+import { Icon } from '../components/Icon'
+import { Banner, Button, Drawer, Empty, ErrorBox, Loading, StatusBadge } from '../components/ui'
 import { errorMessage } from '../lib/errors'
 import { formatDate, formatPhone, formatWhen, money, workAreaNames } from '../lib/format'
 import { useT } from '../lib/i18n'
@@ -30,19 +32,21 @@ export function UsersPage() {
 
   return (
     <>
-      <div className="page-head">
-        <h1>{t('navUsers')}</h1>
-        <span className="spacer" />
-        <input type="search" aria-label={t('searchUsers')} placeholder={t('searchUsers')} value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 260 }} />
-      </div>
-      <div className="chips" role="group">
+      <PageHead title={t('navUsers')}>
+        <label className="search">
+          <span className="sr-only">{t('searchUsers')}</span>
+          <Icon name="search" />
+          <input type="search" placeholder={t('searchUsers')} value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 280 }} />
+        </label>
+      </PageHead>
+      <div className="tabs" role="group">
         {(['HOUSEHOLD', 'COLLECTOR'] as const).map((r) => (
-          <button key={r} type="button" className="chip" aria-pressed={role === r} onClick={() => setRole(r)}>
+          <button key={r} type="button" className="tab" aria-pressed={role === r} onClick={() => setRole(r)}>
             {t(r === 'HOUSEHOLD' ? 'tabHouseholds' : 'tabCollectors')}
           </button>
         ))}
       </div>
-      <section className="panel">
+      <section className="card">
         {users.isPending ? (
           <Loading />
         ) : users.isError ? (
@@ -51,7 +55,7 @@ export function UsersPage() {
           <Empty text={t('noUsers')} />
         ) : (
           <div className="table-wrap">
-            <table>
+            <table className="xwide">
               <thead>
                 {role === 'HOUSEHOLD' ? (
                   <tr>
@@ -63,7 +67,7 @@ export function UsersPage() {
                     <th className="num">{t('colNoShows30')}</th>
                     <th>{t('colJoined')}</th>
                     <th>{t('colStatus')}</th>
-                    <th>{t('colActions')}</th>
+                    <th className="num">{t('colActions')}</th>
                   </tr>
                 ) : (
                   <tr>
@@ -74,22 +78,22 @@ export function UsersPage() {
                     <th className="num">{t('colPickups30')}</th>
                     <th className="num">{t('colReleases30')}</th>
                     <th>{t('colStatus')}</th>
-                    <th>{t('colActions')}</th>
+                    <th className="num">{t('colActions')}</th>
                   </tr>
                 )}
               </thead>
               <tbody>
                 {rows.map((u) => (
                   <tr key={u.id} className={u.releaseFlag ? 'flagged' : undefined} data-testid={`user-${u.id}`}>
-                    <td>{u.name ?? <span className="muted">{t('unnamed')}</span>}</td>
-                    <td>{formatPhone(u.phone, lang)}</td>
+                    <td className="strong">{u.name ?? <span className="muted">{t('unnamed')}</span>}</td>
+                    <td className="muted nowrap">{formatPhone(u.phone, lang)}</td>
                     {role === 'HOUSEHOLD' ? (
                       <>
                         <td>{u.household?.area ?? '—'}</td>
                         <td className="num">{localDigits(u.household?.completedCount ?? 0, lang)}</td>
-                        <td className="num">{money(u.household?.totalReceived ?? 0, lang)}</td>
+                        <td className="num strong money">{money(u.household?.totalReceived ?? 0, lang)}</td>
                         <td className="num">{localDigits(u.household?.noShows30d ?? 0, lang)}</td>
-                        <td>{formatDate(u.createdAt, lang)}</td>
+                        <td className="muted nowrap">{formatDate(u.createdAt, lang)}</td>
                       </>
                     ) : u.collector ? (
                       <>
@@ -97,8 +101,14 @@ export function UsersPage() {
                         <td className="num">{u.collector.ratingAvg != null ? localDigits(u.collector.ratingAvg.toFixed(1), lang) : t('noRating')}</td>
                         <td className="num">{localDigits(u.collector.pickups30d, lang)}</td>
                         <td className="num">
-                          {localDigits(u.collector.releases30d, lang)}
-                          {u.releaseFlag ? <> <span className="badge alert">{t('releaseFlag')}</span></> : null}
+                          {u.releaseFlag ? (
+                            <span className="badge alert" title={t('releaseFlag')} style={{ fontSize: 13, fontWeight: 700 }}>
+                              {localDigits(u.collector.releases30d, lang)}
+                              <span className="sr-only"> ({t('releaseFlag')})</span>
+                            </span>
+                          ) : (
+                            localDigits(u.collector.releases30d, lang)
+                          )}
                         </td>
                       </>
                     ) : (
@@ -107,9 +117,9 @@ export function UsersPage() {
                     <td>
                       <span className={`badge ${STATUS_TONE[u.status]}`}>{t(`ustatus_${u.status}`)}</span>
                     </td>
-                    <td>
-                      <Button small onClick={() => setViewing(u)}>
-                        → {t('view')}
+                    <td className="num">
+                      <Button small variant="link" icon="arrowRight" onClick={() => setViewing(u)}>
+                        {t('view')}
                       </Button>
                     </td>
                   </tr>
@@ -119,14 +129,14 @@ export function UsersPage() {
           </div>
         )}
         {users.hasNextPage ? (
-          <Button busy={users.isFetchingNextPage} onClick={() => void users.fetchNextPage()}>
-            ↓ {t('showMore')}
-          </Button>
-        ) : null}
-        {role === 'COLLECTOR' ? (
-          <p className="muted" style={{ margin: 0 }}>{t('releasesNote', { count: localDigits(ADMIN_ATTENTION.maxReleases30d, lang) })}</p>
+          <div className="card-foot">
+            <Button icon="arrowDown" busy={users.isFetchingNextPage} onClick={() => void users.fetchNextPage()}>
+              {t('showMore')}
+            </Button>
+          </div>
         ) : null}
       </section>
+      {role === 'COLLECTOR' ? <p className="note">{t('releasesNote', { count: localDigits(ADMIN_ATTENTION.maxReleases30d, lang) })}</p> : null}
       {viewing ? <UserDrawer user={viewing} onClose={() => setViewing(null)} /> : null}
     </>
   )
@@ -152,7 +162,7 @@ export function UserDrawer({ user, onClose }: { user: AdminUserRow; onClose: () 
         <dl className="kv">
           <dt>{t('colPhone')}</dt>
           <dd>
-            {formatPhone(user.phone, lang)} <a href={`tel:${user.phone}`}>☎ {t('call')}</a>
+            {formatPhone(user.phone, lang)} <a href={`tel:${user.phone}`}>{t('call')}</a>
           </dd>
           <dt>{t('colJoined')}</dt>
           <dd>{formatDate(user.createdAt, lang)}</dd>
@@ -172,25 +182,25 @@ export function UserDrawer({ user, onClose }: { user: AdminUserRow; onClose: () 
 
       <section className="panel">
         <h3>{t('changeStatus')}</h3>
-        <div className="chips" role="radiogroup">
+        <div className="tabs" role="radiogroup">
           {USER_STATUSES.map((s) => (
-            <button key={s} type="button" className="chip" role="radio" aria-checked={status === s} aria-pressed={status === s} onClick={() => setStatusValue(s)}>
+            <button key={s} type="button" className="tab" role="radio" aria-checked={status === s} aria-pressed={status === s} onClick={() => setStatusValue(s)}>
               {t(`ustatus_${s}`)}
             </button>
           ))}
         </div>
-        {status === 'SUSPENDED' ? <div className="banner warn">{t('suspendWarning')}</div> : null}
+        {status === 'SUSPENDED' ? <Banner tone="warn">{t('suspendWarning')}</Banner> : null}
         {status === 'SUSPENDED' && user.role === 'COLLECTOR' && activeCount > 0 ? (
-          <div className="banner alert">{t('activeJobsWarning', { count: localDigits(activeCount, lang) })}</div>
+          <Banner tone="alert">{t('activeJobsWarning', { count: localDigits(activeCount, lang) })}</Banner>
         ) : null}
         <label className="field">
           {t('statusNote')}
           <textarea value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
         </label>
-        {setStatus.error ? <p className="alert" role="alert">{errorMessage(setStatus.error, lang)}</p> : null}
-        {setStatus.isSuccess ? <div className="banner ok" role="status">{t('statusSaved')}</div> : null}
-        <Button variant="primary" busy={setStatus.isPending} onClick={() => setStatus.mutate({ userId: user.id, status, note: note.trim() || undefined })}>
-          ✓ {t('saveStatus')}
+        {setStatus.error ? <Banner tone="alert" role="alert">{errorMessage(setStatus.error, lang)}</Banner> : null}
+        {setStatus.isSuccess ? <Banner tone="ok" role="status">{t('statusSaved')}</Banner> : null}
+        <Button variant="primary" icon="check" busy={setStatus.isPending} onClick={() => setStatus.mutate({ userId: user.id, status, note: note.trim() || undefined })}>
+          {t('saveStatus')}
         </Button>
       </section>
 

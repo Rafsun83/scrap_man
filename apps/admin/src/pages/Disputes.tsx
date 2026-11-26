@@ -1,10 +1,12 @@
+import { PageHead } from '../components/PageHead'
 import { DISPUTE_TYPES, t as tApp, type AdminDispute, type Category } from '@bw/shared'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useCategories, useDisputes, usePickup, usePickupEvents, useResolveDispute, type DisputeOutcome, type DisputeType } from '../api/hooks'
 import { WeighRoundsTable } from '../components/PickupDrawer'
 import { TeamWeighForm } from '../components/TeamWeighForm'
-import { Button, Empty, ErrorBox, Loading, StatusBadge } from '../components/ui'
+import { Icon } from '../components/Icon'
+import { Banner, Button, Empty, ErrorBox, Loading, StatusBadge } from '../components/ui'
 import { errorMessage } from '../lib/errors'
 import { formatPhone, formatWhen, localDigits, money } from '../lib/format'
 import { isOpen, needsTeamWeigh, outcomesFor } from '../lib/disputes'
@@ -25,16 +27,11 @@ export function DisputesPage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>{t('navDisputes')}</h1>
-          <p className="muted">{t('disputesSub')}</p>
-        </div>
-      </div>
+      <PageHead title={t('navDisputes')} sub={t('disputesSub')} />
       <div className="row">
-        <div className="chips" role="group">
+        <div className="tabs" role="group">
           {(['OPEN', 'RESOLVED'] as const).map((x) => (
-            <button key={x} type="button" className="chip" aria-pressed={tab === x} onClick={() => setTab(x)}>
+            <button key={x} type="button" className="tab" aria-pressed={tab === x} onClick={() => setTab(x)}>
               {t(x === 'OPEN' ? 'tabOpen' : 'tabResolved')}
             </button>
           ))}
@@ -52,17 +49,26 @@ export function DisputesPage() {
       ) : all.isError ? (
         <ErrorBox error={all.error} onRetry={() => void all.refetch()} />
       ) : list.length === 0 ? (
-        <Empty text={t('noDisputes')} />
+        <section className="panel">
+          <Empty text={t('noDisputes')} />
+        </section>
       ) : (
         <div className="split">
-          <section className="list">
+          <section className="list" aria-label={t('navDisputes')}>
+            <div className="list-head">
+              {t(tab === 'OPEN' ? 'tabOpen' : 'tabResolved')} · {localDigits(list.length, lang)}
+            </div>
             {list.map((d) => (
-              <button key={d.id} type="button" className="list-item" aria-current={selected?.id === d.id} onClick={() => select(d)}>
-                <strong>{`${d.displayNo}: ${t(`dtype_${d.type}`)}`}</strong>
-                <span className="muted">{t('parties', { household: d.householdName ?? t('unnamed'), area: d.area, collector: d.collectorName ?? t('unnamed') })}</span>
-                <span className="row" style={{ gap: 6 }}>
-                  <span className={`badge ${d.status === 'RESOLVED' ? 'done' : d.status === 'ADMIN_REVIEW' ? 'alert' : 'active'}`}>{t(`dstatus_${d.status}`)}</span>
-                  <span className="muted">{t('openedAt', { time: formatWhen(d.createdAt, lang) })}</span>
+              <button key={d.id} type="button" className="list-item" aria-current={selected?.id === d.id} onClick={() => select(d)} style={{ minHeight: 64 }}>
+                <span className="body">
+                  <span className="title">
+                    {d.displayNo}
+                    <span className={`badge ${d.type === 'WEIGHT' ? 'alert' : 'active'}`}>{t(`dtype_${d.type}`)}</span>
+                  </span>
+                  <span className="meta">{t('parties', { household: d.householdName ?? t('unnamed'), area: d.area, collector: d.collectorName ?? t('unnamed') })}</span>
+                  <span className="meta">
+                    {t(`dstatus_${d.status}`)} · {t('openedAt', { time: formatWhen(d.createdAt, lang) })}
+                  </span>
                 </span>
               </button>
             ))}
@@ -83,8 +89,8 @@ function DisputeDetail({ d, all }: { d: AdminDispute; all: AdminDispute[] }) {
   const [outcome, setOutcome] = useState<DisputeOutcome | null>(null)
   const [note, setNote] = useState('')
 
-  if (pickup.isPending) return <Loading />
-  if (pickup.isError) return <ErrorBox error={pickup.error} onRetry={() => void pickup.refetch()} />
+  if (pickup.isPending) return <section className="panel detail"><Loading /></section>
+  if (pickup.isError) return <section className="panel detail"><ErrorBox error={pickup.error} onRetry={() => void pickup.refetch()} /></section>
   const p = pickup.data
   const lastWeight = all.filter((x) => x.pickupId === d.pickupId && x.type === 'WEIGHT').sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
   const teamWeigh = needsTeamWeigh(p, lastWeight?.outcome ?? null)
@@ -92,96 +98,112 @@ function DisputeDetail({ d, all }: { d: AdminDispute; all: AdminDispute[] }) {
   const scales = p.photos.filter((ph) => ph.kind === 'SCALE')
 
   return (
-    <div className="stack">
-      <section className="panel">
-        <div className="row">
-          <h2>{`${d.displayNo}: ${t(`dtype_${d.type}`)}`}</h2>
-          <StatusBadge status={p.status} />
+    <div className="detail stack" style={{ gap: 20 }}>
+      <section className="panel" style={{ padding: 24, gap: 20 }}>
+        <div className="detail-head">
+          <div className="titles">
+            <h2 className="row" style={{ gap: 10 }}>
+              {`${d.displayNo}: ${t(`dtype_${d.type}`)}`}
+              <StatusBadge status={p.status} />
+            </h2>
+            <span>{t('parties', { household: d.householdName ?? t('unnamed'), area: d.area, collector: d.collectorName ?? t('unnamed') })}</span>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            {p.household.phone ? (
+              <a className="btn small" href={`tel:${p.household.phone}`} title={formatPhone(p.household.phone, lang)}>
+                <Icon name="phone" />
+                {t('callHousehold')}
+              </a>
+            ) : null}
+            {p.collector?.phone ? (
+              <a className="btn small" href={`tel:${p.collector.phone}`} title={formatPhone(p.collector.phone, lang)}>
+                <Icon name="phone" />
+                {t('callCollector')}
+              </a>
+            ) : null}
+          </div>
         </div>
-        <p className="muted" style={{ margin: 0 }}>
-          {t('parties', { household: d.householdName ?? t('unnamed'), area: d.area, collector: d.collectorName ?? t('unnamed') })}
-        </p>
-        <div className="row">
-          {p.household.phone ? <a className="btn small" href={`tel:${p.household.phone}`}>☎ {t('callHousehold')} · {formatPhone(p.household.phone, lang)}</a> : null}
-          {p.collector?.phone ? <a className="btn small" href={`tel:${p.collector.phone}`}>☎ {t('callCollector')} · {formatPhone(p.collector.phone, lang)}</a> : null}
-        </div>
-        <div>
-          <strong>{t('householdReason')}: </strong>
-          {d.reason ? <q>{d.reason}</q> : <span className="muted">{t('noReason')}</span>}
-        </div>
-        {evidence.length > 0 ? (
-          <>
-            <strong>{t('householdPhotos')}</strong>
-            <div className="photos">
+
+        <div className="reason">
+          <span className="muted">{t('householdReason')}: </span>
+          {d.reason ? <strong>“{d.reason}”</strong> : <span className="muted">{t('noReason')}</span>}
+          {evidence.length > 0 ? (
+            <div className="photos" style={{ marginTop: 10 }}>
               {evidence.map((ph) => (
                 <a key={ph.id} href={ph.url} target="_blank" rel="noreferrer"><img src={ph.url} alt={t('householdPhotos')} /></a>
               ))}
             </div>
-          </>
-        ) : null}
-      </section>
+          ) : null}
+        </div>
 
-      {p.weighRounds.length > 0 ? (
-        <section className="panel">
-          <h3>{t('weighRounds')}</h3>
-          <WeighRoundsTable p={p} categories={categories.data} />
-          <div className="photos">
-            {scales.map((ph) => (
-              <figure key={ph.id} style={{ margin: 0 }}>
-                <a href={ph.url} target="_blank" rel="noreferrer"><img src={ph.url} alt={t('scalePhotoRound', { n: localDigits(ph.weighVersion ?? '', lang) })} /></a>
-                <figcaption className="muted">{t('scalePhotoRound', { n: localDigits(ph.weighVersion ?? '', lang) })}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-      ) : null}
+        {p.weighRounds.length > 0 ? <WeighRoundsTable p={p} categories={categories.data} /> : null}
 
-      {d.type === 'PAYMENT' && p.payment ? (
-        <section className="panel">
-          <h3>{t('payment')}</h3>
-          <dl className="kv">
-            <dt>{t('amount')}</dt>
-            <dd>{money(p.payment.amount, lang)}</dd>
-            <dt>{t('method')}</dt>
-            <dd>{tApp(`pay_${p.payment.method}`, lang)}</dd>
-            <dt>{t('wallet')}</dt>
-            <dd>{formatPhone(p.payment.walletNumber, lang)}</dd>
-            <dt>{t('trxFromCollector')}</dt>
-            <dd>{p.payment.trxId ?? '—'}</dd>
-            <dt>{t('reportedAt')}</dt>
-            <dd>{formatWhen(d.createdAt, lang)}</dd>
+        {d.type === 'PAYMENT' && p.payment ? (
+          <dl className="tiles">
+            <div>
+              <dt>{t('amount')}</dt>
+              <dd className="amount">{money(p.payment.amount, lang)}</dd>
+            </div>
+            <div>
+              <dt>{t('method')}</dt>
+              <dd>{tApp(`pay_${p.payment.method}`, lang)}</dd>
+            </div>
+            <div>
+              <dt>{t('wallet')}</dt>
+              <dd>{formatPhone(p.payment.walletNumber, lang)}</dd>
+            </div>
+            <div>
+              <dt>{t('trxFromCollector')}</dt>
+              <dd style={{ letterSpacing: '0.04em' }}>{p.payment.trxId ?? '—'}</dd>
+            </div>
+            <div>
+              <dt>{t('reportedAt')}</dt>
+              <dd>{formatWhen(d.createdAt, lang)}</dd>
+            </div>
           </dl>
-        </section>
-      ) : null}
+        ) : null}
 
-      <section className="panel">
-        <h3>{t('timeline')}</h3>
-        {events.data ? (
-          <ol className="timeline">
-            {events.data.map((e) => (
-              <li key={e.id}>
-                <time dateTime={e.at}>{formatWhen(e.at, lang)}</time>
-                <span>{eventLabel(e, lang)}</span>
-              </li>
-            ))}
-          </ol>
-        ) : events.isError ? (
-          <ErrorBox error={events.error} onRetry={() => void events.refetch()} />
+        <div className="evidence">
+          {scales.length > 0 ? (
+            <div className="photos" style={{ alignContent: 'flex-start' }}>
+              {scales.map((ph) => (
+                <figure key={ph.id} style={{ margin: 0 }}>
+                  <a href={ph.url} target="_blank" rel="noreferrer"><img src={ph.url} alt={t('scalePhotoRound', { n: localDigits(ph.weighVersion ?? '', lang) })} /></a>
+                  <figcaption className="muted">{t('scalePhotoRound', { n: localDigits(ph.weighVersion ?? '', lang) })}</figcaption>
+                </figure>
+              ))}
+            </div>
+          ) : null}
+          <div className="stack" style={{ gap: 6 }}>
+            <h3 style={{ fontSize: 13 }}>{t('timeline')}</h3>
+            {events.data ? (
+              <ol className="timeline">
+                {events.data.map((e) => (
+                  <li key={e.id} className={e.to === 'DISPUTED' ? 'alert' : undefined}>
+                    <time dateTime={e.at}>{formatWhen(e.at, lang)}</time>
+                    <span>{eventLabel(e, lang)}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : events.isError ? (
+              <ErrorBox error={events.error} onRetry={() => void events.refetch()} />
+            ) : (
+              <Loading />
+            )}
+          </div>
+        </div>
+
+        {d.status === 'ADMIN_REVIEW' ? (
+          <ResolutionForm d={d} amount={p.totalAmount} outcome={outcome} setOutcome={setOutcome} note={note} setNote={setNote} resolve={resolve} pickupStatus={p.status} />
+        ) : d.status === 'REWEIGH' ? (
+          <Banner tone="warn">{t('waitingForCollector')}</Banner>
         ) : (
-          <Loading />
+          <Banner tone="ok">
+            {t('resolvedWith', { outcome: d.outcome ? t(`outcome_${d.outcome}`, { amount: money(p.totalAmount, lang) }) : '—' })}
+            {d.resolutionNote ? <div>{t('noteValue', { note: d.resolutionNote })}</div> : null}
+          </Banner>
         )}
       </section>
-
-      {d.status === 'ADMIN_REVIEW' ? (
-        <ResolutionForm d={d} amount={p.totalAmount} outcome={outcome} setOutcome={setOutcome} note={note} setNote={setNote} resolve={resolve} pickupStatus={p.status} />
-      ) : d.status === 'REWEIGH' ? (
-        <div className="banner warn">{t('waitingForCollector')}</div>
-      ) : (
-        <div className="banner ok">
-          {t('resolvedWith', { outcome: d.outcome ? t(`outcome_${d.outcome}`, { amount: money(p.totalAmount, lang) }) : '—' })}
-          {d.resolutionNote ? <div className="muted">{t('noteValue', { note: d.resolutionNote })}</div> : null}
-        </div>
-      )}
 
       {teamWeigh ? <TeamWeighForm pickup={p} categories={categories.data as Category[] | undefined} /> : null}
     </div>
@@ -210,29 +232,40 @@ function ResolutionForm({
   const { t, lang } = useT()
   const options = outcomesFor(d.type, pickupStatus)
   return (
-    <section className="panel" aria-labelledby="resolution-title">
-      <h3 id="resolution-title">{t('resolution')}</h3>
-      {options.map((o) => (
-        <label key={o} className="radio">
-          <input type="radio" name="outcome" value={o} checked={outcome === o} onChange={() => setOutcome(o)} />
-          {t(`outcome_${o}`, { amount: money(amount, lang) })}
-        </label>
-      ))}
+    <>
+      <fieldset className="options">
+        <legend>{t('resolution')}</legend>
+        {options.map((o) => (
+          <label key={o} className="radio">
+            <input type="radio" name="outcome" value={o} checked={outcome === o} onChange={() => setOutcome(o)} />
+            {t(`outcome_${o}`, { amount: money(amount, lang) })}
+          </label>
+        ))}
+      </fieldset>
       <label className="field">
         {t('noteBothSides')}
-        <textarea value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
+        <textarea rows={2} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
       </label>
-      {resolve.error ? <p className="alert" role="alert">{errorMessage(resolve.error, lang)}</p> : null}
-      {resolve.isSuccess ? <div className="banner ok" role="status">{t('resolvedDone')}</div> : null}
-      <Button
-        variant="primary"
-        busy={resolve.isPending}
-        disabled={!outcome || note.trim().length === 0}
-        onClick={() => outcome && resolve.mutate({ id: d.id, pickupId: d.pickupId, outcome, note: note.trim() })}
-      >
-        ✓ {t('resolveDispute')}
-      </Button>
-      {!outcome || !note.trim() ? <p className="muted" style={{ margin: 0 }}>{t('pickOutcome')}</p> : null}
-    </section>
+      {resolve.error ? <Banner tone="alert" role="alert">{errorMessage(resolve.error, lang)}</Banner> : null}
+      <div className="actions-end">
+        {!outcome || !note.trim() ? <span className="muted" style={{ fontSize: 14, marginRight: 'auto' }}>{t('pickOutcome')}</span> : null}
+        {resolve.isSuccess ? (
+          <span className="ok-text" role="status">
+            <Icon name="checkCircle" />
+            {t('resolvedDone')}
+          </span>
+        ) : null}
+        <Button
+          variant="primary"
+          large
+          icon="check"
+          busy={resolve.isPending}
+          disabled={!outcome || note.trim().length === 0}
+          onClick={() => outcome && resolve.mutate({ id: d.id, pickupId: d.pickupId, outcome, note: note.trim() })}
+        >
+          {t('resolveDispute')}
+        </Button>
+      </div>
+    </>
   )
 }

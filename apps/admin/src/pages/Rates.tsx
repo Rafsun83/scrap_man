@@ -1,8 +1,9 @@
+import { PageHead } from '../components/PageHead'
 import { localDigits } from '@bw/shared'
 import { useState } from 'react'
 import { useCategories, usePublishRates, useRates } from '../api/hooks'
 import { categoryName } from '../lib/format'
-import { Button, ErrorBox, Loading } from '../components/ui'
+import { Banner, Button, ErrorBox, Loading } from '../components/ui'
 import { errorMessage } from '../lib/errors'
 import { dhakaDate, formatDate, formatLongDate, formatWhen, rate } from '../lib/format'
 import { useT } from '../lib/i18n'
@@ -45,36 +46,36 @@ export function RatesPage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>{t('navRates')}</h1>
-          <p className="muted">
-            {formatLongDate(date, lang)}.{' '}
+      <PageHead
+        title={t('navRates')}
+        eyebrow={
+          <>
+            {formatLongDate(date, lang)} ·{' '}
             {data.publishedAt ? t('publishedBy', { time: formatWhen(data.publishedAt, lang), name: data.publishedByName ?? t('unnamed') }) : t('notPublished')}
-          </p>
-        </div>
-        <span className="spacer" />
-        <label className="field">
-          {t('rateDate')}
-          <input type="date" value={date} min={today} onChange={(e) => e.target.value && setDate(e.target.value)} />
-        </label>
-        <Button onClick={() => setDraft(copyPrevious(data, draft))} disabled={past}>
-          ⧉ {t('copyPrevious')}
-        </Button>
-        <Button variant="primary" busy={publish.isPending} disabled={past || changes.length === 0 || invalid.length > 0} onClick={onPublish}>
-          ✓ {t('publishRates')}
-        </Button>
-      </div>
+          </>
+        }
+      >
+          <label className="field inline">
+            {t('rateDate')}
+            <input type="date" value={date} min={today} onChange={(e) => e.target.value && setDate(e.target.value)} />
+          </label>
+          <Button icon="copy" onClick={() => setDraft(copyPrevious(data, draft))} disabled={past}>
+            {t('copyPrevious')}
+          </Button>
+          <Button variant="primary" icon="check" busy={publish.isPending} disabled={past || changes.length === 0 || invalid.length > 0} onClick={onPublish}>
+            {t('publishRates')}
+          </Button>
+      </PageHead>
 
-      {past ? <div className="banner alert">{t('pastDate')}</div> : null}
-      {changes.length > 0 ? <div className="banner warn" role="status">{t('unpublishedBanner')}</div> : null}
-      {done && changes.length === 0 ? <div className="banner ok" role="status">{t('ratesPublished')}</div> : null}
-      {publish.error ? <div className="banner alert" role="alert">{errorMessage(publish.error, lang)}</div> : null}
+      {past ? <Banner tone="alert">{t('pastDate')}</Banner> : null}
+      {changes.length > 0 ? <Banner tone="warn" role="status">{t('unpublishedBanner')}</Banner> : null}
+      {done && changes.length === 0 ? <Banner tone="ok" role="status">{t('ratesPublished')}</Banner> : null}
+      {publish.error ? <Banner tone="alert" role="alert">{errorMessage(publish.error, lang)}</Banner> : null}
 
-      <section className="panel">
-        <h2>{t('ratesPerKg')}</h2>
+      <section className="card">
+        <h2 className="card-head sub" style={{ fontFamily: 'inherit', margin: 0 }}>{t('ratesPerKg')}</h2>
         <div className="table-wrap">
-          <table>
+          <table style={{ minWidth: 600, fontSize: 15 }}>
             <thead>
               <tr>
                 <th>{t('colCategory')}</th>
@@ -89,16 +90,16 @@ export function RatesPage() {
                 const other = lang === 'bn' ? 'en' : 'bn'
                 const name = (
                   <>
-                    <strong>{categoryName(categories.data, r.categoryCode, lang)}</strong>
-                    <div className="muted">{categoryName(categories.data, r.categoryCode, other)}</div>
+                    <div style={{ fontWeight: 600 }}>{categoryName(categories.data, r.categoryCode, lang)}</div>
+                    <div className="sub-line" style={{ fontSize: 13 }}>{categoryName(categories.data, r.categoryCode, other)}</div>
                   </>
                 )
                 if (r.pricingType === 'ON_INSPECTION') {
                   return (
                     <tr key={r.categoryCode}>
                       <td>{name}</td>
-                      <td>{t('onInspection')}</td>
-                      <td className="num">—</td>
+                      <td className="muted">{t('onInspection')}</td>
+                      <td className="num muted">—</td>
                       <td colSpan={2} className="muted">{t('collectorQuotes')}</td>
                     </tr>
                   )
@@ -107,16 +108,17 @@ export function RatesPage() {
                 const typed = parseRate(value)
                 const bad = value.trim() !== '' && typed === null
                 const change = changeFromPrevious(r.previousRate, typed)
+                const changed = value !== (r.rate == null ? '' : String(r.rate))
                 return (
                   <tr key={r.categoryCode}>
                     <td>{name}</td>
-                    <td>{t('perKg')}</td>
-                    <td className="num">
+                    <td className="muted">{t('perKg')}</td>
+                    <td className="num muted">
                       {rate(r.previousRate, lang)}
-                      {r.previousDate ? <div className="muted">{t('fromDate', { date: formatDate(r.previousDate, lang) })}</div> : null}
+                      {r.previousDate ? <div className="sub-line">{t('fromDate', { date: formatDate(r.previousDate, lang) })}</div> : null}
                     </td>
                     <td>
-                      <span className="row" style={{ gap: 4 }}>
+                      <label className={`rate-field ${bad ? 'bad' : changed ? 'changed' : ''}`}>
                         ৳
                         <input
                           type="text"
@@ -126,14 +128,19 @@ export function RatesPage() {
                           value={value}
                           disabled={past}
                           onChange={(e) => set(r.categoryCode, e.target.value)}
-                          style={{ width: 110 }}
                           data-testid={`rate-${r.categoryCode}`}
                         />
-                      </span>
-                      {bad ? <div className="alert">{t('rateInvalid')}</div> : null}
+                      </label>
+                      {bad ? <div className="alert" style={{ fontSize: 13, marginTop: 4 }}>{t('rateInvalid')}</div> : null}
                     </td>
-                    <td className={`num ${change !== null && change < 0 ? 'alert' : change ? 'money' : ''}`}>
-                      {change === null ? '—' : change === 0 ? t('noChange') : `${change > 0 ? '+' : '−'}${rate(Math.abs(change), lang)}`}
+                    <td className="num">
+                      {change === null ? (
+                        <span className="muted">—</span>
+                      ) : (
+                        <span className={`change ${change > 0 ? 'up' : change < 0 ? 'down' : ''}`}>
+                          {change === 0 ? t('noChange') : `${change > 0 ? '+' : '−'}${rate(Math.abs(change), lang)}`}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 )
@@ -141,8 +148,8 @@ export function RatesPage() {
             </tbody>
           </table>
         </div>
-        <p className="muted" style={{ margin: 0 }}>{t('ratesFooter')}</p>
       </section>
+      <p className="note">{t('ratesFooter')}</p>
     </>
   )
 }

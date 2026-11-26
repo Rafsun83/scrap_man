@@ -8,7 +8,7 @@ import { categoryName } from '../../lib/format';
 import { TotalsLabelCard } from './parts';
 import { Button, Icon, Note, Screen, Stepper } from '../../ui/components';
 import { errorMessage } from '../../ui/errors';
-import { body, cardShadow, colors, display, radius, tones } from '../../ui/theme';
+import { body, cardShadow, colors, display, minTouch, radius, tones } from '../../ui/theme';
 import { takePhoto } from '../camera';
 import { PageHeader } from '../ui';
 import { initialLines, parseKg, previewTotals, rateLookup, stepKg, toWeightLines, type DraftLine } from '../weigh';
@@ -111,7 +111,7 @@ export function WeighView({
                 <Text style={[body(16, 600), { flex: 1 }]}>{name}</Text>
                 <Text style={[body(13), { color: colors.muted }]}>{rateText(l.categoryCode)}</Text>
                 {!listed ? (
-                  <Pressable accessibilityRole="button" accessibilityLabel={t('removeItem', { item: name })} onPress={() => remove(i)} hitSlop={12} style={s.remove}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={t('removeItem', { item: name })} onPress={() => remove(i)} style={s.remove}>
                     <Icon name="trash-2" size={20} color={colors.alert} />
                   </Pressable>
                 ) : null}
@@ -254,7 +254,7 @@ const s = StyleSheet.create({
   dispute: { flexDirection: 'row', gap: 12, padding: 14, borderRadius: radius.md, backgroundColor: tones.alertBg, borderWidth: 1, borderColor: tones.alertLine },
   line: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, gap: 10, ...cardShadow },
   lineTop: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
-  remove: { minWidth: 32, alignItems: 'center' },
+  remove: { minWidth: minTouch, minHeight: minTouch, marginVertical: -12, alignItems: 'center', justifyContent: 'center' },
   lineBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   kg: { minWidth: 96, minHeight: 48, textAlign: 'center', ...display(22) },
   quote: { minHeight: 52, borderWidth: 1.5, borderColor: colors.line, borderRadius: radius.md, paddingHorizontal: 14, backgroundColor: colors.surface, ...body(16) },

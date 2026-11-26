@@ -31,7 +31,8 @@ describe('v1 parts', () => {
     await renderScreen(<Toggle testID="t" value onChange={onChange} label="Default address" />);
     const node = screen.getByTestId('t');
     expect(node.props.accessibilityRole).toBe('switch');
-    expect(flat(node).backgroundColor).toBe(colors.money);
+    expect(flat(node).minHeight).toBeGreaterThanOrEqual(48);
+    expect(flat(screen.getByTestId('t-track')).backgroundColor).toBe(colors.money);
     await fireEvent.press(node);
     expect(onChange).toHaveBeenCalledWith(false);
   });

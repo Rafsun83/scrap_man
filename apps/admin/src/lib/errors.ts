@@ -10,10 +10,12 @@ export function errorMessage(error: unknown, lang: Lang): string {
   return ta('errGeneric', lang)
 }
 
-export function statusTone(status: PickupStatus): 'active' | 'done' | 'ended' | 'alert' {
+/** Tag colour per status (version 1): requested yellow, accepted blue-grey, in progress grey, disputed red, done green. */
+export function statusTone(status: PickupStatus): 'active' | 'info' | 'neutral' | 'done' | 'ended' | 'alert' {
+  if (status === 'REQUESTED') return 'active'
+  if (status === 'ACCEPTED') return 'info'
   if (status === 'COMPLETED') return 'done'
   if (status === 'CANCELLED' || status === 'EXPIRED') return 'ended'
   if (status === 'DISPUTED') return 'alert'
-  return 'active'
+  return 'neutral'
 }
-

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dhakaDate, formatDate, formatLongDate, formatPhone, formatTime, formatWhen, normalizePhone, rate, sinceParts } from './format'
+import { dhakaDate, formatDate, formatLongDate, formatPhone, formatTime, formatWhen, initials, normalizePhone, rate, sinceParts } from './format'
 
 describe('admin formatting (Dhaka time, both languages)', () => {
   // 01:09 on 17 Nov in Dhaka is 19:09 on 16 Nov UTC.
@@ -33,5 +33,12 @@ describe('admin formatting (Dhaka time, both languages)', () => {
     expect(rate(30.5, 'en')).toBe('৳30.50')
     expect(rate(50, 'bn')).toBe('৳৫০')
     expect(sinceParts('2026-11-17T00:00:00Z', new Date('2026-11-17T02:05:00Z'))).toEqual({ minutes: 125, h: 2, m: 5 })
+  })
+
+  it('makes avatar initials from a name, or the phone when there is none', () => {
+    expect(initials('Farhana Rahman')).toBe('FR')
+    expect(initials('Md Abdul Karim')).toBe('MK')
+    expect(initials('rubel')).toBe('RU')
+    expect(initials(null, '+8801700000042')).toBe('42')
   })
 })

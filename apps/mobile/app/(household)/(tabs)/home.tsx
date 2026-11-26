@@ -177,7 +177,7 @@ export default function Home() {
 
 const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  place: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36, alignSelf: 'flex-start' },
+  place: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: minTouch, alignSelf: 'flex-start' },
   bell: {
     width: minTouch,
     height: minTouch,

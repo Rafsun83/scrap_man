@@ -7,11 +7,13 @@ import { useLedger } from '../../../src/collector/api';
 import { rangeFor, type LedgerRange } from '../../../src/collector/ledgerRange';
 import { StatTile, cs } from '../../../src/collector/ui';
 import { useT } from '../../../src/i18n/lang';
-import { formatTime } from '../../../src/lib/dhaka';
+import { formatDate, formatTime } from '../../../src/lib/dhaka';
 import { categoryName } from '../../../src/lib/format';
-import { Chip, Divider, EmptyView, ErrorView, LoadingView } from '../../../src/ui/components';
+import { Button, Chip, Divider, EmptyView, ErrorView, LoadingView } from '../../../src/ui/components';
 import { errorMessage } from '../../../src/ui/errors';
 import { body, borderWidth, colors, display, radius } from '../../../src/ui/theme';
+
+const PAGE = 20;
 
 const RANGES: { key: LedgerRange; label: 'today' | 'rangeWeek' | 'rangeMonth' }[] = [
   { key: 'TODAY', label: 'today' },
@@ -23,6 +25,8 @@ const RANGES: { key: LedgerRange; label: 'today' | 'rangeWeek' | 'rangeMonth' }[
 export default function LedgerScreen() {
   const { t, lang } = useT();
   const [range, setRange] = useState<LedgerRange>('TODAY');
+  // A month can hold hundreds of payments; draw them a page at a time so low-end phones stay quick.
+  const [shown, setShown] = useState(PAGE);
   const { from, to } = rangeFor(range);
   const ledger = useLedger(from, to);
   const categories = useCategories();
@@ -39,7 +43,11 @@ export default function LedgerScreen() {
           <Text style={[display(24), { lineHeight: 30 }]}>{t('cTabLedger')}</Text>
           <View style={s.chips}>
             {RANGES.map((r) => (
-              <Chip key={r.key} label={t(r.label)} selected={range === r.key} onPress={() => setRange(r.key)} />
+              <Chip key={r.key} label={t(r.label)} selected={range === r.key} onPress={() => {
+                  setRange(r.key);
+                  setShown(PAGE);
+                }}
+              />
             ))}
           </View>
           <View style={s.stats}>
@@ -85,8 +93,9 @@ export default function LedgerScreen() {
 
               <Text style={cs.sectionTitle}>{t('paymentsTitle')}</Text>
               <View style={cs.section}>
-                {data.payments.map((p, i) => {
-                  const vars = { time: formatTime(p.paidAt, lang), method: t(`pay_${p.method}`) };
+                {data.payments.slice(0, shown).map((p, i) => {
+                  const time = range === 'TODAY' ? formatTime(p.paidAt, lang) : `${formatDate(p.paidAt, lang)}, ${formatTime(p.paidAt, lang)}`;
+                  const vars = { time, method: t(`pay_${p.method}`) };
                   return (
                     <View key={p.pickupId} testID={`payment-${p.pickupId}`}>
                       {i > 0 ? <Divider /> : null}
@@ -103,6 +112,9 @@ export default function LedgerScreen() {
                   );
                 })}
               </View>
+              {data.payments.length > shown ? (
+                <Button label={t('loadMore')} icon="chevron-down" variant="outline" onPress={() => setShown(shown + PAGE)} testID="ledger-more" />
+              ) : null}
             </>
           )}
         </View>

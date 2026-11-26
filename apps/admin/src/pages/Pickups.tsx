@@ -1,3 +1,4 @@
+import { PageHead } from '../components/PageHead'
 import { localDigits, WORK_AREAS, type AttentionItem, type OpsAlert, type Pickup } from '@bw/shared'
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
@@ -6,6 +7,7 @@ import { filtersFor, type CardKey } from '../lib/pickupFilters'
 import { PickupDrawer } from '../components/PickupDrawer'
 import { categoryName } from '../lib/format'
 import { PickupMap } from '../components/PickupMap'
+import { Icon } from '../components/Icon'
 import { Button, Empty, ErrorBox, Loading, StatusBadge } from '../components/ui'
 import { formatLongDate, formatWhen, sinceParts } from '../lib/format'
 import { useT } from '../lib/i18n'
@@ -60,135 +62,150 @@ export function PickupsPage() {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>{t('navPickups')}</h1>
-          <p className="muted">{formatLongDate(today, lang)}</p>
-        </div>
-        <span className="spacer" />
-        <input type="search" aria-label={t('searchPickups')} placeholder={t('searchPickups')} value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 280 }} />
-        <input type="text" list="areas" aria-label={t('colArea')} placeholder={t('allAreas')} value={area} onChange={(e) => setArea(e.target.value)} />
-        <datalist id="areas">
-          {WORK_AREAS.map((a) => (
-            <option key={a.code} value={a[lang]} />
-          ))}
-        </datalist>
-      </div>
+      <PageHead title={t('navPickups')} eyebrow={formatLongDate(today, lang)}>
+          <label className="search">
+            <span className="sr-only">{t('searchPickups')}</span>
+            <Icon name="search" />
+            <input type="search" placeholder={t('searchPickups')} value={q} onChange={(e) => setQ(e.target.value)} />
+          </label>
+          <label className="field inline">
+            {t('colArea')}
+            <input type="text" list="areas" placeholder={t('allAreas')} value={area} onChange={(e) => setArea(e.target.value)} style={{ width: 160 }} />
+          </label>
+          <datalist id="areas">
+            {WORK_AREAS.map((a) => (
+              <option key={a.code} value={a[lang]} />
+            ))}
+          </datalist>
+      </PageHead>
 
       <div className="counts" role="group" aria-label={t('colStatus')}>
         {CARDS.map((c) => (
           <button key={c.key} type="button" className="count-card" aria-pressed={card === c.key} onClick={() => setCard(card === c.key ? null : c.key)} data-testid={`count-${c.key}`}>
-            <span className="n">{overview.data ? localDigits(overview.data.counts[c.count], lang) : '…'}</span>
-            <span>{t(c.label)}</span>
+            <span className={`n ${c.key === 'DISPUTED' ? 'alert' : c.key === 'COMPLETED' ? 'money' : ''}`}>{overview.data ? localDigits(overview.data.counts[c.count], lang) : '…'}</span>
+            <span className="l">{t(c.label)}</span>
           </button>
         ))}
       </div>
 
-      {alerts.data && alerts.data.length > 0 ? (
-        <section className="panel alerts" aria-labelledby="alerts-title" data-testid="alerts">
-          <h2 id="alerts-title">{t('alertsTitle')}</h2>
-          <ul className="attention">
-            {alerts.data.map((a) => (
-              <li key={a.id}>
-                <span className={`badge ${a.severity === 'CRITICAL' ? 'alert' : 'active'}`}>{t(`severity_${a.severity}`)}</span>
-                <span style={{ flex: 1 }}>{alertText(a)}</span>
-                {a.pickupId ? (
-                  <Button small onClick={() => open(a.pickupId)}>
-                    → {t('view')}
-                  </Button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <section className="panel" aria-labelledby="attention-title">
-        <h2 id="attention-title">{t('needsAttention')}</h2>
-        {overview.isPending ? (
-          <Loading />
-        ) : overview.isError ? (
-          <ErrorBox error={overview.error} onRetry={() => void overview.refetch()} />
-        ) : overview.data.attention.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>{t('nothingNeedsAttention')}</p>
-        ) : (
-          <ul className="attention">
-            {overview.data.attention.map((a, i) => (
-              <li key={`${a.kind}-${a.pickupId ?? a.userId}-${i}`}>
-                <span className="dot" aria-hidden="true" />
-                <span style={{ flex: 1 }}>{attentionText(a)}</span>
-                <Button
-                  small
-                  onClick={() =>
-                    a.kind === 'RELEASES'
-                      ? navigate(`/users?role=COLLECTOR&q=${encodeURIComponent(a.name ?? '')}`)
-                      : a.kind === 'DISPUTE_REVIEW'
-                        ? navigate(`/disputes?pickup=${a.pickupId}`)
-                        : open(a.pickupId)
-                  }
-                >
-                  → {t('view')}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
       <div className="grid-2">
-        <section className="panel" aria-labelledby="table-title">
-          <div className="row">
-            <h2 id="table-title">{card ? t(CARDS.find((c) => c.key === card)!.label) : t('allPickups')}</h2>
-            <span className="spacer" />
-            {card ? (
-              <Button variant="link" onClick={() => setCard(null)}>
-                {t('showAll')}
-              </Button>
-            ) : null}
-          </div>
-          {pickups.isPending ? (
-            <Loading />
-          ) : pickups.isError ? (
-            <ErrorBox error={pickups.error} onRetry={() => void pickups.refetch()} />
-          ) : rows.length === 0 ? (
-            <Empty text={t('noPickups')} />
-          ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{t('colId')}</th>
-                    <th>{t('colHousehold')}</th>
-                    <th>{t('colArea')}</th>
-                    <th>{t('colCollector')}</th>
-                    <th>{t('colItems')}</th>
-                    <th>{t('colStatus')}</th>
-                    <th>{t('colUpdated')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((p: Pickup) => (
-                    <tr key={p.id} className="clickable" onClick={() => open(p.id)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && open(p.id)}>
-                      <td>{p.displayNo}</td>
-                      <td>{p.household.name ?? t('unnamed')}</td>
-                      <td>{p.area}</td>
-                      <td>{p.collector ? (p.collector.name ?? t('unnamed')) : <span className="muted">{t('notYet')}</span>}</td>
-                      <td>{p.categoryCodes.map((c) => categoryName(categories.data, c, lang)).join(', ')}</td>
-                      <td><StatusBadge status={p.status} /></td>
-                      <td>{formatWhen(p.updatedAt, lang)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {pickups.hasNextPage ? (
-            <Button busy={pickups.isFetchingNextPage} onClick={() => void pickups.fetchNextPage()}>
-              ↓ {t('showMore')}
-            </Button>
+        <div className="wide">
+          {alerts.data && alerts.data.length > 0 ? (
+            <section className="card attention-card" aria-labelledby="alerts-title" data-testid="alerts">
+              <div className="card-head">
+                <h2 id="alerts-title">{t('alertsTitle')}</h2>
+              </div>
+              <ul className="attention">
+                {alerts.data.map((a) => (
+                  <li key={a.id}>
+                    <span className={`badge ${a.severity === 'CRITICAL' ? 'alert' : 'active'}`}>{t(`severity_${a.severity}`)}</span>
+                    <span className="text">{alertText(a)}</span>
+                    {a.pickupId ? (
+                      <Button small icon="arrowRight" onClick={() => open(a.pickupId)}>
+                        {t('view')}
+                      </Button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : null}
-        </section>
-        <PickupMap onOpen={open} />
+
+          <section className="card attention-card" aria-labelledby="attention-title">
+            <div className="card-head">
+              <h2 id="attention-title">{t('needsAttention')}</h2>
+            </div>
+            {overview.isPending ? (
+              <Loading />
+            ) : overview.isError ? (
+              <ErrorBox error={overview.error} onRetry={() => void overview.refetch()} />
+            ) : overview.data.attention.length === 0 ? (
+              <ul className="attention">
+                <li className="empty">{t('nothingNeedsAttention')}</li>
+              </ul>
+            ) : (
+              <ul className="attention">
+                {overview.data.attention.map((a, i) => (
+                  <li key={`${a.kind}-${a.pickupId ?? a.userId}-${i}`}>
+                    <span className={`dot ${a.kind === 'RELEASES' ? 'warn' : ''}`} aria-hidden="true" />
+                    <span className="text">{attentionText(a)}</span>
+                    <Button
+                      small
+                      icon="arrowRight"
+                      onClick={() =>
+                        a.kind === 'RELEASES'
+                          ? navigate(`/users?role=COLLECTOR&q=${encodeURIComponent(a.name ?? '')}`)
+                          : a.kind === 'DISPUTE_REVIEW'
+                            ? navigate(`/disputes?pickup=${a.pickupId}`)
+                            : open(a.pickupId)
+                      }
+                    >
+                      {t('view')}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="card" aria-labelledby="table-title">
+            <div className="card-head">
+              <h2 id="table-title" style={{ fontFamily: 'inherit', fontSize: 15 }}>{card ? t(CARDS.find((c) => c.key === card)!.label) : t('allPickups')}</h2>
+              {card ? (
+                <Button variant="link" small onClick={() => setCard(null)}>
+                  {t('showAll')}
+                </Button>
+              ) : null}
+            </div>
+            {pickups.isPending ? (
+              <Loading />
+            ) : pickups.isError ? (
+              <ErrorBox error={pickups.error} onRetry={() => void pickups.refetch()} />
+            ) : rows.length === 0 ? (
+              <Empty text={t('noPickups')} />
+            ) : (
+              <div className="table-wrap">
+                <table className="wide">
+                  <thead>
+                    <tr>
+                      <th>{t('colId')}</th>
+                      <th>{t('colHousehold')}</th>
+                      <th>{t('colCollector')}</th>
+                      <th>{t('colItems')}</th>
+                      <th>{t('colStatus')}</th>
+                      <th className="num">{t('colUpdated')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((p: Pickup) => (
+                      <tr key={p.id} className="clickable" onClick={() => open(p.id)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && open(p.id)}>
+                        <td className="strong nowrap">{p.displayNo}</td>
+                        <td className="nowrap">
+                          {p.household.name ?? t('unnamed')}
+                          <div className="sub-line">{p.area}</div>
+                        </td>
+                        <td className="nowrap">{p.collector ? (p.collector.name ?? t('unnamed')) : <span className="muted">{t('notYet')}</span>}</td>
+                        <td>{p.categoryCodes.map((c) => categoryName(categories.data, c, lang)).join(', ')}</td>
+                        <td><StatusBadge status={p.status} /></td>
+                        <td className="num muted nowrap">{formatWhen(p.updatedAt, lang)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {pickups.hasNextPage ? (
+              <div className="card-foot">
+                <Button icon="arrowDown" busy={pickups.isFetchingNextPage} onClick={() => void pickups.fetchNextPage()}>
+                  {t('showMore')}
+                </Button>
+              </div>
+            ) : null}
+          </section>
+        </div>
+        <div className="side">
+          <PickupMap onOpen={open} />
+        </div>
       </div>
 
       {openId ? <PickupDrawer pickupId={openId} onClose={() => open(null)} /> : null}
