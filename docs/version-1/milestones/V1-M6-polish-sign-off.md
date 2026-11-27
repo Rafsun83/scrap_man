@@ -26,6 +26,10 @@ A final pass on the mobile app (households and collectors) and the admin panel, 
 - [x] Android bundle builds (`npx expo export --platform android`, Hermes bundle 3.3 MB)
 - [ ] **Pending:** run both apps on a low-end Android phone (2-3 GB RAM): scrolling C1, H11 and C9, the map on H6, the camera on C4 and H14
 
+### Fixes from Rafsun's review
+- [x] H5 finding a collector: the still rings read as "stuck". A pulse now runs from the home to the edge of the radius every 2 seconds (native driver, so it is cheap on low-end phones), and the collectors online inside the radius show as active: green truck badge with a small green light, and a green light before "n collectors online nearby". With "reduce motion" on, the pulse stays off. The only animation left in version 1 (2026-11-27)
+- [x] A1 Live pickups map: larger (about two fifths of the row, most of the screen height), stays in view while the table scrolls, zooms to the open requests and online collectors, with a "Show all" button; 360 px tall under the table on phones
+
 ### Review and walk-throughs
 - [ ] **Pending:** Rafsun's review of version 1 and the fixes from it
 - [ ] **Pending:** phone walk-through of the household screens (V1-M3) and collector screens (V1-M4)
@@ -36,7 +40,7 @@ A final pass on the mobile app (households and collectors) and the admin panel, 
 | Check | Result |
 | --- | --- |
 | `pnpm turbo run lint typecheck test build` | 17 of 17 tasks pass |
-| Mobile tests | 110 pass (one new: C9 ledger paging and dates; the switch test now also checks the 48 px target) |
+| Mobile tests | 111 pass (new: C9 ledger paging and dates, H5 pulse on and off with reduce motion; the switch test now also checks the 48 px target) |
 | Admin tests | 30 pass |
 | Shared tests | 19 pass |
 | Android bundle | Builds |

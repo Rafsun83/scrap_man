@@ -23,7 +23,7 @@ Each `.dc.html` file is one screen made in the canvas tool. Like the version 0 p
 - **Colours:** ground `#F5F6F2`, white cards with a light shadow, ink `#13304A` for text and main buttons, muted ink `#5B6B7A` for secondary text, signal yellow `#FFC72C` only for the one key action on a screen, money green `#0B7A5C` only for taka and success, alert `#A63D16` only for errors and destructive actions.
 - **Type:** Anek Bangla for headings and amounts (600/700), Hind Siliguri for body and labels (400/500/600). Body 15 to 16 px, labels 14 px.
 - **Sizes:** inputs and main buttons 56 px tall; every touch target at least 44 to 48 px; every action has an icon and text.
-- **Static states only.** The "finding a collector" screen uses still rings, not a moving radar.
+- **Static states only, with one exception.** The "finding a collector" screen (H5) keeps a slow pulse from the home out to the edge of the search radius, so the household can see the search is running, and shows the online collectors inside the radius as active (green truck with a green light). Decided by Rafsun on 2026-11-27; the pulse stops when the phone's "reduce motion" setting is on.
 
 ## Household app
 

@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
-import { Alert } from 'react-native';
+import { AccessibilityInfo, Alert } from 'react-native';
 import { ApiError } from '../../api/client';
 import { setCollectorLocation } from '../../realtime/socket';
 import { categories, makePickup, renderScreen, weighed } from '../../test/render';
@@ -58,6 +58,18 @@ describe('H5 searching', () => {
     );
     expect(screen.queryAllByTestId('radar-collector', { includeHiddenElements: true })).toHaveLength(0);
     expect(screen.getByText(/এই মুহূর্তে কাছে কেউ অনলাইনে নেই/)).toBeTruthy();
+  });
+
+  it('pulses while searching, and stays still when the phone asks for reduced motion', async () => {
+    const props = { pickup: makePickup(), categories, onCancel: jest.fn(), cancelling: false, cancelError: null };
+    const view = await renderScreen(<SearchingView {...props} />);
+    expect(screen.getByTestId('radar-pulse', { includeHiddenElements: true })).toBeTruthy();
+    await view.unmount();
+
+    const reduce = jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+    await renderScreen(<SearchingView {...props} />);
+    await waitFor(() => expect(screen.queryByTestId('radar-pulse', { includeHiddenElements: true })).toBeNull());
+    reduce.mockRestore();
   });
 });
 
