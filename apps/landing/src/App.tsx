@@ -4,6 +4,7 @@ import { useReveal } from './hooks/useReveal'
 import { Collectors } from './sections/Collectors'
 import { Faq } from './sections/Faq'
 import { Footer } from './sections/Footer'
+import { Green } from './sections/Green'
 import { Header } from './sections/Header'
 import { Hero } from './sections/Hero'
 import { HowItWorks } from './sections/HowItWorks'
@@ -31,6 +32,7 @@ export function App({ loadRates }: { loadRates?: () => Promise<RateBoard> }) {
         <HowItWorks />
         <Rates rates={state} onRetry={retry} />
         <Items />
+        <Green />
         <Safety />
         <Collectors />
         <Faq />

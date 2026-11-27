@@ -8,6 +8,7 @@ const NAV: { href: string; label: LandingStringKey }[] = [
   { href: '#how', label: 'navHow' },
   { href: '#rates', label: 'navRates' },
   { href: '#items', label: 'navItems' },
+  { href: '#green', label: 'navGreen' },
   { href: '#safety', label: 'navSafety' },
   { href: '#collectors', label: 'navCollectors' },
   { href: '#faq', label: 'navFaq' },

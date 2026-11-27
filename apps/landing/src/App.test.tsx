@@ -34,6 +34,13 @@ describe('landing page', () => {
     expect(load).toHaveBeenCalledTimes(1)
   })
 
+  it('explains why selling scrap helps the environment', () => {
+    renderApp(async () => board, 'en')
+    expect(screen.getByRole('heading', { level: 2, name: 'Your scrap is not rubbish. It gets used again.' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 3, name: 'Plastic: clear drains and rivers' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Environment' }).getAttribute('href')).toBe('#green')
+  })
+
   it('switches to English with the toggle', async () => {
     renderApp(async () => board)
     fireEvent.click(screen.getByRole('button', { name: 'Switch to English' }))
