@@ -17,17 +17,17 @@ export function Safety() {
       <div className="container safety-layout">
         <div className="safety-intro">
           <SectionHeading id="safety-title" kicker={t('safetyKicker')} title={t('safetyTitle')} />
-          <div className="code-demo" aria-hidden="true">
+          <div className="code-demo reveal d1" aria-hidden="true">
             {localDigits('4729', lang).split('').map((d, i) => (
               <span key={i}>{d}</span>
             ))}
           </div>
         </div>
         <ul className="safety-grid">
-          {POINTS.map((p) => (
-            <li key={p.title} className="safety-card">
+          {POINTS.map((p, i) => (
+            <li key={p.title} className={`safety-card reveal d${i % 2}`}>
               <span className="safety-icon">
-                <Icon name={p.icon} size={26} />
+                <Icon name={p.icon} size={22} />
               </span>
               <h3>{t(p.title)}</h3>
               <p>{t(p.text)}</p>

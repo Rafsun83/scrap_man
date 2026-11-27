@@ -9,7 +9,7 @@ export function SectionHeading({ id, kicker, title, lead, tone = 'light' }: {
   tone?: 'light' | 'dark'
 }) {
   return (
-    <div className={`section-heading ${tone}`}>
+    <div className={`section-heading ${tone} reveal`}>
       <p className="kicker">{kicker}</p>
       <h2 id={id}>{title}</h2>
       {lead ? <p className="lead">{lead}</p> : null}

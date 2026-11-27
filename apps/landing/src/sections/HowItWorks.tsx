@@ -18,12 +18,14 @@ export function HowItWorks() {
         <SectionHeading id="how-title" kicker={t('howKicker')} title={t('howTitle')} />
         <ol className="steps">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="step">
-              <span className="step-no" aria-hidden="true">
-                {localDigits(i + 1, lang)}
-              </span>
-              <span className="step-icon">
-                <Icon name={s.icon} size={28} />
+            <li key={s.title} className={`step reveal d${i}`}>
+              <span className="step-top">
+                <span className="step-icon">
+                  <Icon name={s.icon} size={26} />
+                </span>
+                <span className="step-no" aria-hidden="true">
+                  {localDigits(`0${i + 1}`, lang)}
+                </span>
               </span>
               <h3>{t(s.title)}</h3>
               <p>{t(s.text)}</p>

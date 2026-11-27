@@ -3,7 +3,7 @@ import { formatRate, trendOf, type RateRow } from '../lib/rates'
 import { Icon } from './Icon'
 
 /**
- * The rate board rows, drawn like the H2 home card: name, dotted leader, price. `compact` (hero card) leaves out
+ * The rate board rows: name and price on one line, a thin rule between rows. `compact` (hero card) leaves out
  * the change from yesterday and categories without a per-kg rate.
  */
 export function RateList({ rows, compact = false }: { rows: RateRow[]; compact?: boolean }) {
@@ -18,7 +18,6 @@ export function RateList({ rows, compact = false }: { rows: RateRow[]; compact?:
         return (
           <li key={row.code} className="rate-row">
             <span className="rate-name">{name}</span>
-            <span className="rate-leader" aria-hidden="true" />
             {row.ratePerKg !== null ? (
               <span className="rate-price">{formatRate(row.ratePerKg, lang)}</span>
             ) : (

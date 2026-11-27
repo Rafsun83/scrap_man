@@ -14,11 +14,12 @@ export function Promises() {
   const { t } = useT()
   return (
     <section className="promises" aria-label={t('brandSub')}>
-      <ul className="container promise-grid">
+      <div className="container">
+      <ul className="promise-grid reveal">
         {PROMISES.map((p) => (
           <li key={p.title} className="promise">
             <span className="promise-icon">
-              <Icon name={p.icon} />
+              <Icon name={p.icon} size={22} />
             </span>
             <span>
               <strong>{t(p.title)}</strong>
@@ -27,6 +28,7 @@ export function Promises() {
           </li>
         ))}
       </ul>
+      </div>
     </section>
   )
 }

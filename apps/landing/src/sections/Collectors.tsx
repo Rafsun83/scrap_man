@@ -10,8 +10,10 @@ const STEPS: LandingStringKey[] = ['collectorsStep1', 'collectorsStep2', 'collec
 export function Collectors() {
   const { t, lang } = useT()
   return (
-    <section id="collectors" className="section dark" aria-labelledby="collectors-title">
-      <div className="container collectors-layout">
+    <section id="collectors" className="section collectors-section" aria-labelledby="collectors-title">
+      <div className="container">
+      <div className="collectors-panel reveal">
+      <div className="collectors-layout">
         <div>
           <SectionHeading
             id="collectors-title"
@@ -23,7 +25,7 @@ export function Collectors() {
           <ul className="perk-list">
             {PERKS.map((key) => (
               <li key={key}>
-                <Icon name="check" size={22} />
+                <Icon name="check" size={24} />
                 {t(key)}
               </li>
             ))}
@@ -46,7 +48,7 @@ export function Collectors() {
               ))}
             </ul>
           </div>
-          <div className="collector-card yellow">
+          <div className="collector-card light">
             <h3>
               <Icon name="bolt" />
               {t('collectorsStepsTitle')}
@@ -63,6 +65,8 @@ export function Collectors() {
             </ol>
           </div>
         </div>
+      </div>
+      </div>
       </div>
     </section>
   )

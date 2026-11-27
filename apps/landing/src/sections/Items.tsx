@@ -20,17 +20,17 @@ export function Items() {
       <div className="container">
         <SectionHeading id="items-title" kicker={t('itemsKicker')} title={t('itemsTitle')} lead={t('itemsLead')} />
         <ul className="item-grid">
-          {ITEMS.map((item) => (
-            <li key={item.code} className={`item-card${item.code === 'ELECTRONICS' ? ' inspect' : ''}`}>
+          {ITEMS.map((item, i) => (
+            <li key={item.code} className={`item-card reveal d${i % 3}${item.code === 'ELECTRONICS' ? ' inspect' : ''}`}>
               <span className="item-icon">
-                <Icon name={item.icon} size={30} />
+                <Icon name={item.icon} size={28} />
               </span>
               <h3>{t(item.name)}</h3>
               <p>{t(item.hint)}</p>
             </li>
           ))}
         </ul>
-        <p className="note">
+        <p className="note reveal">
           <Icon name="scale" size={20} />
           {t('itemsMinimum')}
         </p>

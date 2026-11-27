@@ -1,5 +1,6 @@
 import { useT } from './lib/i18n'
 import { useRateBoard } from './hooks/useRateBoard'
+import { useReveal } from './hooks/useReveal'
 import { Collectors } from './sections/Collectors'
 import { Faq } from './sections/Faq'
 import { Footer } from './sections/Footer'
@@ -16,6 +17,7 @@ import type { RateBoard } from './lib/rates'
 export function App({ loadRates }: { loadRates?: () => Promise<RateBoard> }) {
   const { t } = useT()
   const { state, retry } = useRateBoard(loadRates)
+  useReveal()
   return (
     <>
       <a className="skip-link" href="#main">

@@ -1,4 +1,5 @@
 import type { LandingStringKey } from '@bw/shared'
+import { Icon } from '../components/Icon'
 import { SectionHeading } from '../components/SectionHeading'
 import { useT } from '../lib/i18n'
 
@@ -19,8 +20,13 @@ export function Faq() {
         <SectionHeading id="faq-title" kicker={t('faqKicker')} title={t('faqTitle')} />
         <div className="faq-list">
           {QUESTIONS.map(([q, a]) => (
-            <details key={q} className="faq-item">
-              <summary>{t(q)}</summary>
+            <details key={q} className="faq-item reveal">
+              <summary>
+                {t(q)}
+                <span className="faq-chevron" aria-hidden="true">
+                  <Icon name="chevronDown" size={18} />
+                </span>
+              </summary>
               <p>{t(a)}</p>
             </details>
           ))}

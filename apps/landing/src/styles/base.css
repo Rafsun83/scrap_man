@@ -1,26 +1,41 @@
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 88px; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
 body {
   margin: 0;
   font-family: var(--font-body);
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--ink);
   background: var(--ground);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
-h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.2; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.2; font-weight: 700; letter-spacing: -0.005em; }
 p { margin: 0; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
-a { color: var(--ink); }
+a { color: var(--ink); transition: color 0.2s var(--ease); }
 a:hover { color: var(--money); }
 img { max-width: 100%; height: auto; }
-:focus-visible { outline: 3px solid var(--money); outline-offset: 2px; }
+::selection { background: var(--signal-soft); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: var(--radius-sm); }
 .muted { color: var(--muted); }
 
 .skip-link {
   position: absolute; left: 12px; top: -60px; z-index: 50; padding: 10px 16px;
-  background: var(--signal); border: 2px solid var(--ink); border-radius: var(--radius-sm); font-weight: 700;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  font-weight: 600; box-shadow: var(--shadow);
 }
 .skip-link:focus { top: 12px; }
+
+/* Sections fade up as they come into view. `useReveal` adds `reveal-ready` to <html> only when the browser can
+   watch scrolling and the visitor has not asked for less motion, so without it everything simply shows. */
+.reveal-ready .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+.reveal-ready .reveal.in { opacity: 1; transform: none; }
+.reveal-ready .reveal.d1 { transition-delay: 0.08s; }
+.reveal-ready .reveal.d2 { transition-delay: 0.16s; }
+.reveal-ready .reveal.d3 { transition-delay: 0.24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

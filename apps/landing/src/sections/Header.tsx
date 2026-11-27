@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BrandMark } from '../components/BrandMark'
 import { Icon } from '../components/Icon'
 import { useLang, useT } from '../lib/i18n'
@@ -17,12 +17,19 @@ export function Header() {
   const { t } = useT()
   const { lang, setLang } = useLang()
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <header className="site-header">
+    <header className={`site-header${scrolled ? ' scrolled' : ''}`}>
       <div className="container header-inner">
         <a className="brand" href="#top" aria-label={t('brand')}>
-          <BrandMark size={44} />
+          <BrandMark size={40} />
           <span className="brand-text">
             <span className="brand-name">{t('brand')}</span>
             <span className="brand-sub">{t('brandSub')}</span>

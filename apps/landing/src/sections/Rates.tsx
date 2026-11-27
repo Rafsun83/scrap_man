@@ -11,10 +11,17 @@ export function Rates({ rates, onRetry }: { rates: RateBoardState; onRetry: () =
   return (
     <section id="rates" className="section tinted" aria-labelledby="rates-title">
       <div className="container rates-layout">
-        <SectionHeading id="rates-title" kicker={t('ratesKicker')} title={t('ratesTitle')} lead={t('ratesLockNote')} />
-        <div className="rates-board" aria-live="polite" aria-busy={rates.status === 'loading'}>
+        <div>
+          <SectionHeading id="rates-title" kicker={t('ratesKicker')} title={t('ratesTitle')} />
+          <p className="lock-note reveal d1">
+            <Icon name="lock" size={20} />
+            {t('ratesLockNote')}
+          </p>
+        </div>
+        <div className="rates-board reveal d1" aria-live="polite" aria-busy={rates.status === 'loading'}>
           <div className="rates-board-head">
-            <span>
+            <span className="when">
+              {rates.status === 'ready' ? <span className="live-dot" aria-hidden="true" /> : null}
               {rates.status === 'ready' && rates.board.effectiveDate
                 ? t('ratesDate', { date: formatDhakaLongDate(rates.board.effectiveDate, lang) })
                 : t('ratesTitle')}
