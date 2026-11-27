@@ -53,3 +53,4 @@
 .site-footer .brand-sub { color: var(--ink-200); }
 .footer-inner { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 24px; padding-top: 36px; padding-bottom: 36px; }
 .footer-meta { margin-left: auto; color: var(--ink-200); font-size: 15px; }
+.brand-mark { flex: none; display: block; }

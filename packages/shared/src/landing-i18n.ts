@@ -31,6 +31,7 @@ export const landingStrings = {
     heroCardTitle: 'আজকের দর',
     heroCardUnit: 'প্রতি কেজি, টাকায়',
     heroCardMore: 'সব দর দেখুন',
+    heroChipRecycle: 'রিসাইকেল হয়ে নতুন জিনিস',
 
     promiseRate: 'প্রতিদিনের নির্ধারিত দর',
     promiseRateText: 'প্রতিদিন সকালে দর প্রকাশ হয়। দরাদরির ঝামেলা নেই।',
@@ -176,6 +177,7 @@ export const landingStrings = {
     heroCardTitle: "Today's rates",
     heroCardUnit: 'Per kg, in taka',
     heroCardMore: 'See all rates',
+    heroChipRecycle: 'Recycled into something new',
 
     promiseRate: 'Fixed daily rates',
     promiseRateText: 'Rates are published every morning. No haggling.',

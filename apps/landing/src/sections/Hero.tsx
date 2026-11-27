@@ -1,12 +1,16 @@
 import { formatDhakaDate } from '@bw/shared'
 import { Icon } from '../components/Icon'
-import { RateList } from '../components/RateList'
 import type { RateBoardState } from '../hooks/useRateBoard'
 import { useT } from '../lib/i18n'
+import { formatRate } from '../lib/rates'
 
-/** Headline and the two calls to action; beside them the mascot and a card with today's live rates. */
+/**
+ * Headline, the green promise and the two calls to action, with today's rates as a slim live strip; beside them
+ * the mascot in full, ringed by what selling here means (weighed in front of you, paid on the spot, recycled).
+ */
 export function Hero({ rates }: { rates: RateBoardState }) {
   const { t, lang } = useT()
+  const priced = rates.status === 'ready' ? rates.board.rows.filter((r) => r.ratePerKg !== null).slice(0, 4) : []
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-bg" aria-hidden="true" />
@@ -18,6 +22,12 @@ export function Hero({ rates }: { rates: RateBoardState }) {
           </p>
           <h1 id="hero-title" className="reveal d1">{t('heroTitle')}</h1>
           <p className="hero-lead reveal d2">{t('heroLead')}</p>
+          <p className="hero-green reveal d2">
+            <span className="hero-green-icon">
+              <Icon name="leaf" size={18} />
+            </span>
+            {t('greenPledge')}
+          </p>
           <div className="hero-ctas reveal d3">
             <a className="btn primary big" href="#rates">
               <Icon name="list" size={20} />
@@ -29,43 +39,63 @@ export function Hero({ rates }: { rates: RateBoardState }) {
               {t('heroCtaCollector')}
             </a>
           </div>
-          <p className="app-soon reveal d3">
-            <Icon name="phone" size={16} />
-            {t('appSoon')}
-          </p>
-        </div>
 
-        <div className="hero-art reveal d2">
-          <div className="hero-disc" aria-hidden="true" />
-          <img className="hero-mascot" src="/scale.png" alt="" width="360" height="360" />
-          <div className="rate-card">
-            <div className="rate-card-head">
-              <h2>{t('heroCardTitle')}</h2>
+          <div className="rate-strip reveal d3" aria-labelledby="hero-rates-title">
+            <div className="rate-strip-head">
+              <h2 id="hero-rates-title">{t('heroCardTitle')}</h2>
               {rates.status === 'ready' && rates.board.effectiveDate ? (
-                <span className="rate-card-date">
+                <span className="rate-strip-date">
                   <span className="live-dot" aria-hidden="true" />
                   {formatDhakaDate(rates.board.effectiveDate, lang)}
                 </span>
               ) : null}
+              <span className="rate-strip-unit">{t('heroCardUnit')}</span>
             </div>
-            <p className="rate-card-unit">{t('heroCardUnit')}</p>
-            {rates.status === 'ready' ? (
-              <RateList rows={rates.board.rows.slice(0, 5)} compact />
+            {rates.status === 'ready' && priced.length > 0 ? (
+              <ul className="rate-chips">
+                {priced.map((row) => (
+                  <li key={row.code}>
+                    <span className="name">{lang === 'bn' ? row.nameBn : row.nameEn}</span>
+                    <span className="price">{formatRate(row.ratePerKg!, lang)}</span>
+                  </li>
+                ))}
+                <li className="more">
+                  <a href="#rates">
+                    {t('heroCardMore')}
+                    <Icon name="arrowRight" size={16} />
+                  </a>
+                </li>
+              </ul>
             ) : (
-              <p className="rate-card-note">
-                {rates.status === 'loading' ? t('ratesLoading') : rates.status === 'empty' ? t('ratesEmpty') : t('ratesError')}
+              <p className="rate-strip-note">
+                {rates.status === 'loading' ? t('ratesLoading') : rates.status === 'error' ? t('ratesError') : t('ratesEmpty')}
               </p>
             )}
-            <a className="rate-card-more" href="#rates">
-              {t('heroCardMore')}
-              <Icon name="arrowRight" size={18} />
-            </a>
           </div>
-          <p className="hero-chip">
+        </div>
+
+        <div className="hero-art reveal d2" aria-hidden="true">
+          <div className="hero-orbit" />
+          <div className="hero-badge">
+            <img src="/scale.png" alt="" width="420" height="420" />
+          </div>
+          <p className="float-chip c1">
             <span className="chip-icon">
-              <Icon name="scale" size={22} />
+              <Icon name="scale" size={20} />
             </span>
             {t('promiseWeigh')}
+          </p>
+          <p className="float-chip c2">
+            <span className="chip-icon cash">
+              <Icon name="cash" size={20} />
+            </span>
+            {t('promisePaid')}
+          </p>
+          <p className="float-chip c3 green">
+            <span className="chip-icon">
+              <Icon name="recycle" size={20} />
+            </span>
+            {t('heroChipRecycle')}
           </p>
         </div>
       </div>
